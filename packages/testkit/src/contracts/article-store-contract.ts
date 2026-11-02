@@ -141,7 +141,7 @@ export function runArticleStoreContract(
         await store.writer.upsert(
           [
             {
-              article: anArticle().withDoi(DOI_A).build(),
+              article: anArticle().withDoi(DOI_A).withTitle('Stroke prevention').build(),
               chunks: [
                 aChunk()
                   .of(DOI_A)
@@ -151,7 +151,7 @@ export function runArticleStoreContract(
               ],
             },
             {
-              article: anArticle().withDoi(DOI_B).build(),
+              article: anArticle().withDoi(DOI_B).withTitle('Thromboprophylaxis').build(),
               chunks: [
                 aChunk()
                   .of(DOI_B)
@@ -171,6 +171,14 @@ export function runArticleStoreContract(
           signal,
         );
         expect(hits).toEqual([{ chunkId: `${DOI_A}#0`, doi: DOI_A, rank: 1 }]);
+      });
+
+      it('matches words of the article title in every chunk of it', async () => {
+        const hits = await store.search.lexical(
+          { terms: ['thromboprophylaxis'], filters: noFilters, limit: 10 },
+          signal,
+        );
+        expect(hits).toEqual([{ chunkId: `${DOI_B}#0`, doi: DOI_B, rank: 1 }]);
       });
 
       it('returns no hits for no terms', async () => {

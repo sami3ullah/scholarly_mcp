@@ -22,7 +22,7 @@ interface Entry {
 
 /**
  * Creates an empty in-memory store. Lexical search is case-insensitive substring matching
- * and vector search is exact cosine, which is enough to exercise callers and contracts.
+ * over each chunk's text and its article's title, and vector search is exact cosine, which is enough to exercise callers and contracts.
  */
 export function createInMemoryArticleStore(): InMemoryArticleStore {
   const entries = new Map<Doi, Entry>();
@@ -88,7 +88,8 @@ export function createInMemoryArticleStore(): InMemoryArticleStore {
       settle(signal, () => {
         const needles = terms.map((term) => term.toLowerCase()).filter((term) => term !== '');
         const scored = allChunks().map((chunk) => {
-          const text = chunk.text.toLowerCase();
+          const title = entries.get(chunk.doi)?.article.title ?? '';
+          const text = `${title} ${chunk.text}`.toLowerCase();
           return { chunk, score: needles.filter((needle) => text.includes(needle)).length };
         });
         return rank(scored, filters, limit);
