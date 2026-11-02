@@ -2,7 +2,7 @@
 
 [← Back to the docs index](../README.md)
 
-How to build the search index from Crossref (and Europe PMC), keep it fresh and check it. Design rules: [ADR 0020](../adr/0020-crossref-source-ingestion-rules.md) (Crossref), [ADR 0024](../adr/0024-europe-pmc-enrichment.md) (Europe PMC), [ADR 0021](../adr/0021-chunking-language-and-embedder-rules.md) (chunking and embeddings), [ADR 0022](../adr/0022-sqlite-index-files-and-builds.md) (index files and builds).
+How to build the search index from Crossref (and Europe PMC), keep it fresh and check it. For what each step does and why, read [how ingestion works](how-ingestion-works.md). Design rules: [ADR 0020](../adr/0020-crossref-source-ingestion-rules.md) (Crossref), [ADR 0024](../adr/0024-europe-pmc-enrichment.md) (Europe PMC), [ADR 0021](../adr/0021-chunking-language-and-embedder-rules.md) (chunking and embeddings), [ADR 0022](../adr/0022-sqlite-index-files-and-builds.md) (index files and builds).
 
 ## First build
 

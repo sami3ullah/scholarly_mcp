@@ -32,9 +32,10 @@ Everything beyond the quick start lives here. New guides are added as the featur
 
 ## Guides
 
-| Guide                            | What's inside                                |
-| -------------------------------- | -------------------------------------------- |
-| [Ingestion](guides/ingestion.md) | Building, refreshing and verifying the index |
+| Guide                                                | What's inside                                                                                    |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| [Ingestion](guides/ingestion.md)                     | Building, refreshing and verifying the index                                                     |
+| [How ingestion works](guides/how-ingestion-works.md) | Every step from Crossref to a swapped-in index, how full text stays hidden, and how it was built |
 
 Planned:
 
