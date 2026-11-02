@@ -10,7 +10,7 @@ Everything beyond the quick start lives here. New guides are added as the featur
 | ------------------------------------ | --------------------------------------------------------------------------------------------------------- |
 | [Engineering plan](PLAN.md)          | The full design: goals, architecture, data model, tool contracts, edge cases, standards and delivery plan |
 | [Phase 0 results](spike-results.md)  | Crossref and Europe PMC coverage, embedding model and vector store checks                                 |
-| [Ticket board](../tickets/README.md) | Work broken into tickets SM-00 to SM-15, with status                                                      |
+| [Ticket board](../tickets/README.md) | Work broken into tickets SM-00 to SM-16, with status                                                      |
 
 ## Design
 
@@ -28,7 +28,7 @@ Everything beyond the quick start lives here. New guides are added as the featur
 | [SQLite store](../packages/store-sqlite/README.md)            | Index and runtime files, text matching, build and swap                     |
 | [Ingest CLI](../apps/ingest/README.md)                        | Commands and configuration of the ingestion CLI                            |
 | [Search service](../packages/search/README.md)                | Query pipeline, fusion, teasers, cursors and search settings               |
-| [Eval CLI](../apps/eval/README.md)                            | Search latency bench on the live index                                     |
+| [Eval CLI](../apps/eval/README.md)                            | Search latency bench and golden-set relevance eval                         |
 | [MCP server](../apps/server/README.md)                        | The six tools, their inputs and outputs, layout and configuration          |
 | [Citations](../packages/cite/README.md)                       | Citation styles, how records map to CSL, the vendored AMA style            |
 
@@ -39,6 +39,7 @@ Everything beyond the quick start lives here. New guides are added as the featur
 | [Ingestion](guides/ingestion.md)                     | Building, refreshing and verifying the index                                                     |
 | [How ingestion works](guides/how-ingestion-works.md) | Every step from Crossref to a swapped-in index, how full text stays hidden, and how it was built |
 | [Connecting clients](guides/connecting-clients.md)   | Running the MCP server and connecting Claude Desktop or MCP Inspector, over stdio or HTTP        |
+| [Evaluating search](guides/evaluating-search.md)     | The golden set, its metrics, the eval index and the regression gate for ranking changes          |
 
 Planned:
 

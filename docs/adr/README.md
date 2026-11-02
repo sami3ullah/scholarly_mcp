@@ -31,3 +31,5 @@ Each ADR records one decision: the context, what we chose and what follows from 
 | [0023](0023-search-service-rules.md)                    | Search service: query rules, fusion, teasers, cursors, budget    | accepted |
 | [0024](0024-europe-pmc-enrichment.md)                   | Europe PMC enrichment: subjects and matching-only full text      | accepted |
 | [0025](0025-mcp-server-and-tool-rules.md)               | MCP server: SDK, transports, errors, links, journals, citations  | accepted |
+| [0026](0026-golden-set-eval-and-tuning.md)              | Golden set, eval and tuning results                              | accepted |
+| [0027](0027-measure-a-larger-embedding-model.md)        | Measure a larger embedding model before switching                | proposed |

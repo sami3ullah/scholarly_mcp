@@ -13,7 +13,7 @@ Status values: `todo`, `in-progress`, `done`, `blocked`. Update the table when a
 | SM-05 | SQLite store and ingest CLI                          | 2     | SM-03, SM-04 | done                        |
 | SM-06 | Europe PMC full-text source                          | 2     | SM-05        | done                        |
 | SM-07 | Search service                                       | 3     | SM-05        | done                        |
-| SM-08 | Golden set, eval and tuning                          | 3     | SM-07        | todo                        |
+| SM-08 | Golden set, eval and tuning                          | 3     | SM-07        | done (exit unmet, ADR 0027) |
 | SM-09 | MCP server: six tools and transports                 | 4     | SM-07        | done                        |
 | SM-10 | Auth, rate limits, telemetry, metering, entitlements | 4     | SM-09        | todo                        |
 | SM-11 | Landing sessions and Next.js landing page            | 4b    | SM-09        | todo                        |
@@ -21,5 +21,6 @@ Status values: `todo`, `in-progress`, `done`, `blocked`. Update the table when a
 | SM-13 | Postgres adapter                                     | 5     | SM-07        | todo                        |
 | SM-14 | Hardening, image and docs                            | 6     | SM-12        | todo                        |
 | SM-15 | Demo deployment, recording, outreach                 | 7-8   | SM-14        | todo (needs user decisions) |
+| SM-16 | Embedding model evaluation (bge-m3)                  | 3     | SM-08        | todo                        |
 
 Definition of done for every ticket: see "Definition of done" in `docs/PLAN.md`.
