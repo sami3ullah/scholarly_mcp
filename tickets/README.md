@@ -5,7 +5,7 @@ Status values: `todo`, `in-progress`, `done`, `blocked`. Update the table when a
 
 | ID | Title | Phase | Depends on | Status |
 |----|-------|-------|------------|--------|
-| SM-00 | Feasibility spike | 0 | - | todo |
+| SM-00 | Feasibility spike | 0 | - | done |
 | SM-01 | Monorepo foundations and CI | 1 | - | todo |
 | SM-02 | Core domain, ports, config, errors, testkit | 1 | SM-01 | todo |
 | SM-03 | Crossref source and normalisation pipeline | 2 | SM-02 | todo |

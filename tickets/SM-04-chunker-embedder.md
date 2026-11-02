@@ -8,4 +8,4 @@
 - [ ] Embedder contract (dims = 384, deterministic, normalised)
 
 ## Exit
-Unit + property tests green; embedder runs in Node 22 on CPU.
+Unit + property tests green; embedder runs in Node 24 on CPU.

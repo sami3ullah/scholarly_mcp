@@ -1,7 +1,7 @@
 # SM-01 Monorepo foundations and CI (Phase 1)
 
 ## Tasks
-- [ ] pnpm workspace, Node 22, ESM, TypeScript 5 strict + `noUncheckedIndexedAccess` + `exactOptionalPropertyTypes`
+- [ ] pnpm workspace, Node 24 LTS, ESM, TypeScript 5 strict + `noUncheckedIndexedAccess` + `exactOptionalPropertyTypes`
 - [ ] Turborepo pipeline (build, lint, typecheck, test)
 - [ ] ESLint (typescript-eslint strict, `no-floating-promises`, no `console`), Prettier
 - [ ] Vitest with coverage (v8), threshold 85% on core packages
