@@ -31,7 +31,7 @@ import { runGolden } from './golden/run-golden.js';
 const USAGE = `Usage:
   eval bench [--rounds N] [--max-p95 MS] [--show]
   eval golden [--golden FILE] [--min-recall R] [--min-cross-recall R] [--show]
-              [--baseline FILE] [--write-baseline FILE]`;
+              [--baseline FILE] [--write-baseline FILE] [--rankings FILE]`;
 /** The versioned golden set (SM-08), found from this file so any working directory works. */
 const GOLDEN_SET = fileURLToPath(
   new URL('../../../packages/testkit/golden/golden-set.json', import.meta.url),
@@ -47,7 +47,8 @@ const DOI_CASES = 3;
  * `golden` scores the golden set (recall@10, MRR, nDCG@10). With `--baseline` it exits 1
  * when any score dropped below the committed baseline (run it on the eval index, ADR 0026),
  * otherwise when recall is below the SM-08 targets. Exit 2 is bad usage or a baseline made
- * on another index or golden set.
+ * on another index or golden set. `--rankings FILE` writes each query's top ten DOIs, so
+ * the results of a new model can be pooled for judging (SM-16).
  */
 async function main(argv: readonly string[]): Promise<number> {
   const { positionals, values } = parseArgs({
@@ -61,6 +62,7 @@ async function main(argv: readonly string[]): Promise<number> {
       'min-cross-recall': { type: 'string', default: '0.7' },
       baseline: { type: 'string' },
       'write-baseline': { type: 'string' },
+      rankings: { type: 'string' },
       show: { type: 'boolean', default: false },
     },
   });
@@ -116,6 +118,14 @@ async function main(argv: readonly string[]): Promise<number> {
         byGroup,
       };
       process.stdout.write(`${JSON.stringify(current, null, 2)}\n`);
+      if (values.rankings !== undefined) {
+        const rankings = {
+          golden: version,
+          modelVersion: index.meta().modelVersion,
+          queries: report.outcomes.map(({ query, ranking }) => ({ id: query.id, ranking })),
+        };
+        writeFileSync(values.rankings, `${JSON.stringify(rankings, null, 2)}\n`);
+      }
       if (values['write-baseline'] !== undefined) {
         writeFileSync(values['write-baseline'], `${JSON.stringify(current, null, 2)}\n`);
       }
