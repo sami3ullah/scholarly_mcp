@@ -2,9 +2,6 @@ import { z } from 'zod';
 import { doiSchema } from '../article/doi.js';
 import { languageSchema } from '../article/language.js';
 
-/** Vector size of multilingual-e5-small (ADR 0002). Every embedding in an index has it. */
-export const EMBEDDING_DIMENSIONS = 384;
-
 /**
  * Where a chunk's text came from. Only `metadata` and `abstract` text may ever be shown;
  * `fulltext` is for matching only (ADR 0003).
@@ -34,11 +31,13 @@ export const chunkSchema = z
     origin: chunkOriginSchema,
     source: chunkSourceSchema,
     licenseUrl: z.url().optional(),
+    /**
+     * The model decides the size (ADR 0028); the embedder checks it, and an index holds
+     * one size only.
+     */
     embedding: z
       .instanceof(Float32Array)
-      .refine((vector) => vector.length === EMBEDDING_DIMENSIONS, {
-        message: `Expected ${String(EMBEDDING_DIMENSIONS)} dimensions`,
-      }),
+      .refine((vector) => vector.length > 0, { message: 'Expected a non-empty embedding' }),
     modelVersion: z.string().min(1),
   })
   .refine((chunk) => chunk.origin !== 'fulltext' || chunk.licenseUrl !== undefined, {

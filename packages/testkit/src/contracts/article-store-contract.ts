@@ -11,6 +11,7 @@ import fc from 'fast-check';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { aChunk } from '../builders/a-chunk.js';
 import { anArticle } from '../builders/an-article.js';
+import { TEST_EMBEDDING_DIMENSIONS } from '../fakes/fake-embedder.js';
 
 /** The four faces of a store. Real adapters may back them with separate connections. */
 export interface ArticleStoreUnderTest {
@@ -275,7 +276,7 @@ export function runArticleStoreContract(
       });
 
       it('returns nearest chunks first, within the limit', async () => {
-        const embedding = new Float32Array(384);
+        const embedding = new Float32Array(TEST_EMBEDDING_DIMENSIONS);
         embedding.set([1, 0]);
         const hits = await store.search.vector({ embedding, filters: noFilters, limit: 1 }, signal);
         expect(hits).toEqual([{ chunkId: `${DOI_A}#0`, doi: DOI_A, rank: 1 }]);
@@ -356,7 +357,7 @@ export function runArticleStoreContract(
 }
 
 function unit(): Float32Array {
-  const vector = new Float32Array(384);
+  const vector = new Float32Array(TEST_EMBEDDING_DIMENSIONS);
   vector[0] = 1;
   return vector;
 }

@@ -4,6 +4,7 @@ import {
   anArticle,
   runArticleStoreContract,
   runSyncStateStoreContract,
+  TEST_EMBEDDING_DIMENSIONS,
 } from '@scholarly-mcp/testkit';
 import { describe, expect, it } from 'vitest';
 import { createSqliteIndexStore } from './create-sqlite-index-store.js';
@@ -12,7 +13,7 @@ import { openDatabase } from './database/open-database.js';
 
 function freshStore() {
   const db = openDatabase(':memory:');
-  createIndexSchema(db);
+  createIndexSchema(db, { dimensions: TEST_EMBEDDING_DIMENSIONS });
   return createSqliteIndexStore(db);
 }
 

@@ -16,7 +16,7 @@ export {
 export { runSessionStoreContract } from './contracts/session-store-contract.js';
 export { runSourceContract, type SourceContractOptions } from './contracts/source-contract.js';
 export { runSyncStateStoreContract } from './contracts/sync-state-store-contract.js';
-export { createFakeEmbedder } from './fakes/fake-embedder.js';
+export { TEST_EMBEDDING_DIMENSIONS, createFakeEmbedder } from './fakes/fake-embedder.js';
 export { createFakeClock, type FakeClock } from './fakes/fake-clock.js';
 export {
   createInMemoryArticleStore,

@@ -1,4 +1,5 @@
 import { isAppError } from '@scholarly-mcp/core';
+import { TEST_EMBEDDING_DIMENSIONS } from '@scholarly-mcp/testkit';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { beginIndexBuild } from './build/index-build.js';
 import { openIndexReader } from './open-index-reader.js';
@@ -19,7 +20,12 @@ describe('openIndexReader', () => {
   });
 
   async function build(version: string, modelVersion = MODEL, ...numbers: number[]) {
-    const next = beginIndexBuild({ indexPath, kind: 'full', now });
+    const next = beginIndexBuild({
+      indexPath,
+      kind: 'full',
+      now,
+      dimensions: TEST_EMBEDDING_DIMENSIONS,
+    });
     await next.store.writer.upsert(numbers.map(recordNumber), signal);
     next.commit({ ...metaFor(version, numbers.length), modelVersion });
   }

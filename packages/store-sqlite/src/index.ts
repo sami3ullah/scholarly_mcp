@@ -16,6 +16,7 @@ export { createSqliteIndexStore, type SqliteIndexStore } from './create-sqlite-i
 export {
   INDEX_SCHEMA_VERSION,
   createIndexSchema,
+  embeddingDimensionsOf,
   indexSchemaVersion,
 } from './database/index-schema.js';
 export { openDatabase, type Db } from './database/open-database.js';

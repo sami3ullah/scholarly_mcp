@@ -4,6 +4,7 @@ import { createSqliteIndexStore, type SqliteIndexStore } from '../create-sqlite-
 import {
   INDEX_SCHEMA_VERSION,
   createIndexSchema,
+  embeddingDimensionsOf,
   indexSchemaVersion,
 } from '../database/index-schema.js';
 import { writeIndexMeta } from '../database/index-meta-row.js';
@@ -35,27 +36,33 @@ export const buildPathOf = (indexPath: string): string => `${indexPath}.building
 
 /**
  * Starts or resumes a build of the index at `indexPath` (PLAN.md "SQLite store"). A leftover
- * build of the same kind and schema is resumed, so its checkpoint and its rows carry on
- * together; any other leftover is discarded. An incremental build copies the live index with
+ * build of the same kind, schema and vector size is resumed, so its checkpoint and its rows
+ * carry on together; any other leftover is discarded. An incremental build copies the live index with
  * `VACUUM INTO`, which is consistent even while the server reads it.
  */
 export function beginIndexBuild(options: {
   readonly indexPath: string;
   readonly kind: BuildKind;
   readonly now: Date;
+  /** The embedding model's vector size; a full build creates its file for it (ADR 0028). */
+  readonly dimensions: number;
 }): IndexBuild {
-  const { indexPath, kind, now } = options;
+  const { indexPath, kind, now, dimensions } = options;
   const buildPath = buildPathOf(indexPath);
   const leftover = existsSync(buildPath) ? openDatabase(buildPath) : undefined;
-  if (leftover !== undefined && buildKindOf(leftover) === kind) {
+  if (
+    leftover !== undefined &&
+    buildKindOf(leftover) === kind &&
+    embeddingDimensionsOf(leftover) === dimensions
+  ) {
     return indexBuild(leftover, { kind, resumed: true, indexPath, buildPath });
   }
   leftover?.close();
   removeDatabaseFiles(buildPath);
 
-  if (kind !== 'full') copyLiveIndex(indexPath, buildPath);
+  if (kind !== 'full') copyLiveIndex(indexPath, buildPath, dimensions);
   const db = openDatabase(buildPath);
-  if (kind === 'full') createIndexSchema(db);
+  if (kind === 'full') createIndexSchema(db, { dimensions });
   db.prepare('INSERT INTO index_build (id, kind, started_at) VALUES (1, ?, ?)').run(
     kind,
     now.toISOString(),
@@ -101,7 +108,7 @@ function buildKindOf(db: Db): BuildKind | undefined {
   return row?.kind;
 }
 
-function copyLiveIndex(indexPath: string, buildPath: string): void {
+function copyLiveIndex(indexPath: string, buildPath: string, dimensions: number): void {
   if (!existsSync(indexPath)) {
     throw appError('INDEX_UNAVAILABLE', 'No index to update yet; run a full build first');
   }
@@ -109,6 +116,12 @@ function copyLiveIndex(indexPath: string, buildPath: string): void {
   try {
     if (indexSchemaVersion(live) !== INDEX_SCHEMA_VERSION) {
       throw appError('INDEX_UNAVAILABLE', 'The index has an older layout; run a full build');
+    }
+    if (embeddingDimensionsOf(live) !== dimensions) {
+      throw appError(
+        'INDEX_UNAVAILABLE',
+        'The index holds vectors of another size; run a full build with this model',
+      );
     }
     live.prepare('VACUUM INTO ?').run(buildPath);
   } finally {

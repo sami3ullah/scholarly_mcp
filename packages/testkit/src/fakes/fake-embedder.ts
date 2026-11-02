@@ -1,5 +1,8 @@
-import { EMBEDDING_DIMENSIONS, type Embedder } from '@scholarly-mcp/core';
+import type { Embedder } from '@scholarly-mcp/core';
 import { settle } from './settle.js';
+
+/** Vector size of the fake embedder and the chunk builder: e5-small's, as in a real index. */
+export const TEST_EMBEDDING_DIMENSIONS = 384;
 
 const WORD = /[\p{L}\p{N}]+/gu;
 
@@ -14,9 +17,9 @@ function hash(word: string): number {
 }
 
 function embed(text: string): Float32Array {
-  const vector = new Float32Array(EMBEDDING_DIMENSIONS);
+  const vector = new Float32Array(TEST_EMBEDDING_DIMENSIONS);
   for (const [word] of text.toLowerCase().matchAll(WORD)) {
-    const index = hash(word) % EMBEDDING_DIMENSIONS;
+    const index = hash(word) % TEST_EMBEDDING_DIMENSIONS;
     vector[index] = (vector[index] ?? 0) + 1;
   }
   const norm = Math.hypot(...vector);
@@ -32,7 +35,7 @@ function embed(text: string): Float32Array {
 export function createFakeEmbedder(): Embedder {
   return {
     modelVersion: 'fake-embedder@1',
-    dimensions: EMBEDDING_DIMENSIONS,
+    dimensions: TEST_EMBEDDING_DIMENSIONS,
     countTokens: (text) => text.match(WORD)?.length ?? 0,
     embedPassages: (texts, signal) => settle(signal, () => texts.map(embed)),
     embedQuery: (text, signal) => settle(signal, () => embed(text)),

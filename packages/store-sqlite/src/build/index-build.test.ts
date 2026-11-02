@@ -1,6 +1,8 @@
 import { existsSync } from 'node:fs';
 import { isAppError } from '@scholarly-mcp/core';
+import { TEST_EMBEDDING_DIMENSIONS } from '@scholarly-mcp/testkit';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { embeddingDimensionsOf } from '../database/index-schema.js';
 import { openDatabase } from '../database/open-database.js';
 import { openIndexReader } from '../open-index-reader.js';
 import { MODEL, metaFor, recordNumber, tempIndexPath } from '../testing/index-files.js';
@@ -21,13 +23,23 @@ describe('index builds', () => {
   });
 
   async function buildFull(version: string, ...numbers: number[]) {
-    const build = beginIndexBuild({ indexPath, kind: 'full', now });
+    const build = beginIndexBuild({
+      indexPath,
+      kind: 'full',
+      now,
+      dimensions: TEST_EMBEDDING_DIMENSIONS,
+    });
     await build.store.writer.upsert(numbers.map(recordNumber), signal);
     build.commit(metaFor(version, numbers.length));
   }
 
   it('builds next to the live index and swaps it in on commit', async () => {
-    const build = beginIndexBuild({ indexPath, kind: 'full', now });
+    const build = beginIndexBuild({
+      indexPath,
+      kind: 'full',
+      now,
+      dimensions: TEST_EMBEDDING_DIMENSIONS,
+    });
     await build.store.writer.upsert([recordNumber(1)], signal);
     expect(existsSync(indexPath)).toBe(false);
     build.commit(metaFor('v1', 1));
@@ -47,7 +59,12 @@ describe('index builds', () => {
   });
 
   it('resumes an interrupted build of the same kind with its rows and checkpoint', async () => {
-    const first = beginIndexBuild({ indexPath, kind: 'full', now });
+    const first = beginIndexBuild({
+      indexPath,
+      kind: 'full',
+      now,
+      dimensions: TEST_EMBEDDING_DIMENSIONS,
+    });
     await first.store.writer.upsert([recordNumber(1)], signal);
     await first.store.syncState.save(
       { source: 'crossref', cursor: 'page-2', lastRunStatus: 'running', lastRunAt: now },
@@ -55,7 +72,12 @@ describe('index builds', () => {
     );
     first.close();
 
-    const again = beginIndexBuild({ indexPath, kind: 'full', now });
+    const again = beginIndexBuild({
+      indexPath,
+      kind: 'full',
+      now,
+      dimensions: TEST_EMBEDDING_DIMENSIONS,
+    });
     expect(again.resumed).toBe(true);
     expect((await again.store.syncState.load('crossref', signal))?.cursor).toBe('page-2');
     expect(
@@ -66,11 +88,21 @@ describe('index builds', () => {
 
   it('discards a leftover build of the other kind', async () => {
     await buildFull('v1', 1);
-    const incremental = beginIndexBuild({ indexPath, kind: 'incremental', now });
+    const incremental = beginIndexBuild({
+      indexPath,
+      kind: 'incremental',
+      now,
+      dimensions: TEST_EMBEDDING_DIMENSIONS,
+    });
     await incremental.store.writer.upsert([recordNumber(2)], signal);
     incremental.close();
 
-    const full = beginIndexBuild({ indexPath, kind: 'full', now });
+    const full = beginIndexBuild({
+      indexPath,
+      kind: 'full',
+      now,
+      dimensions: TEST_EMBEDDING_DIMENSIONS,
+    });
     expect(full.resumed).toBe(false);
     expect(
       await full.store.writer.contentHashOf(recordNumber(1).article.doi, signal),
@@ -80,7 +112,12 @@ describe('index builds', () => {
 
   it('starts an incremental build from a copy of the live index', async () => {
     await buildFull('v1', 1);
-    const build = beginIndexBuild({ indexPath, kind: 'incremental', now });
+    const build = beginIndexBuild({
+      indexPath,
+      kind: 'incremental',
+      now,
+      dimensions: TEST_EMBEDDING_DIMENSIONS,
+    });
     expect(
       await build.store.writer.contentHashOf(recordNumber(1).article.doi, signal),
     ).toBeDefined();
@@ -93,7 +130,12 @@ describe('index builds', () => {
 
   it('starts a purge build from a copy of the live index too', async () => {
     await buildFull('v1', 1);
-    const build = beginIndexBuild({ indexPath, kind: 'purge', now });
+    const build = beginIndexBuild({
+      indexPath,
+      kind: 'purge',
+      now,
+      dimensions: TEST_EMBEDDING_DIMENSIONS,
+    });
     expect(build.resumed).toBe(false);
     expect(
       await build.store.writer.contentHashOf(recordNumber(1).article.doi, signal),
@@ -102,17 +144,30 @@ describe('index builds', () => {
   });
 
   it('deletes a discarded build, so the next run starts over', async () => {
-    const build = beginIndexBuild({ indexPath, kind: 'full', now });
+    const build = beginIndexBuild({
+      indexPath,
+      kind: 'full',
+      now,
+      dimensions: TEST_EMBEDDING_DIMENSIONS,
+    });
     await build.store.writer.upsert([recordNumber(1)], signal);
     build.discard();
     expect(existsSync(buildPathOf(indexPath))).toBe(false);
-    expect(beginIndexBuild({ indexPath, kind: 'full', now }).resumed).toBe(false);
+    expect(
+      beginIndexBuild({ indexPath, kind: 'full', now, dimensions: TEST_EMBEDDING_DIMENSIONS })
+        .resumed,
+    ).toBe(false);
   });
 
   it('refuses an incremental build when there is no live index', () => {
     let error: unknown;
     try {
-      beginIndexBuild({ indexPath, kind: 'incremental', now });
+      beginIndexBuild({
+        indexPath,
+        kind: 'incremental',
+        now,
+        dimensions: TEST_EMBEDDING_DIMENSIONS,
+      });
     } catch (caught) {
       error = caught;
     }
@@ -124,6 +179,34 @@ describe('index builds', () => {
     const db = openDatabase(indexPath);
     db.pragma('user_version = 0');
     db.close();
-    expect(() => beginIndexBuild({ indexPath, kind: 'incremental', now })).toThrow(/older layout/);
+    expect(() =>
+      beginIndexBuild({
+        indexPath,
+        kind: 'incremental',
+        now,
+        dimensions: TEST_EMBEDDING_DIMENSIONS,
+      }),
+    ).toThrow(/older layout/);
+  });
+  it('starts over instead of resuming a leftover build for another vector size', async () => {
+    const first = beginIndexBuild({
+      indexPath,
+      kind: 'full',
+      now,
+      dimensions: TEST_EMBEDDING_DIMENSIONS,
+    });
+    await first.store.writer.upsert([recordNumber(1)], signal);
+    first.close();
+    const other = beginIndexBuild({ indexPath, kind: 'full', now, dimensions: 1024 });
+    expect(other.resumed).toBe(false);
+    expect(embeddingDimensionsOf(other.db)).toBe(1024);
+    other.close();
+  });
+
+  it('refuses an incremental build on an index of another vector size', async () => {
+    await buildFull('v1', 1);
+    expect(() =>
+      beginIndexBuild({ indexPath, kind: 'incremental', now, dimensions: 1024 }),
+    ).toThrow(/another size/);
   });
 });

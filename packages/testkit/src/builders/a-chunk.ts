@@ -1,4 +1,5 @@
-import { EMBEDDING_DIMENSIONS, chunkSchema, type Chunk } from '@scholarly-mcp/core';
+import { chunkSchema, type Chunk } from '@scholarly-mcp/core';
+import { TEST_EMBEDDING_DIMENSIONS } from '../fakes/fake-embedder.js';
 
 /** A fluent, immutable builder for valid chunks. Every method returns a new builder. */
 export interface ChunkBuilder {
@@ -41,7 +42,7 @@ export function aChunk(draft: Draft = DEFAULTS): ChunkBuilder {
     withModelVersion: (modelVersion) => next({ modelVersion }),
     fromFullText: (licenseUrl) => next({ origin: 'fulltext', source: 'europepmc', licenseUrl }),
     build: () => {
-      const embedding = new Float32Array(EMBEDDING_DIMENSIONS);
+      const embedding = new Float32Array(TEST_EMBEDDING_DIMENSIONS);
       embedding.set(draft.embedding);
       const text = typeof draft['text'] === 'string' ? draft['text'] : '';
       return chunkSchema.parse({

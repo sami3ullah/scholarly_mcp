@@ -1,4 +1,4 @@
-import { aChunk, anArticle } from '@scholarly-mcp/testkit';
+import { aChunk, anArticle, TEST_EMBEDDING_DIMENSIONS } from '@scholarly-mcp/testkit';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createSqliteIndexStore, type SqliteIndexStore } from '../create-sqlite-index-store.js';
 import { createIndexSchema } from '../database/index-schema.js';
@@ -14,7 +14,7 @@ describe('verifyIndex', () => {
 
   beforeEach(async () => {
     db = openDatabase(':memory:');
-    createIndexSchema(db);
+    createIndexSchema(db, { dimensions: TEST_EMBEDDING_DIMENSIONS });
     store = createSqliteIndexStore(db);
     await store.writer.upsert([1, 2, 3, 4, 5, 6].map(recordNumber), signal);
   });
@@ -32,7 +32,7 @@ describe('verifyIndex', () => {
 
   it('fails an empty index', async () => {
     const empty = openDatabase(':memory:');
-    createIndexSchema(empty);
+    createIndexSchema(empty, { dimensions: TEST_EMBEDDING_DIMENSIONS });
     const report = await verifyIndex(empty, { modelVersion: MODEL }, signal);
     expect(report.ok).toBe(false);
     expect(report.checks.find((check) => check.name === 'not empty')?.ok).toBe(false);

@@ -14,10 +14,11 @@ import {
   extractSubset,
   ingestIndex,
   purgeLicense,
+  reembedIndex,
   verifyLiveIndex,
   type IngestIndexDeps,
 } from './ingest-index.js';
-import { article, countingEmbedder } from './testing/ingest-fixtures.js';
+import { article, countingEmbedder, otherModelEmbedder } from './testing/ingest-fixtures.js';
 
 const signal = new AbortController().signal;
 const numbered = (count: number) => Array.from({ length: count }, (_, i) => article(i + 1));
@@ -59,6 +60,25 @@ describe('ingestIndex on SQLite files', () => {
     expect((await verifyLiveIndex(indexPath, embedder.modelVersion, signal)).ok).toBe(true);
     const reader = openIndexReader(indexPath, embedder.modelVersion);
     expect(reader.meta()).toMatchObject({ articleCount: 7, chunkCount: 7 });
+    reader.close();
+  });
+
+  it('rebuilds in full with the new vector size when the embedding model changed', async () => {
+    await ingestIndex('incremental', deps(numbered(3)), signal);
+    const other = otherModelEmbedder();
+    const outcome = await ingestIndex(
+      'incremental',
+      { ...deps(numbered(3)), loadEmbedder: () => Promise.resolve(other) },
+      signal,
+    );
+    expect(outcome).toMatchObject({
+      plan: { kind: 'full', reason: 'embedding model changed' },
+      report: { embedded: 3, reused: 0 },
+      committed: true,
+    });
+    const reader = openIndexReader(indexPath, other.modelVersion);
+    const [chunk] = await reader.reader.findArticleChunks(article(1).doi, signal);
+    expect(chunk?.embedding).toHaveLength(other.dimensions);
     reader.close();
   });
 
@@ -131,7 +151,7 @@ describe('ingestIndex on SQLite files', () => {
     ) => ({
       indexPath,
       allowlist,
-      modelVersion: embedder.modelVersion,
+      model: { version: embedder.modelVersion, dimensions: embedder.dimensions },
       clock: createFakeClock(),
       logger: createTestLogger(),
     });
@@ -184,7 +204,7 @@ describe('ingestIndex on SQLite files', () => {
     const subsetDeps = () => ({
       sourcePath: indexPath,
       indexPath: join(dir, 'subset.sqlite'),
-      modelVersion: embedder.modelVersion,
+      model: { version: embedder.modelVersion, dimensions: embedder.dimensions },
       clock: createFakeClock(),
       logger: createTestLogger(),
     });
@@ -209,9 +229,60 @@ describe('ingestIndex on SQLite files', () => {
     it('refuses a source index built with another model', async () => {
       await ingestIndex('full', deps(numbered(2)), signal);
       await expect(
-        extractSubset([article(1).doi], { ...subsetDeps(), modelVersion: 'other@1' }, signal),
+        extractSubset(
+          [article(1).doi],
+          { ...subsetDeps(), model: { version: 'other@1', dimensions: 384 } },
+          signal,
+        ),
       ).rejects.toMatchObject({ code: 'INVALID_INPUT' });
       expect(existsSync(subsetDeps().indexPath)).toBe(false);
+    });
+  });
+
+  describe('reembedIndex', () => {
+    const reembedDeps = (model = otherModelEmbedder()) => ({
+      sourcePath: indexPath,
+      indexPath: join(dir, 'reembedded.sqlite'),
+      embedder: model,
+      clock: createFakeClock(),
+      logger: createTestLogger(),
+    });
+
+    it('embeds every chunk again with the new model, chunking unchanged', async () => {
+      await ingestIndex('full', deps(numbered(4)), signal);
+      const deps2 = reembedDeps();
+      const outcome = await reembedIndex(deps2, signal);
+      expect(outcome).toMatchObject({ written: 4, kept: 0, chunks: 4, committed: true });
+      expect(outcome.verify.ok).toBe(true);
+
+      const source = openIndexReader(indexPath, embedder.modelVersion);
+      const copy = openIndexReader(deps2.indexPath, deps2.embedder.modelVersion);
+      const [before] = await source.reader.findArticleChunks(article(2).doi, signal);
+      const [after] = await copy.reader.findArticleChunks(article(2).doi, signal);
+      expect(after).toMatchObject({
+        id: before?.id,
+        text: before?.text,
+        modelVersion: 'other-model@1',
+      });
+      expect(after?.embedding).toHaveLength(deps2.embedder.dimensions);
+      expect(deps2.embedder.texts()).toContain(`${article(2).title}\n\n${before?.text ?? ''}`);
+      source.close();
+      copy.close();
+    });
+
+    it('keeps the articles an interrupted run already re-embedded', async () => {
+      await ingestIndex('full', deps(numbered(3)), signal);
+      const controller = new AbortController();
+      const first = otherModelEmbedder({
+        onEmbed: () => {
+          controller.abort();
+        },
+      });
+      await expect(reembedIndex(reembedDeps(first), controller.signal)).rejects.toThrow();
+
+      const outcome = await reembedIndex(reembedDeps(), signal);
+      expect(outcome).toMatchObject({ committed: true });
+      expect(outcome.written + outcome.kept).toBe(3);
     });
   });
 });

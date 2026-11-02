@@ -26,6 +26,7 @@ export { articleSections } from './chunk/article-sections.js';
 export {
   DEFAULT_CHUNKING,
   chunkDocument,
+  embeddingTextOf,
   type ChunkDraft,
   type ChunkSection,
   type ChunkableDocument,
@@ -33,7 +34,6 @@ export {
   type CountTokens,
 } from './chunk/chunk-document.js';
 export {
-  EMBEDDING_DIMENSIONS,
   chunkOriginSchema,
   chunkSchema,
   chunkSourceSchema,

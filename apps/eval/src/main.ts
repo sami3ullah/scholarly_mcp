@@ -4,8 +4,8 @@ import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { parseConfig, type Clock } from '@scholarly-mcp/core';
 import {
-  MODEL_VERSION,
   embedderConfigSchema,
+  embeddingModelOf,
   loadOnnxEmbedder,
 } from '@scholarly-mcp/embedder-onnx';
 import { createLogger, loggingConfigSchema } from '@scholarly-mcp/logger';
@@ -92,7 +92,7 @@ async function main(argv: readonly string[]): Promise<number> {
   });
   const clock: Clock = { now: () => new Date() };
   const signal = new AbortController().signal;
-  const index = openIndexReader(config.INDEX_PATH, MODEL_VERSION);
+  const index = openIndexReader(config.INDEX_PATH, embeddingModelOf(config).version);
   try {
     const embedder = await loadOnnxEmbedder(config);
     const service = createSearchService({

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { EMBEDDING_DIMENSIONS, chunkSchema, isDisplayable } from './chunk.js';
+import { chunkSchema, isDisplayable } from './chunk.js';
 
 const valid = {
   id: '10.1055/a-1#0',
@@ -11,7 +11,7 @@ const valid = {
   tokenCount: 9,
   origin: 'abstract',
   source: 'crossref',
-  embedding: new Float32Array(EMBEDDING_DIMENSIONS),
+  embedding: new Float32Array(384),
   modelVersion: 'multilingual-e5-small@1',
 };
 
@@ -35,9 +35,9 @@ describe('chunkSchema', () => {
     expect(chunkSchema.safeParse(chunk).success).toBe(true);
   });
 
-  it('rejects an embedding of the wrong size', () => {
-    const result = chunkSchema.safeParse({ ...valid, embedding: new Float32Array(768) });
-    expect(result.error?.issues[0]?.message).toBe('Expected 384 dimensions');
+  it('rejects an empty embedding', () => {
+    const result = chunkSchema.safeParse({ ...valid, embedding: new Float32Array(0) });
+    expect(result.error?.issues[0]?.message).toBe('Expected a non-empty embedding');
   });
 });
 

@@ -1,12 +1,13 @@
-import { EMBEDDING_DIMENSIONS } from '@scholarly-mcp/core';
 import { describe, expect, it } from 'vitest';
 import { createEmbedder, type ExtractFeatures } from './create-embedder.js';
 
 const signal = new AbortController().signal;
+const DIMENSIONS = 384;
+const E5_PREFIXES = { passage: 'passage: ', query: 'query: ' };
 
 /** A vector whose first value is the text's length, so tests can see which text it encodes. */
 function vectorFor(text: string): Float32Array {
-  const vector = new Float32Array(EMBEDDING_DIMENSIONS);
+  const vector = new Float32Array(DIMENSIONS);
   vector[0] = text.length;
   return vector;
 }
@@ -20,11 +21,18 @@ function recordingModel() {
   return { calls, extract };
 }
 
-function embedderWith(extract: ExtractFeatures, batchSize = 2, concurrency = 1) {
+function embedderWith(
+  extract: ExtractFeatures,
+  batchSize = 2,
+  concurrency = 1,
+  prefixes = E5_PREFIXES,
+) {
   return createEmbedder({
     extract,
     countTokens: (text) => text.length,
     modelVersion: 'test-model@1',
+    dimensions: DIMENSIONS,
+    prefixes,
     batchSize,
     concurrency,
   });
@@ -42,6 +50,14 @@ describe('createEmbedder', () => {
     const model = recordingModel();
     await embedderWith(model.extract).embedQuery('Vorhofflimmern', signal);
     expect(model.calls).toEqual([['query: Vorhofflimmern']]);
+  });
+
+  it('embeds texts as they are for a model without prefixes', async () => {
+    const model = recordingModel();
+    const embedder = embedderWith(model.extract, 2, 1, { passage: '', query: '' });
+    await embedder.embedPassages(['a'], signal);
+    await embedder.embedQuery('q', signal);
+    expect(model.calls).toEqual([['a'], ['q']]);
   });
 
   it('exposes the model version, dimensions and token counter', () => {

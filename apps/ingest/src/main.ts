@@ -4,8 +4,8 @@ import { dirname, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { fulltextConfigSchema, parseConfig, type Clock } from '@scholarly-mcp/core';
 import {
-  MODEL_VERSION,
   embedderConfigSchema,
+  embeddingModelOf,
   loadOnnxEmbedder,
 } from '@scholarly-mcp/embedder-onnx';
 import { createLogger, loggingConfigSchema } from '@scholarly-mcp/logger';
@@ -13,15 +13,25 @@ import { createCrossrefSource, crossrefConfigSchema } from '@scholarly-mcp/sourc
 import { createEuropepmcEnricher, europepmcConfigSchema } from '@scholarly-mcp/source-europepmc';
 import { sqliteConfigSchema } from '@scholarly-mcp/store-sqlite';
 import { ingestConfigSchema } from './config/ingest-config.js';
-import { extractSubset, ingestIndex, purgeLicense, verifyLiveIndex } from './ingest-index.js';
+import {
+  extractSubset,
+  ingestIndex,
+  purgeLicense,
+  reembedIndex,
+  verifyLiveIndex,
+} from './ingest-index.js';
 
-const USAGE =
-  'Usage: ingest <full|incremental|verify|purge-license <licence-url>|subset --from <index> --dois <file> --out <index>>';
+const USAGE = `Usage:
+  ingest full | incremental | verify
+  ingest purge-license <licence-url>
+  ingest subset --from <index> --dois <file> --out <index>
+  ingest reembed --from <index> --out <index>`;
 
 /**
  * The composition root (PLAN.md "Backend conventions"): reads config, creates the real
  * adapters and runs one command. `subset` writes only to its `--out` path, never to
- * `INDEX_PATH`, so it cannot replace the live index by mistake. Exit codes: 0 done, 1 failed or not verified, 2 bad usage.
+ * `INDEX_PATH`, so it cannot replace the live index by mistake; so does `reembed`, which
+ * embeds a copy of an index with `EMBEDDER_MODEL` (ADR 0028). Exit codes: 0 done, 1 failed or not verified, 2 bad usage.
  * SIGINT and SIGTERM abort the run; its build file is kept and the next run resumes it.
  */
 async function main(argv: readonly string[]): Promise<number> {
@@ -37,6 +47,7 @@ async function main(argv: readonly string[]): Promise<number> {
     process.env,
   );
   const logger = createLogger({ name: 'ingest', level: config.LOG_LEVEL });
+  const model = embeddingModelOf(config);
   const clock: Clock = { now: () => new Date() };
   const controller = new AbortController();
   for (const signal of ['SIGINT', 'SIGTERM'] as const) {
@@ -47,7 +58,7 @@ async function main(argv: readonly string[]): Promise<number> {
   }
 
   if (command === 'verify') {
-    const report = await verifyLiveIndex(config.INDEX_PATH, MODEL_VERSION, controller.signal);
+    const report = await verifyLiveIndex(config.INDEX_PATH, model.version, controller.signal);
     logger.info({ ...report }, report.ok ? 'Index verified' : 'Index failed verification');
     return report.ok ? 0 : 1;
   }
@@ -62,7 +73,7 @@ async function main(argv: readonly string[]): Promise<number> {
       {
         indexPath: config.INDEX_PATH,
         allowlist: config.FULLTEXT_LICENSE_ALLOWLIST,
-        modelVersion: MODEL_VERSION,
+        model,
         clock,
         logger,
       },
@@ -101,13 +112,35 @@ async function main(argv: readonly string[]): Promise<number> {
         .split('\n')
         .map((line) => line.trim())
         .filter((line) => line !== '' && !line.startsWith('#')),
-      { sourcePath: from, indexPath: out, modelVersion: MODEL_VERSION, clock, logger },
+      { sourcePath: from, indexPath: out, model, clock, logger },
       controller.signal,
     );
     const { written, missing, verify, committed } = outcome;
     logger.info(
       { written, missing, verify },
       committed ? 'Subset index written' : 'Subset failed verification; nothing was written',
+    );
+    return committed ? 0 : 1;
+  }
+  if (command === 'reembed') {
+    const { values } = parseArgs({
+      args: argv.slice(1),
+      options: { from: { type: 'string' }, out: { type: 'string' } },
+    });
+    const { from, out } = values;
+    if (from === undefined || out === undefined || resolve(from) === resolve(out)) {
+      process.stderr.write(`${USAGE}\n`);
+      return 2;
+    }
+    mkdirSync(dirname(out), { recursive: true });
+    const outcome = await reembedIndex(
+      { sourcePath: from, indexPath: out, embedder: await loadOnnxEmbedder(config), clock, logger },
+      controller.signal,
+    );
+    const { written, kept, chunks, verify, committed } = outcome;
+    logger.info(
+      { model: model.version, written, kept, chunks, verify },
+      committed ? 'Re-embedded index written' : 'Re-embedded index failed verification',
     );
     return committed ? 0 : 1;
   }

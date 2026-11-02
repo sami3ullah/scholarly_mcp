@@ -1,5 +1,5 @@
 import type { Doi } from '@scholarly-mcp/core';
-import { aChunk, anArticle } from '@scholarly-mcp/testkit';
+import { aChunk, anArticle, TEST_EMBEDDING_DIMENSIONS } from '@scholarly-mcp/testkit';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createSqliteIndexStore, type SqliteIndexStore } from '../create-sqlite-index-store.js';
 import { createIndexSchema } from '../database/index-schema.js';
@@ -22,7 +22,7 @@ describe('SQLite lexical search with German text', () => {
 
   beforeEach(async () => {
     const db = openDatabase(':memory:');
-    createIndexSchema(db);
+    createIndexSchema(db, { dimensions: TEST_EMBEDDING_DIMENSIONS });
     store = createSqliteIndexStore(db);
     await store.writer.upsert(
       articles.map(([doi, title, text]) => ({

@@ -1,4 +1,3 @@
-import { EMBEDDING_DIMENSIONS } from '@scholarly-mcp/core';
 import type { Db } from './open-database.js';
 
 /**
@@ -18,7 +17,7 @@ export const INDEX_SCHEMA_VERSION = 2;
  * `sync_state` lives in the index file on purpose: a page's articles and the checkpoint
  * after it are built into the same file, so they can never disagree after a crash.
  */
-const SCHEMA = `
+const schema = (dimensions: number) => `
 CREATE TABLE articles (
   doi TEXT PRIMARY KEY,
   record TEXT NOT NULL,
@@ -62,7 +61,7 @@ CREATE VIRTUAL TABLE chunks_trigram USING fts5 (
 
 CREATE TABLE vec_chunks (
   rowid INTEGER PRIMARY KEY,
-  embedding BLOB NOT NULL CHECK (length(embedding) = ${String(EMBEDDING_DIMENSIONS * 4)}),
+  embedding BLOB NOT NULL CHECK (length(embedding) = ${String(dimensions * 4)}),
   language TEXT,
   year INTEGER NOT NULL,
   issn_print TEXT,
@@ -92,10 +91,13 @@ CREATE TABLE index_build (
 ) STRICT;
 `;
 
-/** Creates the index tables in an empty database. */
-export function createIndexSchema(db: Db): void {
+/** Creates the index tables in an empty database, for vectors of `dimensions` floats. */
+export function createIndexSchema(db: Db, options: { readonly dimensions: number }): void {
+  if (!Number.isInteger(options.dimensions) || options.dimensions < 1) {
+    throw new RangeError(`Invalid embedding dimensions ${String(options.dimensions)}`);
+  }
   db.transaction(() => {
-    db.exec(SCHEMA);
+    db.exec(schema(options.dimensions));
     db.pragma(`user_version = ${String(INDEX_SCHEMA_VERSION)}`);
   })();
 }
@@ -103,4 +105,16 @@ export function createIndexSchema(db: Db): void {
 /** The layout version of an index file, 0 for a file without one. */
 export function indexSchemaVersion(db: Db): number {
   return Number(db.pragma('user_version', { simple: true }));
+}
+
+/**
+ * The vector size an index file was created for, read from its `vec_chunks` check, or
+ * undefined for a file without the table.
+ */
+export function embeddingDimensionsOf(db: Db): number | undefined {
+  const row = db
+    .prepare<[], { sql: string }>("SELECT sql FROM sqlite_master WHERE name = 'vec_chunks'")
+    .get();
+  const bytes = row && /length\(embedding\) = (\d+)/.exec(row.sql)?.[1];
+  return bytes ? Number(bytes) / 4 : undefined;
 }

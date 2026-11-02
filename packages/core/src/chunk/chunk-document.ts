@@ -46,6 +46,15 @@ export type ChunkDraft = Omit<Chunk, 'embedding' | 'modelVersion'> & {
   readonly overlapLength: number;
 };
 
+/**
+ * The text a chunk is embedded from: its own text with the article title in front, except a
+ * `metadata` chunk, which already is the title. A re-embedding with another model rebuilds
+ * it from a stored chunk (ADR 0028).
+ */
+export function embeddingTextOf(title: string, chunk: Pick<Chunk, 'origin' | 'text'>): string {
+  return chunk.origin === 'metadata' ? chunk.text : `${title}\n\n${chunk.text}`;
+}
+
 export const DEFAULT_CHUNKING = {
   maxTokens: 400,
   minTokens: 200,
@@ -247,7 +256,7 @@ function toDraft(
     origin: section.origin,
     source: section.source,
     ...(section.licenseUrl !== undefined && { licenseUrl: section.licenseUrl }),
-    embeddingText: section.origin === 'metadata' ? text : `${document.title}\n\n${text}`,
+    embeddingText: embeddingTextOf(document.title, { origin: section.origin, text }),
     overlapLength: text.length - freshText.length,
   };
 }

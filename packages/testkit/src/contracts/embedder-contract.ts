@@ -1,4 +1,4 @@
-import { EMBEDDING_DIMENSIONS, type Embedder } from '@scholarly-mcp/core';
+import type { Embedder } from '@scholarly-mcp/core';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 /** Options for {@link runEmbedderContract}. */
@@ -43,9 +43,9 @@ export function runEmbedderContract(name: string, options: EmbedderContractOptio
       embedder = await create();
     }, timeoutMs);
 
-    it('names its model and has the index dimensions', () => {
+    it('names its model and its vector size', () => {
       expect(embedder.modelVersion).toMatch(/\S/);
-      expect(embedder.dimensions).toBe(EMBEDDING_DIMENSIONS);
+      expect(Number.isInteger(embedder.dimensions) && embedder.dimensions > 0).toBe(true);
     });
 
     it('returns one normalised vector per passage, in order', async () => {
@@ -53,7 +53,7 @@ export function runEmbedderContract(name: string, options: EmbedderContractOptio
       expect(vectors).toHaveLength(TEXTS.length);
       for (const vector of vectors) {
         expect(vector).toBeInstanceOf(Float32Array);
-        expect(vector).toHaveLength(EMBEDDING_DIMENSIONS);
+        expect(vector).toHaveLength(embedder.dimensions);
         expect(norm(vector)).toBeCloseTo(1, 3);
       }
       const single = await embedder.embedPassages([TEXTS[1] ?? ''], signal);
@@ -70,7 +70,7 @@ export function runEmbedderContract(name: string, options: EmbedderContractOptio
         embedder.embedQuery(TEXTS[0] ?? '', signal),
       ]);
       const other = await embedder.embedQuery(TEXTS[2] ?? '', signal);
-      expect(first).toHaveLength(EMBEDDING_DIMENSIONS);
+      expect(first).toHaveLength(embedder.dimensions);
       expect(norm(first)).toBeCloseTo(1, 3);
       expect(again).toEqual(first);
       expect(other).not.toEqual(first);

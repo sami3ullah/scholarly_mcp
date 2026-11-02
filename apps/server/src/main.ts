@@ -3,7 +3,7 @@ import { mkdirSync, readFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { serveStdio } from '@modelcontextprotocol/server/stdio';
 import { parseConfig, type Clock } from '@scholarly-mcp/core';
-import { MODEL_VERSION, loadOnnxEmbedder } from '@scholarly-mcp/embedder-onnx';
+import { loadOnnxEmbedder } from '@scholarly-mcp/embedder-onnx';
 import { createLogger } from '@scholarly-mcp/logger';
 import { searchOptionsFrom } from '@scholarly-mcp/search';
 import {
@@ -39,7 +39,10 @@ async function main(): Promise<void> {
   ).version;
 
   const embedder = await loadOnnxEmbedder(config);
-  const index = createLiveIndex(() => openIndexReader(config.INDEX_PATH, MODEL_VERSION), logger);
+  const index = createLiveIndex(
+    () => openIndexReader(config.INDEX_PATH, embedder.modelVersion),
+    logger,
+  );
   index.refresh();
   mkdirSync(dirname(config.RUNTIME_DB_PATH), { recursive: true });
   const runtimeDb = openRuntimeDatabase(config.RUNTIME_DB_PATH);

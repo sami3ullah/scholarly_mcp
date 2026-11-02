@@ -1,6 +1,8 @@
 import { existsSync } from 'node:fs';
 import {
   appError,
+  chunkSchema,
+  embeddingTextOf,
   type ArticleEnricher,
   type ArticleRecord,
   type Clock,
@@ -35,7 +37,7 @@ export interface IngestIndexDeps {
   readonly source: Source;
   /** Europe PMC subjects and matching-only full text, when `EUROPEPMC_ENABLED` (ADR 0024). */
   readonly enricher?: ArticleEnricher;
-  /** Loaded only once a run is certain, as loading the model takes seconds. */
+  /** Loaded first: the plan depends on whether the live index used the same model. */
   readonly loadEmbedder: () => Promise<Embedder>;
   readonly clock: Clock;
   readonly logger: Logger;
@@ -68,16 +70,29 @@ export async function ingestIndex(
     const liveStore = currentLayout ? createSqliteIndexStore(live) : undefined;
     const liveArticles = live === undefined ? 0 : articleCountOf(live);
     const liveState = await liveStore?.syncState.load(deps.source.name, signal);
+    const liveModel = (await liveStore?.reader.indexMeta(signal))?.modelVersion;
+    const embedder = await deps.loadEmbedder();
     const plan = planRun(
       command,
-      live && { syncState: liveState, currentLayout },
+      live && {
+        syncState: liveState,
+        currentLayout,
+        sameModel: liveModel === undefined || liveModel === embedder.modelVersion,
+      },
       clock.now(),
       deps.fullRunDays,
     );
-    logger.info({ kind: plan.kind, reason: plan.reason }, 'Ingest planned');
+    logger.info(
+      { kind: plan.kind, reason: plan.reason, model: embedder.modelVersion },
+      'Ingest planned',
+    );
 
-    const embedder = await deps.loadEmbedder();
-    const build = beginIndexBuild({ indexPath, kind: plan.kind, now: clock.now() });
+    const build = beginIndexBuild({
+      indexPath,
+      kind: plan.kind,
+      now: clock.now(),
+      dimensions: embedder.dimensions,
+    });
     try {
       const report = await runIngest(
         {
@@ -129,11 +144,17 @@ export async function ingestIndex(
 }
 
 /** What `ingest purge-license` needs. */
+/** The embedding model an index command works with, known before the model is loaded. */
+export interface IndexModel {
+  readonly version: string;
+  readonly dimensions: number;
+}
+
 export interface PurgeDeps {
   readonly indexPath: string;
   /** `FULLTEXT_LICENSE_ALLOWLIST`; the licence to purge must no longer be on it. */
   readonly allowlist: readonly string[];
-  readonly modelVersion: string;
+  readonly model: IndexModel;
   readonly clock: Clock;
   readonly logger: Logger;
 }
@@ -164,12 +185,17 @@ export async function purgeLicense(
       { field: 'FULLTEXT_LICENSE_ALLOWLIST' },
     );
   }
-  const { indexPath, clock } = deps;
-  const build = beginIndexBuild({ indexPath, kind: 'purge', now: clock.now() });
+  const { indexPath, clock, model } = deps;
+  const build = beginIndexBuild({
+    indexPath,
+    kind: 'purge',
+    now: clock.now(),
+    dimensions: model.dimensions,
+  });
   try {
     const purged = await build.store.purgeFullText(licenseUrl, signal);
     deps.logger.info({ ...purged }, 'Full text purged from the build');
-    const verify = await verifyIndex(build.db, { modelVersion: deps.modelVersion }, signal);
+    const verify = await verifyIndex(build.db, { modelVersion: model.version }, signal);
     if (!verify.ok) {
       build.discard();
       return { purged, verify, committed: false };
@@ -177,7 +203,7 @@ export async function purgeLicense(
     const builtAt = clock.now();
     build.commit({
       version: builtAt.toISOString(),
-      modelVersion: deps.modelVersion,
+      modelVersion: model.version,
       articleCount: verify.articleCount,
       chunkCount: verify.chunkCount,
       builtAt,
@@ -194,7 +220,7 @@ export interface SubsetDeps {
   readonly sourcePath: string;
   /** Where the subset index is built and swapped in. */
   readonly indexPath: string;
-  readonly modelVersion: string;
+  readonly model: IndexModel;
   readonly clock: Clock;
   readonly logger: Logger;
 }
@@ -224,10 +250,11 @@ export async function extractSubset(
   try {
     const store = createSqliteIndexStore(source);
     const meta = await store.reader.indexMeta(signal);
-    if (meta?.modelVersion !== deps.modelVersion) {
+    const { model } = deps;
+    if (meta?.modelVersion !== model.version) {
       throw appError(
         'INVALID_INPUT',
-        `The source index was built with ${meta?.modelVersion ?? 'no model'}, not ${deps.modelVersion}`,
+        `The source index was built with ${meta?.modelVersion ?? 'no model'}, not ${model.version}`,
         { field: 'from' },
       );
     }
@@ -235,6 +262,7 @@ export async function extractSubset(
       indexPath: deps.indexPath,
       kind: 'full',
       now: deps.clock.now(),
+      dimensions: model.dimensions,
     });
     try {
       const missing: string[] = [];
@@ -250,7 +278,7 @@ export async function extractSubset(
         await build.store.writer.upsert(records, signal);
         written += records.length;
       }
-      const verify = await verifyIndex(build.db, { modelVersion: deps.modelVersion }, signal);
+      const verify = await verifyIndex(build.db, { modelVersion: model.version }, signal);
       if (!verify.ok) {
         build.discard();
         return { written, missing, verify, committed: false };
@@ -258,7 +286,7 @@ export async function extractSubset(
       const builtAt = deps.clock.now();
       build.commit({
         version: builtAt.toISOString(),
-        modelVersion: deps.modelVersion,
+        modelVersion: model.version,
         articleCount: verify.articleCount,
         chunkCount: verify.chunkCount,
         builtAt,
@@ -271,6 +299,110 @@ export async function extractSubset(
   } finally {
     source.close();
   }
+}
+
+export interface ReembedDeps {
+  /** The index whose chunks are re-embedded; it is only read. */
+  readonly sourcePath: string;
+  /** Where the re-embedded index is built and swapped in. */
+  readonly indexPath: string;
+  readonly embedder: Embedder;
+  readonly clock: Clock;
+  readonly logger: Logger;
+}
+
+export interface ReembedOutcome {
+  readonly written: number;
+  /** Articles a resumed build already held, so they were not embedded again. */
+  readonly kept: number;
+  readonly chunks: number;
+  readonly verify: VerifyReport;
+  readonly committed: boolean;
+}
+
+/**
+ * `ingest reembed`: builds a copy of an index whose chunks are embedded again by another
+ * model, chunking unchanged, to compare models on the same text (SM-16, ADR 0028). Each
+ * chunk is embedded from its stored text with the article title in front, as at ingestion,
+ * so full text is never fetched again. An interrupted run resumes: articles already in the
+ * build are kept.
+ */
+export async function reembedIndex(
+  deps: ReembedDeps,
+  signal: AbortSignal,
+): Promise<ReembedOutcome> {
+  const { embedder, clock, logger } = deps;
+  const source = openDatabase(deps.sourcePath, { readonly: true, mustExist: true });
+  try {
+    const store = createSqliteIndexStore(source);
+    const dois = source.prepare('SELECT doi FROM articles ORDER BY doi').pluck().all() as Doi[];
+    const build = beginIndexBuild({
+      indexPath: deps.indexPath,
+      kind: 'full',
+      now: clock.now(),
+      dimensions: embedder.dimensions,
+    });
+    try {
+      const counts = { written: 0, kept: 0, chunks: 0 };
+      for (let start = 0; start < dois.length; start += SUBSET_BATCH) {
+        const records: ArticleRecord[] = [];
+        for (const doi of dois.slice(start, start + SUBSET_BATCH)) {
+          const record = await store.findRecord(doi, signal);
+          if (record === undefined) continue;
+          const held = await build.store.writer.contentHashOf(doi, signal);
+          if (held === record.article.contentHash) {
+            counts.kept += 1;
+            continue;
+          }
+          records.push(await reembedRecord(record, embedder, signal));
+          counts.chunks += record.chunks.length;
+        }
+        await build.store.writer.upsert(records, signal);
+        counts.written += records.length;
+        logger.info({ ...counts, of: dois.length }, 'Re-embedded batch written');
+      }
+      const verify = await verifyIndex(build.db, { modelVersion: embedder.modelVersion }, signal);
+      if (!verify.ok) {
+        build.discard();
+        return { ...counts, verify, committed: false };
+      }
+      const builtAt = clock.now();
+      build.commit({
+        version: builtAt.toISOString(),
+        modelVersion: embedder.modelVersion,
+        articleCount: verify.articleCount,
+        chunkCount: verify.chunkCount,
+        builtAt,
+      });
+      return { ...counts, verify, committed: true };
+    } catch (error) {
+      if (build.db.open) build.close();
+      throw error;
+    }
+  } finally {
+    source.close();
+  }
+}
+
+async function reembedRecord(
+  record: ArticleRecord,
+  embedder: Embedder,
+  signal: AbortSignal,
+): Promise<ArticleRecord> {
+  const { article, chunks } = record;
+  const vectors = await embedder.embedPassages(
+    chunks.map((chunk) => embeddingTextOf(article.title, chunk)),
+    signal,
+  );
+  return {
+    article,
+    chunks: chunks.map((chunk, i) => {
+      const embedding = vectors[i];
+      if (embedding === undefined)
+        throw new Error(`The embedder returned no vector for ${chunk.id}`);
+      return chunkSchema.parse({ ...chunk, embedding, modelVersion: embedder.modelVersion });
+    }),
+  };
 }
 
 /** `ingest verify`: checks the live index as it is, without changing it. */

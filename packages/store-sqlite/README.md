@@ -20,7 +20,12 @@ The default store (key design decision 4): one SQLite file per index with FTS5, 
 
 ```ts
 // Ingest: build, verify, swap.
-const build = beginIndexBuild({ indexPath, kind: 'incremental', now: clock.now() });
+const build = beginIndexBuild({
+  indexPath,
+  kind: 'incremental',
+  now: clock.now(),
+  dimensions: embedder.dimensions,
+});
 await build.store.writer.upsert(records, signal);
 const report = await verifyIndex(build.db, { modelVersion: embedder.modelVersion }, signal);
 if (report.ok) build.commit(meta);

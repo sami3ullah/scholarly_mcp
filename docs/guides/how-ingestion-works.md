@@ -156,7 +156,7 @@ Code: `packages/core/src/chunk/` ([ADR 0021](../adr/0021-chunking-language-and-e
 
 Code: `packages/embedder-onnx`
 
-The model (`Xenova/multilingual-e5-small`, pinned revision, 8-bit weights) runs in-process. Each chunk is embedded with the prefix `passage: `; queries later get `query: `, as e5 models expect. One text at a time, so the same text always gives the same vector. `MODEL_VERSION` is stored with every chunk; an index never mixes models.
+The model (by default `Xenova/multilingual-e5-small`, pinned revision, 8-bit weights; `EMBEDDER_MODEL` picks another, ADR 0028) runs in-process. Each chunk is embedded with the prefix `passage: `; queries later get `query: `, as e5 models expect. One text at a time, so the same text always gives the same vector. The model version is stored with every chunk; an index never mixes models.
 
 ### 9. Write the page and the checkpoint
 

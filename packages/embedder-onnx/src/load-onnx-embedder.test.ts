@@ -6,7 +6,7 @@ import { chunkDocument, doiSchema, type Embedder } from '@scholarly-mcp/core';
 import { runEmbedderContract } from '@scholarly-mcp/testkit';
 import { describe, expect, it } from 'vitest';
 import { loadOnnxEmbedder } from './load-onnx-embedder.js';
-import { MODEL_MAX_TOKENS } from './model.js';
+import { EMBEDDING_MODELS, type EmbeddingModelName } from './model.js';
 
 /** Shared with CI's cache step, so the model downloads once per revision. */
 const CACHE_DIR = fileURLToPath(new URL('../../../.cache/models', import.meta.url));
@@ -14,22 +14,42 @@ const CACHE_DIR = fileURLToPath(new URL('../../../.cache/models', import.meta.ur
 const TIMEOUT_MS = 300_000;
 const signal = new AbortController().signal;
 
-let loading: Promise<Embedder> | undefined;
-function embedder(): Promise<Embedder> {
-  loading ??= loadOnnxEmbedder({
-    EMBEDDER_CACHE_DIR: CACHE_DIR,
-    EMBEDDER_ALLOW_REMOTE: true,
-    EMBEDDER_BATCH_SIZE: 1,
-    EMBEDDER_CONCURRENCY: 1,
-  });
-  return loading;
+/**
+ * The candidate models of SM-16 are hundreds of MB each, so their contract runs only when
+ * asked for, e.g. `EMBEDDER_CANDIDATE_TESTS=bge-m3,multilingual-e5-base`.
+ */
+const CANDIDATES = (process.env['EMBEDDER_CANDIDATE_TESTS'] ?? '')
+  .split(',')
+  .map((name) => name.trim())
+  .filter((name): name is EmbeddingModelName => name in EMBEDDING_MODELS);
+
+const loading = new Map<EmbeddingModelName, Promise<Embedder>>();
+function embedder(name: EmbeddingModelName = 'multilingual-e5-small'): Promise<Embedder> {
+  let model = loading.get(name);
+  if (model === undefined) {
+    model = loadOnnxEmbedder({
+      EMBEDDER_MODEL: name,
+      EMBEDDER_CACHE_DIR: CACHE_DIR,
+      EMBEDDER_ALLOW_REMOTE: true,
+      EMBEDDER_BATCH_SIZE: 1,
+      EMBEDDER_CONCURRENCY: 1,
+    });
+    loading.set(name, model);
+  }
+  return model;
 }
 
 function cosine(a: Float32Array, b: Float32Array): number {
   return a.reduce((sum, value, index) => sum + value * (b[index] ?? 0), 0);
 }
 
-runEmbedderContract('onnx multilingual-e5-small', { create: embedder, timeoutMs: TIMEOUT_MS });
+runEmbedderContract('onnx multilingual-e5-small', {
+  create: () => embedder(),
+  timeoutMs: TIMEOUT_MS,
+});
+for (const name of CANDIDATES) {
+  runEmbedderContract(`onnx ${name}`, { create: () => embedder(name), timeoutMs: TIMEOUT_MS });
+}
 
 describe('loadOnnxEmbedder', { timeout: TIMEOUT_MS }, () => {
   it('matches a German query to the English passage on its topic', async () => {
@@ -84,7 +104,7 @@ describe('loadOnnxEmbedder', { timeout: TIMEOUT_MS }, () => {
       expect(chunk.tokenCount).toBeLessThanOrEqual(400);
       // `passage: ` plus the two special tokens the model adds.
       const read = model.countTokens(`passage: ${chunk.embeddingText}`) + 2;
-      expect(read).toBeLessThanOrEqual(MODEL_MAX_TOKENS);
+      expect(read).toBeLessThanOrEqual(EMBEDDING_MODELS['multilingual-e5-small'].maxTokens);
     }
   });
 
@@ -92,6 +112,7 @@ describe('loadOnnxEmbedder', { timeout: TIMEOUT_MS }, () => {
     const empty = await mkdtemp(join(tmpdir(), 'embedder-'));
     await expect(
       loadOnnxEmbedder({
+        EMBEDDER_MODEL: 'multilingual-e5-small',
         EMBEDDER_CACHE_DIR: empty,
         EMBEDDER_ALLOW_REMOTE: false,
         EMBEDDER_BATCH_SIZE: 1,

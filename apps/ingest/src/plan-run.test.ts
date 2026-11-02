@@ -5,6 +5,7 @@ const now = new Date('2026-11-09T10:00:00Z');
 const daysAgo = (days: number) => new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
 const live = (lastFullRunAt?: Date) => ({
   currentLayout: true,
+  sameModel: true,
   syncState: {
     source: 'crossref',
     lastRunStatus: 'succeeded' as const,
@@ -36,6 +37,13 @@ describe('planRun', () => {
     expect(planRun('incremental', { ...live(daysAgo(1)), currentLayout: false }, now, 7)).toEqual({
       kind: 'full',
       reason: 'index layout changed',
+    });
+  });
+
+  it('runs full when the index was built with another embedding model', () => {
+    expect(planRun('incremental', { ...live(daysAgo(1)), sameModel: false }, now, 7)).toEqual({
+      kind: 'full',
+      reason: 'embedding model changed',
     });
   });
 
