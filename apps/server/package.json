@@ -1,0 +1,30 @@
+{
+  "name": "@scholarly-mcp/server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "scholarly-mcp": "./dist/main.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/node": "2.1.2",
+    "@modelcontextprotocol/server": "2.4.0",
+    "@scholarly-mcp/cite": "workspace:*",
+    "@scholarly-mcp/core": "workspace:*",
+    "@scholarly-mcp/embedder-onnx": "workspace:*",
+    "@scholarly-mcp/logger": "workspace:*",
+    "@scholarly-mcp/search": "workspace:*",
+    "@scholarly-mcp/store-sqlite": "workspace:*",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "2.4.0",
+    "@scholarly-mcp/testkit": "workspace:*",
+    "fast-check": "^4.10.2",
+    "vitest": "^5.0.5"
+  }
+}

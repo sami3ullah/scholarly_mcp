@@ -51,6 +51,14 @@ module.exports = {
       to: { pathNot: ['^packages/(core|search)/', 'node_modules/zod'] },
     },
     {
+      name: 'cite-only-core',
+      comment:
+        'citations are pure formatting: core, zod and citation-js only, no adapters, apps or testkit',
+      severity: 'error',
+      from: { path: '^packages/cite/src', pathNot: '\\.test\\.ts$' },
+      to: { path: '^(packages/(source|store|embedder|search|logger|http|testkit)|apps/)' },
+    },
+    {
       name: 'testkit-not-apps',
       severity: 'error',
       from: { path: '^packages/testkit' },

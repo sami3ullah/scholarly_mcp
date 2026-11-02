@@ -8,6 +8,7 @@ export default defineConfig({
       include: [
         'packages/core/src/**',
         'packages/search/src/**',
+        'packages/cite/src/**',
         'packages/logger/src/**',
         'packages/http/src/**',
         'packages/source-*/src/**',
@@ -15,6 +16,7 @@ export default defineConfig({
         'packages/store-*/src/**',
         'apps/ingest/src/**',
         'apps/eval/src/**',
+        'apps/server/src/**',
       ],
       exclude: ['**/index.ts', '**/main.ts', '**/*.test.ts', '**/testing/**'],
       thresholds: { lines: 85 },
