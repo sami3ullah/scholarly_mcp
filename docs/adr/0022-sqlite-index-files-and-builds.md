@@ -32,6 +32,6 @@ The plan lists the SQLite tables and says the index is built into a new file, ve
 - Sessions and metering survive every index rebuild; the runtime file has its own append-only migrations.
 - A full run still re-fetches all records from Crossref (about 72 pages of 1,000), but embedding cost is paid once per changed article.
 - Changing stemming, folding or the table layout requires bumping `INDEX_SCHEMA_VERSION`; incremental runs then refuse the old file and a full run rebuilds it.
-- The exact scan grows linearly with chunks: about 60 ms at 90k, so roughly 0.7 s at 1M. Past that, sqlite-vec KNN with metadata columns (and a second query per ISSN column) or the Postgres adapter with HNSW is the way out.
+- The exact scan grows linearly with chunks: through the store port it measured 95 ms p95 unfiltered and 51 ms filtered at 90k chunks (layout 2, 551 MB file), so roughly 0.7 s at 1M. Past that, sqlite-vec KNN with metadata columns (and a second query per ISSN column) or the Postgres adapter with HNSW is the way out.
 - sqlite-vec is used only for its distance function, which removes the pre-1.0 vec0 storage format from the risk list in ADR 0009.
 - A language filter of `de` excludes an article declared German whose matching passage is English; the card still shows the declared language.

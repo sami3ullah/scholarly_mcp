@@ -10,7 +10,7 @@
 - [x] `apps/ingest` CLI: `ingest full`, `ingest incremental`, `ingest verify`
 - [x] Incremental runs take `updatedSince` from core `incrementalWindow` (1-day overlap, failed runs retry their window); checkpoint `SyncState` after every page; schedule a periodic full run so embargoed licences open (ADR 0020)
 
-- [ ] Exit check on the layout-2 index (see handoff)
+- [x] Exit check on the layout-2 index: 70,911 articles / 89,388 chunks from scratch in 25 min, second run `written: 0`, verify 17/17
 
 ## Exit
 

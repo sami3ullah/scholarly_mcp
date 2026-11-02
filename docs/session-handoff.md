@@ -60,3 +60,8 @@ Append-only. Newest entry at the bottom.
   5. Then SM-07 (search service), recommended before SM-06.
 - **Gotchas:** without `nvm use`, better-sqlite3 segfaults (wrong Node). better-sqlite3 must not be in `onlyBuiltDependencies` (its prebuilds are used; node-gyp is absent). `data/` is gitignored. `verifyLiveIndex` opens read-write because the FTS5 integrity check is an INSERT. Bump `INDEX_SCHEMA_VERSION` on any schema or text-processing change.
 - **User preference:** after completing anything, end with copy-paste commands to run and verify it, with expected output.
+
+## 2026-11-02 - session 5, SM-05 done
+
+- **Exit check passed on layout 2:** `ingest incremental` auto-rebuilt in full (`index layout changed`), 70,911 articles / 89,388 chunks in 25 min, 551 MB; next incremental `written: 0`; `ingest verify` exit 0. Through the store port: vector top 50 p95 95 ms (51 ms filtered), lexical 2-13 ms.
+- **Next:** SM-07 search service (recommended before SM-06). `data/index.sqlite` is a real index to develop against.
