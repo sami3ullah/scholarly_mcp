@@ -1,0 +1,24 @@
+{
+  "name": "@scholarly-mcp/eval",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "eval": "./dist/main.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@scholarly-mcp/core": "workspace:*",
+    "@scholarly-mcp/embedder-onnx": "workspace:*",
+    "@scholarly-mcp/logger": "workspace:*",
+    "@scholarly-mcp/search": "workspace:*",
+    "@scholarly-mcp/store-sqlite": "workspace:*"
+  },
+  "devDependencies": {
+    "@scholarly-mcp/testkit": "workspace:*",
+    "vitest": "^5.0.5"
+  }
+}
