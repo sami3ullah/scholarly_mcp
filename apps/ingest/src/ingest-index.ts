@@ -1,8 +1,10 @@
 import { existsSync } from 'node:fs';
 import type { Clock, Embedder, Logger, Source } from '@scholarly-mcp/core';
 import {
+  INDEX_SCHEMA_VERSION,
   beginIndexBuild,
   createSqliteIndexStore,
+  indexSchemaVersion,
   openDatabase,
   verifyIndex,
   type Db,
@@ -49,12 +51,14 @@ export async function ingestIndex(
   const { indexPath, clock, logger } = deps;
   const live = existsSync(indexPath) ? openDatabase(indexPath, { readonly: true }) : undefined;
   try {
-    const liveStore = live && createSqliteIndexStore(live);
-    const liveMeta = await liveStore?.reader.indexMeta(signal);
+    // An index with an older layout is neither updated nor read for reuse; it is rebuilt.
+    const currentLayout = live !== undefined && indexSchemaVersion(live) === INDEX_SCHEMA_VERSION;
+    const liveStore = currentLayout ? createSqliteIndexStore(live) : undefined;
+    const liveArticles = live === undefined ? 0 : articleCountOf(live);
     const liveState = await liveStore?.syncState.load(deps.source.name, signal);
     const plan = planRun(
       command,
-      liveMeta && { syncState: liveState },
+      live && { syncState: liveState, currentLayout },
       clock.now(),
       deps.fullRunDays,
     );
@@ -78,7 +82,7 @@ export async function ingestIndex(
         build.db,
         {
           modelVersion: embedder.modelVersion,
-          minArticleCount: Math.ceil((liveMeta?.articleCount ?? 0) * (1 - MAX_SHRINK)),
+          minArticleCount: Math.ceil(liveArticles * (1 - MAX_SHRINK)),
         },
         signal,
       );
@@ -125,6 +129,11 @@ export async function verifyLiveIndex(
   } finally {
     db.close();
   }
+}
+
+/** Counted directly, as this works on any layout, old ones included. */
+function articleCountOf(db: Db): number {
+  return Number(db.prepare('SELECT count(*) FROM articles').pluck().get());
 }
 
 function closeLive(live: Db | undefined): void {

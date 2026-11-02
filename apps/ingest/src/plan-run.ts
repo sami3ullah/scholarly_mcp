@@ -9,6 +9,8 @@ export type IngestCommand = 'full' | 'incremental';
 /** What the live index says about the last runs, when there is a live index. */
 export interface LiveIndex {
   readonly syncState: SyncState | undefined;
+  /** False when the index file has an older layout, which only a full run can replace. */
+  readonly currentLayout: boolean;
 }
 
 /** The kind of build to run, and why, for the log. */
@@ -19,8 +21,8 @@ export interface RunPlan {
 
 /**
  * Decides whether a run is full or incremental. An incremental request becomes a full run
- * when there is no index to build on, or when the last full run is older than
- * `fullRunDays`, so a scheduler only ever needs to call `ingest incremental`.
+ * when there is no index to build on, when its layout is outdated, or when the last full run
+ * is older than `fullRunDays`, so a scheduler only ever needs to call `ingest incremental`.
  */
 export function planRun(
   command: IngestCommand,
@@ -30,6 +32,7 @@ export function planRun(
 ): RunPlan {
   if (command === 'full') return { kind: 'full', reason: 'requested' };
   if (live === undefined) return { kind: 'full', reason: 'no index yet' };
+  if (!live.currentLayout) return { kind: 'full', reason: 'index layout changed' };
   const lastFull = live.syncState?.lastFullRunAt;
   if (lastFull === undefined) return { kind: 'full', reason: 'no full run recorded' };
   if (now.getTime() - lastFull.getTime() >= fullRunDays * DAY_MS) {

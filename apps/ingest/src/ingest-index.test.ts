@@ -2,7 +2,7 @@ import { existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { appError, type Article, type Source } from '@scholarly-mcp/core';
-import { buildPathOf, openIndexReader } from '@scholarly-mcp/store-sqlite';
+import { buildPathOf, openDatabase, openIndexReader } from '@scholarly-mcp/store-sqlite';
 import { createFakeClock, createInMemorySource } from '@scholarly-mcp/testkit';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { ingestIndex, verifyLiveIndex, type IngestIndexDeps } from './ingest-index.js';
@@ -58,6 +58,20 @@ describe('ingestIndex on SQLite files', () => {
     const rebuild = await ingestIndex('full', deps(numbered(4)), signal);
     expect(rebuild.report).toMatchObject({ reused: 4, embedded: 0 });
     expect(embedder.calls()).toBe(before);
+  });
+
+  it('rebuilds an index with an older layout in full, still guarding against a shrink', async () => {
+    await ingestIndex('full', deps(numbered(10)), signal);
+    const db = openDatabase(indexPath);
+    db.pragma('user_version = 1');
+    db.close();
+    const shrunk = await ingestIndex('incremental', deps(numbered(5)), signal);
+    expect(shrunk).toMatchObject({
+      plan: { kind: 'full', reason: 'index layout changed' },
+      committed: false,
+    });
+    const rebuilt = await ingestIndex('incremental', deps(numbered(10)), signal);
+    expect(rebuilt).toMatchObject({ committed: true, report: { embedded: 10, reused: 0 } });
   });
 
   it('keeps the live index when the new one shrank too much', async () => {
