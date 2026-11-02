@@ -9,6 +9,8 @@ export interface OpenDatabaseOptions {
   readonly readonly?: boolean;
   /** WAL lets the server read while another process writes, for the runtime database. */
   readonly wal?: boolean;
+  /** Fails instead of creating an empty file; always true for read-only opens. */
+  readonly mustExist?: boolean;
 }
 
 /**
@@ -17,7 +19,10 @@ export interface OpenDatabaseOptions {
  */
 export function openDatabase(path: string, options: OpenDatabaseOptions = {}): Db {
   const readonly = options.readonly === true;
-  const db = new Database(path, { readonly, fileMustExist: readonly });
+  const db = new Database(path, {
+    readonly,
+    fileMustExist: readonly || options.mustExist === true,
+  });
   try {
     sqliteVec.load(db);
     db.pragma('foreign_keys = ON');

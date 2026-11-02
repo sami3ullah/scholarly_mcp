@@ -17,7 +17,8 @@
     "depcruise": "depcruise packages apps --config .dependency-cruiser.cjs",
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm depcruise && pnpm test:coverage",
     "prepare": "husky",
-    "build:packages": "turbo run build --output-logs=errors-only"
+    "build:packages": "turbo run build --output-logs=errors-only",
+    "ingest": "pnpm build:packages && node --env-file-if-exists=.env apps/ingest/dist/main.js"
   },
   "devDependencies": {
     "@changesets/cli": "^3.0.3",

@@ -23,6 +23,8 @@ export interface IndexBuild {
   commit(meta: IndexMeta): void;
   /** Closes the file and keeps it, so the next run of the same kind resumes it. */
   close(): void;
+  /** Closes and deletes the file, e.g. when it failed verification. */
+  discard(): void;
 }
 
 /** Where a build of the index at `indexPath` is written. */
@@ -82,6 +84,10 @@ function indexBuild(
     },
     close() {
       db.close();
+    },
+    discard() {
+      db.close();
+      removeDatabaseFiles(where.buildPath);
     },
   };
 }

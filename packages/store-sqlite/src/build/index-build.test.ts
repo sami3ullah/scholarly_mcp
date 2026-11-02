@@ -91,6 +91,14 @@ describe('index builds', () => {
     reader.close();
   });
 
+  it('deletes a discarded build, so the next run starts over', async () => {
+    const build = beginIndexBuild({ indexPath, kind: 'full', now });
+    await build.store.writer.upsert([recordNumber(1)], signal);
+    build.discard();
+    expect(existsSync(buildPathOf(indexPath))).toBe(false);
+    expect(beginIndexBuild({ indexPath, kind: 'full', now }).resumed).toBe(false);
+  });
+
   it('refuses an incremental build when there is no live index', () => {
     let error: unknown;
     try {
