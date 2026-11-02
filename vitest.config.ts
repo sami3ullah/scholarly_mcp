@@ -7,11 +7,13 @@ export default defineConfig({
       provider: 'v8',
       include: [
         'packages/core/src/**',
+        'packages/search/src/**',
         'packages/logger/src/**',
         'packages/source-*/src/**',
         'packages/embedder-*/src/**',
         'packages/store-*/src/**',
         'apps/ingest/src/**',
+        'apps/eval/src/**',
       ],
       exclude: ['**/index.ts', '**/main.ts', '**/*.test.ts', '**/testing/**'],
       thresholds: { lines: 85 },

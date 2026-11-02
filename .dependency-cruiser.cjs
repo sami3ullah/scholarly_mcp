@@ -15,7 +15,7 @@ module.exports = {
     {
       name: 'core-no-io-builtins',
       severity: 'error',
-      from: { path: '^packages/core/src' },
+      from: { path: '^packages/(core|search)/src' },
       to: {
         dependencyTypes: ['core'],
         path: '^(fs|http|https|net|child_process|node:fs|node:http|node:https|node:net|node:child_process)',
@@ -34,6 +34,14 @@ module.exports = {
       severity: 'error',
       from: { path: '^packages/logger/src' },
       to: { path: '^(packages/(source|store|embedder)-|packages/testkit|apps/)' },
+    },
+    {
+      name: 'search-only-core',
+      comment:
+        'the search service is core logic in its own package: core and zod only, no adapters, apps or I/O',
+      severity: 'error',
+      from: { path: '^packages/search/src', pathNot: '\\.test\\.ts$' },
+      to: { pathNot: ['^packages/(core|search)/', 'node_modules/zod'] },
     },
     {
       name: 'testkit-not-apps',
