@@ -8,6 +8,7 @@
 - [ ] `Origin` validation, CORS closed, body/query length limits
 - [ ] `/healthz`, `/readyz` (model + index loaded), `/metrics` (Prometheus), OpenTelemetry traces
 - [ ] Metering outbox with idempotency key; JSON-lines + webhook exporter with backoff; failed requests non-billable; never blocks requests
+- [ ] Build the outbox on the runtime database's `usage_events` table (created in SM-05, ADR 0022)
 - [ ] Mock `Entitlements` adapter
 - [ ] SIGTERM drains in-flight requests and flushes the outbox
 

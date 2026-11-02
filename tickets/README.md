@@ -10,7 +10,7 @@ Status values: `todo`, `in-progress`, `done`, `blocked`. Update the table when a
 | SM-02 | Core domain, ports, config, errors, testkit          | 1     | SM-01        | done                        |
 | SM-03 | Crossref source and normalisation pipeline           | 2     | SM-02        | done                        |
 | SM-04 | Chunker and ONNX embedder                            | 2     | SM-02        | done                        |
-| SM-05 | SQLite store and ingest CLI                          | 2     | SM-03, SM-04 | todo                        |
+| SM-05 | SQLite store and ingest CLI                          | 2     | SM-03, SM-04 | in-progress                 |
 | SM-06 | Europe PMC full-text source                          | 2     | SM-05        | todo                        |
 | SM-07 | Search service                                       | 3     | SM-05        | todo                        |
 | SM-08 | Golden set, eval and tuning                          | 3     | SM-07        | todo                        |

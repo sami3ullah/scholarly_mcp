@@ -23,15 +23,20 @@ Everything beyond the quick start lives here. New guides are added as the featur
 | [Edge cases](PLAN.md#edge-cases-and-failure-handling)    | How ingestion, search, the server and landing pages handle failure         |
 | [Crossref source](../packages/source-crossref/README.md) | Configuration, usage and fixtures of the Crossref adapter                  |
 | [ONNX embedder](../packages/embedder-onnx/README.md)     | Configuration and usage of the embedding model adapter                     |
+| [SQLite store](../packages/store-sqlite/README.md)       | Index and runtime files, text matching, build and swap                     |
+| [Ingest CLI](../apps/ingest/README.md)                   | Commands and configuration of the ingestion CLI                            |
 
 ## Guides
 
-Written as each part ships. Planned:
+| Guide                            | What's inside                                |
+| -------------------------------- | -------------------------------------------- |
+| [Ingestion](guides/ingestion.md) | Building, refreshing and verifying the index |
+
+Planned:
 
 | Guide                                                               | Ships with |
 | ------------------------------------------------------------------- | ---------- |
 | `guides/development.md` - local setup, scripts, testing conventions | SM-02      |
-| `guides/ingestion.md` - building and refreshing the index           | SM-05      |
 | `guides/connecting-clients.md` - Claude, ChatGPT and MCP Inspector  | SM-09      |
 | `ADAPTERS.md` - plugging in your own content API or store           | SM-13      |
 | `LANDING.md` - rebuilding the landing page in your own stack        | SM-11      |

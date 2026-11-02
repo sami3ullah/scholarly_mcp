@@ -27,3 +27,4 @@ Each ADR records one decision: the context, what we chose and what follows from 
 | [0019](0019-logger-package-and-core-boundaries.md)      | Logger package, logging port and core's ambient types            | accepted |
 | [0020](0020-crossref-source-ingestion-rules.md)         | Crossref source: paging, notices, retractions and failure rules  | accepted |
 | [0021](0021-chunking-language-and-embedder-rules.md)    | Chunking, per-chunk language and embedder rules                  | accepted |
+| [0022](0022-sqlite-index-files-and-builds.md)           | SQLite index files, text matching and builds                     | accepted |

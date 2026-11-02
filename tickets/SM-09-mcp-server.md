@@ -8,6 +8,7 @@
 - [ ] Tool descriptions per plan conventions; `notice` on every response; ~5 KB response cap
 - [ ] Error mapping in one place (`isError: true`, stable code, no stack)
 - [ ] Streamable HTTP + stdio transports
+- [ ] Open the index with `openIndexReader` and call `refresh()` on an interval so swapped-in builds are served; landing sessions in `RUNTIME_DB_PATH` (ADR 0022)
 - [ ] Protocol tests with the SDK client: list, call each, validate outputs
 
 ## Exit

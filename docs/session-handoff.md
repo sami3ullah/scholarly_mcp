@@ -46,3 +46,16 @@ Append-only. Newest entry at the bottom.
 - **Findings:** 9% of sample abstracts are English but declared `de` by Crossref; per-chunk detection handles it. q8 batching changes vectors (cos 0.99956) and is slower on CPU, so batch size defaults to 1 and the contract demands batch-independent vectors (1e-5). On the 500-record sample: no chunk > 400 tokens, max model input 431/512.
 - **Gotchas:** real-model tests cache the model in `.cache/models` (gitignored, ~135 MB, CI caches it keyed on the revision). First local run downloads it (~50 s). `Doi` is branded: use `doiSchema.parse` in tests.
 - **Next:** SM-05 SQLite store and ingest CLI. Use `articleSections` + `chunkDocument({ countTokens: embedder.countTokens })`, embed `embeddingText`, skip re-embedding on unchanged `contentHash`; use `incrementalWindow`, checkpoint per page, schedule periodic full runs. Decide whether article `language` is corrected from chunk languages (ADR 0021 consequence).
+
+## 2026-11-02 - session 5, SM-05 code done, exit check pending
+
+- **Done (all pushed):** `packages/store-sqlite` (index file: articles, chunks, folded + Snowball-stemmed FTS5, trigram FTS, `vec_chunks`, index_meta, sync_state; runtime file: landing_sessions, usage_events; build to `<INDEX_PATH>.building`, resume, verify, atomic rename; `openIndexReader` with `refresh()`), `apps/ingest` (`full`, `incremental`, `verify`; `pnpm ingest <cmd>` reads `.env`). Core: `SyncState.lastFullRunAt`. Testkit contract: lexical search also matches the article title. ADR 0022 records every decision, including the user-delegated one: article `language` stays as Crossref declares it; filters use chunk language with article fallback. Ingestion guide at `docs/guides/ingestion.md`. Follow-ups added to SM-07, SM-09, SM-10.
+- **Live results (layout 1):** 70,911 articles, 89,388 chunks, 508 MB, full build 23 min with `CROSSREF_ROWS=1000`; second incremental wrote 0 rows; verify passed 17/17. Vector scan was 1.2 s, so layout 2 moved vectors into a plain table carrying the filter columns: ~60 ms unfiltered, 32-40 ms filtered. Lexical 1-14 ms.
+- **In flight when this was written:** rebuild on layout 2 (`ingest incremental` auto-planned full, reason `index layout changed`), log `data/ingest-v2.log`.
+- **Next steps:**
+  1. Check `data/ingest-v2.log` ends with `Index swapped in`; if the process died, rerun the same command (it resumes the `.building` file): `CROSSREF_ROWS=1000 EMBEDDER_CACHE_DIR=.cache/models node --env-file=presets/thieme.env apps/ingest/dist/main.js incremental`.
+  2. Run it once more and confirm `written: 0`; then `... main.js verify` (exit 0).
+  3. Re-time vector search on the real index (expect ~60 ms).
+  4. Tick the exit task in `tickets/SM-05-sqlite-store-ingest.md`, mark SM-05 `done` in `tickets/README.md` and ✅ in the README roadmap, commit, push.
+  5. Then SM-07 (search service), recommended before SM-06.
+- **Gotchas:** without `nvm use`, better-sqlite3 segfaults (wrong Node). better-sqlite3 must not be in `onlyBuiltDependencies` (its prebuilds are used; node-gyp is absent). `data/` is gitignored. `verifyLiveIndex` opens read-write because the FTS5 integrity check is an INSERT. Bump `INDEX_SCHEMA_VERSION` on any schema or text-processing change.
