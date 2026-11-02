@@ -3,6 +3,7 @@ import {
   type Article,
   type ArticleSearch,
   type Chunk,
+  type Doi,
   type SearchFilters,
 } from '@scholarly-mcp/core';
 import {
@@ -193,6 +194,16 @@ describe('createSearchService', () => {
       expect(query?.terms).toEqual(
         expect.arrayContaining(['VHF', 'Vorhofflimmern', 'atrial fibrillation']),
       );
+    });
+
+    it('ranks an exact word match above a neighbour by meaning at the same rank', async () => {
+      const hit = (doi: string) => [{ chunkId: `${doi}#0`, doi: doi as Doi, rank: 1 }];
+      const search: ArticleSearch = {
+        lexical: () => Promise.resolve(hit('10.1055/a-3')),
+        vector: () => Promise.resolve(hit('10.1055/a-1')),
+      };
+      const { hits } = await service({ search }).search(request('duodenography'), signal);
+      expect(hits.map(({ article }) => article.doi)).toEqual(['10.1055/a-3', '10.1055/a-1']);
     });
 
     it('returns an empty page, not an error, when nothing matches', async () => {

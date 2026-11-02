@@ -66,6 +66,11 @@ export interface SearchOptions {
   readonly cacheSize: number;
   /** The RRF constant k. */
   readonly rrfK: number;
+  /**
+   * The weight of the lexical list in fusion; the vector list counts 1. Above 1, an exact
+   * word match beats a neighbour by meaning at the same rank (SM-08).
+   */
+  readonly lexicalWeight: number;
 }
 
 /** What the search service is built from. */

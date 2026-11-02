@@ -14,7 +14,9 @@ export const searchConfigSchema = z.object({
 export type SearchConfig = z.output<typeof searchConfigSchema>;
 
 /** The service options a parsed config sets. */
-export function searchOptionsFrom(config: SearchConfig): Omit<SearchOptions, 'rrfK'> {
+export function searchOptionsFrom(
+  config: SearchConfig,
+): Omit<SearchOptions, 'rrfK' | 'lexicalWeight'> {
   return {
     budgetMs: config.SEARCH_BUDGET_MS,
     candidates: config.SEARCH_CANDIDATES,

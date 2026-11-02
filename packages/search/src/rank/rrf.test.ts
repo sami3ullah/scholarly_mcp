@@ -23,6 +23,12 @@ describe('fuseRankings', () => {
     expect(fused.map(({ chunkId }) => chunkId)).toEqual(['a#0', 'z#0']);
   });
 
+  it('multiplies each list’s share by its weight', () => {
+    const fused = fuseRankings([[hit('lex#0', 1)], [hit('vec#0', 1)]], 60, [1.2, 1]);
+    expect(fused.map(({ chunkId }) => chunkId)).toEqual(['lex#0', 'vec#0']);
+    expect(fused[0]?.score).toBeCloseTo(1.2 / 61, 12);
+  });
+
   it('returns nothing for no hits', () => {
     expect(fuseRankings([[], []])).toEqual([]);
   });

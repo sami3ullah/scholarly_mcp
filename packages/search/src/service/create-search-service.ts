@@ -19,6 +19,13 @@ import type {
 import { relatedArticles } from './related-articles.js';
 import { withBudget } from './with-budget.js';
 
+/**
+ * Just above 1, so at the same rank an exact word match beats a neighbour by meaning, such
+ * as a rare word found only in one article's full text (SM-08). Larger weights lowered
+ * recall on the golden set (ADR 0026).
+ */
+export const LEXICAL_WEIGHT = 1.01;
+
 /** The most results one page may hold (PLAN.md tool contracts). */
 export const MAX_SEARCH_LIMIT = 10;
 
@@ -27,6 +34,7 @@ export const DEFAULT_SEARCH_OPTIONS: SearchOptions = {
   candidates: 50,
   cacheSize: 1000,
   rrfK: RRF_K,
+  lexicalWeight: LEXICAL_WEIGHT,
 };
 
 /** Facts about one search for its log line. Never the query text (PLAN.md hard rules). */
@@ -99,7 +107,9 @@ export function createSearchService(deps: SearchServiceDeps): SearchService {
       }),
     ]);
 
-    const best = collapseToArticles(fuseRankings([lexical, vector], options.rrfK));
+    const best = collapseToArticles(
+      fuseRankings([lexical, vector], options.rrfK, [options.lexicalWeight, 1]),
+    );
     const articles = new Map(
       (
         await reader.findManyByDoi(
