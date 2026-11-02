@@ -59,3 +59,4 @@ Append-only. Newest entry at the bottom.
   4. Tick the exit task in `tickets/SM-05-sqlite-store-ingest.md`, mark SM-05 `done` in `tickets/README.md` and ✅ in the README roadmap, commit, push.
   5. Then SM-07 (search service), recommended before SM-06.
 - **Gotchas:** without `nvm use`, better-sqlite3 segfaults (wrong Node). better-sqlite3 must not be in `onlyBuiltDependencies` (its prebuilds are used; node-gyp is absent). `data/` is gitignored. `verifyLiveIndex` opens read-write because the FTS5 integrity check is an INSERT. Bump `INDEX_SCHEMA_VERSION` on any schema or text-processing change.
+- **User preference:** after completing anything, end with copy-paste commands to run and verify it, with expected output.
