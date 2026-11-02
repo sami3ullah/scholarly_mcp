@@ -5,9 +5,14 @@ export {
   runArticleStoreContract,
   type ArticleStoreUnderTest,
 } from './contracts/article-store-contract.js';
+export {
+  runEmbedderContract,
+  type EmbedderContractOptions,
+} from './contracts/embedder-contract.js';
 export { runSessionStoreContract } from './contracts/session-store-contract.js';
 export { runSourceContract, type SourceContractOptions } from './contracts/source-contract.js';
 export { runSyncStateStoreContract } from './contracts/sync-state-store-contract.js';
+export { createFakeEmbedder } from './fakes/fake-embedder.js';
 export { createFakeClock, type FakeClock } from './fakes/fake-clock.js';
 export {
   createInMemoryArticleStore,

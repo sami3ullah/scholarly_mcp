@@ -1,8 +1,10 @@
 import { runArticleStoreContract } from '../contracts/article-store-contract.js';
+import { runEmbedderContract } from '../contracts/embedder-contract.js';
 import { runSessionStoreContract } from '../contracts/session-store-contract.js';
 import { runSourceContract } from '../contracts/source-contract.js';
 import { runSyncStateStoreContract } from '../contracts/sync-state-store-contract.js';
 import { anArticle } from '../builders/an-article.js';
+import { createFakeEmbedder } from './fake-embedder.js';
 import { createInMemoryArticleStore } from './in-memory-article-store.js';
 import { createInMemorySessionStore } from './in-memory-session-store.js';
 import { createInMemorySource } from './in-memory-source.js';
@@ -14,6 +16,8 @@ runArticleStoreContract('in-memory article store', () => {
 });
 
 runSessionStoreContract('in-memory session store', createInMemorySessionStore);
+
+runEmbedderContract('fake embedder', { create: createFakeEmbedder });
 
 runSyncStateStoreContract('in-memory sync state store', createInMemorySyncStateStore);
 
