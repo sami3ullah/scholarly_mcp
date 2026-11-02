@@ -19,5 +19,5 @@ Append-only. Newest entry at the bottom.
 
 ## 2026-11-02 - session 1, GitHub
 
-- **Remote:** `origin` = https://github.com/sami3ullah/scholarly_mcp.git. User asked to push as we build: push `main` after each finished chunk.
+- **Remote:** `origin` = git@github.com:sami3ullah/scholarly_mcp.git (SSH; HTTPS has no stored credentials). User asked to push as we build: push `main` after each finished chunk.
 - **Docs:** root `README.md` (badges, TOC, mermaid diagram, roadmap table mirroring `tickets/README.md`), `docs/README.md` index, `docs/adr/README.md` index. When a ticket finishes, update the roadmap row in README too; when a guide ships, link it from `docs/README.md`.
