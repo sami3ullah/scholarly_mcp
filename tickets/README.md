@@ -7,7 +7,7 @@ Status values: `todo`, `in-progress`, `done`, `blocked`. Update the table when a
 | ----- | ---------------------------------------------------- | ----- | ------------ | --------------------------- |
 | SM-00 | Feasibility spike                                    | 0     | -            | done                        |
 | SM-01 | Monorepo foundations and CI                          | 1     | -            | done                        |
-| SM-02 | Core domain, ports, config, errors, testkit          | 1     | SM-01        | todo                        |
+| SM-02 | Core domain, ports, config, errors, testkit          | 1     | SM-01        | in-progress                 |
 | SM-03 | Crossref source and normalisation pipeline           | 2     | SM-02        | todo                        |
 | SM-04 | Chunker and ONNX embedder                            | 2     | SM-02        | todo                        |
 | SM-05 | SQLite store and ingest CLI                          | 2     | SM-03, SM-04 | todo                        |

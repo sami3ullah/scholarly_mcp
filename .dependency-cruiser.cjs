@@ -3,9 +3,10 @@ module.exports = {
   forbidden: [
     {
       name: 'core-is-pure',
-      comment: 'core may import only zod and the standard library, no I/O built-ins',
+      comment:
+        'core may import only zod and the standard library, no I/O built-ins (tests may use test tools)',
       severity: 'error',
-      from: { path: '^packages/core/src' },
+      from: { path: '^packages/core/src', pathNot: '\\.test\\.ts$' },
       to: {
         dependencyTypesNot: ['local', 'type-only'],
         pathNot: ['node_modules/zod'],

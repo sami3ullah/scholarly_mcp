@@ -1,5 +1,13 @@
+import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
-import { normalizeDoi } from './doi.js';
+import { doiSchema, normalizeDoi } from './doi.js';
+
+const doiArb = fc
+  .tuple(
+    fc.stringMatching(/^\d{4,9}$/),
+    fc.stringMatching(/^[A-Za-z0-9._;()/:-]{1,30}$/).filter((suffix) => suffix.trim() !== ''),
+  )
+  .map(([registrant, suffix]) => `10.${registrant}/${suffix}`);
 
 describe('normalizeDoi', () => {
   it.each([
@@ -18,4 +26,52 @@ describe('normalizeDoi', () => {
       expect(normalizeDoi(input)).toBeUndefined();
     },
   );
+
+  it('is idempotent', () => {
+    fc.assert(
+      fc.property(doiArb, (doi) => {
+        const once = normalizeDoi(doi);
+        expect(once).toBeDefined();
+        expect(normalizeDoi(once ?? '')).toBe(once);
+      }),
+    );
+  });
+
+  it('gives the same result for every prefix and case variant', () => {
+    fc.assert(
+      fc.property(
+        doiArb,
+        fc.constantFrom('', 'https://doi.org/', 'http://dx.doi.org/', 'doi:', 'DOI: '),
+        fc.boolean(),
+        (doi, prefix, upper) => {
+          const variant = prefix + (upper ? doi.toUpperCase() : doi);
+          expect(normalizeDoi(variant)).toBe(normalizeDoi(doi));
+        },
+      ),
+    );
+  });
+
+  it('never throws and only returns lowercase DOIs', () => {
+    fc.assert(
+      fc.property(fc.string(), (input) => {
+        const doi = normalizeDoi(input);
+        if (doi !== undefined) {
+          expect(doi).toBe(doi.toLowerCase());
+          expect(doi.startsWith('10.')).toBe(true);
+        }
+      }),
+    );
+  });
+});
+
+describe('doiSchema', () => {
+  it('outputs the canonical DOI', () => {
+    expect(doiSchema.parse('https://doi.org/10.1055/A-1')).toBe('10.1055/a-1');
+  });
+
+  it('rejects text that is not a DOI with an actionable message', () => {
+    const result = doiSchema.safeParse('not a doi');
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]?.message).toContain('Expected a DOI');
+  });
 });
