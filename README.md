@@ -13,7 +13,7 @@ each linking to a personalised landing page on the publisher's own site, never t
 ![MCP](https://img.shields.io/badge/MCP-Streamable%20HTTP%20%2B%20stdio-6E56CF)
 ![Status](https://img.shields.io/badge/status-early%20development-orange)
 
-[Why](#why) · [How it works](#how-it-works) · [Tools](#tools) · [Quick start](#quick-start) · [Architecture](#architecture) · [Roadmap](#roadmap) · [Docs](#documentation)
+[Why](#why) · [How it works](#how-it-works) · [Tools](#tools) · [Quick start](#quick-start) · [Architecture](#architecture) · [Limitations](#limitations) · [Roadmap](#roadmap) · [Docs](#documentation)
 
 </div>
 
@@ -172,6 +172,16 @@ Read more in the [engineering plan](docs/PLAN.md#high-level-architecture) and th
 - **No query text** in URLs, logs or stores. A clinician may type patient details; we never keep them.
 - **Retracted papers** are excluded by default and flagged when fetched directly.
 - **Not clinical advice.** Every response carries a notice; the server never generates answers.
+- **Open access full text is for matching only.** CC BY and CC BY-NC-ND text helps ranking but is never shown or exported ([ADR 0003](docs/adr/0003-cc-by-nc-nd-full-text-for-matching-only.md)).
+
+## Limitations
+
+| Limitation                                                                                                                                                                                | Impact                                                                                                 | Fix                                                                    |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| **Crossref public pool.** No contact email is configured, so ingestion uses Crossref's slower public pool instead of the polite pool ([ADR 0005](docs/adr/0005-crossref-public-pool.md)). | The first full ingestion is slower and sees more rate limiting. Incremental syncs are barely affected. | Set `CROSSREF_MAILTO`.                                                 |
+| **Thin abstracts.** About half of recent Thieme articles have no abstract in Crossref.                                                                                                    | Those articles match on title, journal and subjects only.                                              | Open access full text helps; a publisher's own content API removes it. |
+| **Coarse subjects for some articles.** Crossref has no subjects; Europe PMC covers only part of the corpus ([ADR 0004](docs/adr/0004-subjects-from-europe-pmc.md)).                       | Articles outside Europe PMC get journal-level subjects.                                                | A publisher's own taxonomy via a source adapter.                       |
+| **Early development.** Most tools are not built yet.                                                                                                                                      | See the roadmap.                                                                                       | -                                                                      |
 
 ## Roadmap
 

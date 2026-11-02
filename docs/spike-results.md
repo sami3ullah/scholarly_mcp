@@ -48,7 +48,8 @@ Caveat: the 10 docs cover distinct topics, so this is an easy test. The real che
 
 Go with multilingual-e5-small (ADR 0002).
 
-## Open questions for the owner
+## Owner decisions (2026-11-02)
 
-- Should CC BY-NC-ND full text be allowed for _matching only_ (never shown)? Default until answered: CC BY only.
-- Subjects: OK to derive subjects from Europe PMC MeSH/keywords where available and fall back to journal-level subject lists? Default until answered: journal-level subjects from a small curated preset file.
+- CC BY-NC-ND full text allowed for matching only, never shown: [ADR 0003](adr/0003-cc-by-nc-nd-full-text-for-matching-only.md).
+- Subjects from Europe PMC MeSH and keywords, journal-level fallback: [ADR 0004](adr/0004-subjects-from-europe-pmc.md).
+- Crossref public pool, no mailto for now: [ADR 0005](adr/0005-crossref-public-pool.md).

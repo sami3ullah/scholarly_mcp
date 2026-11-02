@@ -2,7 +2,7 @@
 
 ## Tasks
 
-- [ ] `packages/source-crossref`: cursor paging (`cursor=*`), polite pool `mailto`, exponential backoff with jitter, honour `Retry-After`, checkpoint per page
+- [ ] `packages/source-crossref`: cursor paging (`cursor=*`), optional `CROSSREF_MAILTO` (public pool when unset, ADR 0005), exponential backoff with jitter, honour `Retry-After`, checkpoint per page
 - [ ] Incremental sync on `from-update-date` with 1-day overlap; expired cursor restarts from last checkpointed window
 - [ ] Filter to `journal-article`; flag errata
 - [ ] JATS cleaner: tags, MathML, entities, leading "Abstract", keep section labels; snapshot tests on SM-00 fixtures

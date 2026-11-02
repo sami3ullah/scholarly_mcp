@@ -6,7 +6,7 @@
 - [ ] osv-scanner, Trivy, Semgrep, gitleaks in CI; SBOM; Dependabot
 - [ ] Non-root distroless image, read-only FS, image size checked; compose with sqlite/postgres profiles; prebuilt index in image
 - [ ] E2E smoke script: compose up, call every tool over HTTP
-- [ ] README (order per plan), `ADAPTERS.md`, `LANDING.md`, `OPERATIONS.md`, `SECURITY.md`; `presets/thieme.env`
+- [ ] README (order per plan), `ADAPTERS.md`, `LANDING.md`, `OPERATIONS.md`, `SECURITY.md`; `presets/thieme.env`, `presets/thieme.subjects.json` (journal-level subjects by ISSN)
 - [ ] Release workflow: tag -> GHCR image + SBOM
 
 ## Exit

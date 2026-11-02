@@ -6,6 +6,7 @@
 - [ ] DOI normalisation (lowercase, strip `https://doi.org/`, `doi:`) with property tests
 - [ ] Ports: `Source`, `ArticleReader`, `ArticleWriter`, `ArticleSearch`, `SessionStore`, `Embedder`, `Entitlements`, `Meter`, `Clock`, `RandomToken`
 - [ ] `AppError` with stable codes (INVALID_INPUT, NOT_FOUND, CURSOR_STALE, RATE_LIMITED, UNAUTHORIZED, TIMEOUT, INDEX_UNAVAILABLE)
+- [ ] Subject with origin (`mesh`, `keyword`, `journal`); chunk carries source + licence (ADR 0003, 0004)
 - [ ] Config loader (zod over env, fail fast), pino logger factory with redaction (no query text, no secrets)
 - [ ] `packages/testkit`: builders (`anArticle()...`), in-memory fake store and source, contract suites for stores and sources
 - [ ] ADRs 0001-0013 for the key design decisions
