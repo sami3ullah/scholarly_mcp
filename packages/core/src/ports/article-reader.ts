@@ -11,6 +11,8 @@ export interface ArticleReader {
   findManyByDoi(dois: readonly Doi[], signal: AbortSignal): Promise<Article[]>;
   /** Returns the chunks with these ids, in the order given; unknown ids are skipped. */
   findChunks(ids: readonly string[], signal: AbortSignal): Promise<Chunk[]>;
+  /** Returns all chunks of an article in ordinal order; empty when the DOI is not indexed. */
+  findArticleChunks(doi: Doi, signal: AbortSignal): Promise<Chunk[]>;
   /** Describes the index, or undefined when none has been built yet. */
   indexMeta(signal: AbortSignal): Promise<IndexMeta | undefined>;
 }

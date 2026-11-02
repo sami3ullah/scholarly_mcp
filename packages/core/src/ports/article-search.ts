@@ -4,7 +4,11 @@ import type { Language } from '../article/language.js';
 /** Filters applied identically to the lexical and the vector side of a search. */
 export interface SearchFilters {
   readonly language?: string;
-  readonly journalIssn?: string;
+  /**
+   * A journal's ISSNs: an article matches when it carries any of them, because records of one
+   * journal carry its print ISSN, its electronic ISSN or both. Empty matches nothing.
+   */
+  readonly journalIssns?: readonly string[];
   readonly yearFrom?: number;
   readonly yearTo?: number;
   readonly openAccessOnly?: boolean;

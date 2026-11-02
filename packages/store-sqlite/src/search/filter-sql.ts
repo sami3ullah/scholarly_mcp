@@ -28,9 +28,15 @@ export function filterSql(filters: SearchFilters): SqlCondition {
     clauses.push('s.year <= ?');
     params.push(filters.yearTo);
   }
-  if (filters.journalIssn !== undefined) {
-    clauses.push('(s.issn_print = ? OR s.issn_electronic = ?)');
-    params.push(filters.journalIssn, filters.journalIssn);
+  if (filters.journalIssns !== undefined) {
+    const issns = filters.journalIssns;
+    if (issns.length === 0) {
+      clauses.push('0');
+    } else {
+      const marks = issns.map(() => '?').join(', ');
+      clauses.push(`(s.issn_print IN (${marks}) OR s.issn_electronic IN (${marks}))`);
+      params.push(...issns, ...issns);
+    }
   }
   return { sql: clauses.length === 0 ? '1' : clauses.join(' AND '), params };
 }

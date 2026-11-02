@@ -7,13 +7,15 @@ import {
   type Chunk,
   type Doi,
   type IndexMeta,
+  type JournalDirectory,
   type RankedChunk,
+  mergeJournalTallies,
 } from '@scholarly-mcp/core';
 import { matchesFilters } from './matches-filters.js';
 import { settle } from './settle.js';
 
 /** A store that does everything a real one does, in maps, for tests. */
-export type InMemoryArticleStore = ArticleReader & ArticleWriter & ArticleSearch;
+export type InMemoryArticleStore = ArticleReader & ArticleWriter & ArticleSearch & JournalDirectory;
 
 interface Entry {
   readonly article: Article;
@@ -69,7 +71,33 @@ export function createInMemoryArticleStore(): InMemoryArticleStore {
         const byId = new Map(allChunks().map((chunk) => [chunk.id, chunk]));
         return ids.flatMap((id) => byId.get(id) ?? []);
       }),
+    findArticleChunks: (doi, signal) =>
+      settle(signal, () =>
+        [...(entries.get(doi)?.chunks ?? [])].sort((a, b) => a.ordinal - b.ordinal),
+      ),
     indexMeta: (signal) => settle(signal, () => meta),
+    journals: (signal) =>
+      settle(signal, () =>
+        mergeJournalTallies(
+          [...entries.values()].map(({ article }) => ({
+            name: article.journal.name,
+            ...(article.journal.issnPrint !== undefined && {
+              issnPrint: article.journal.issnPrint,
+            }),
+            ...(article.journal.issnElectronic !== undefined && {
+              issnElectronic: article.journal.issnElectronic,
+            }),
+            articleCount: 1,
+            openAccessCount: article.isOpenAccess ? 1 : 0,
+            firstYear: article.published.year,
+            lastYear: article.published.year,
+            subjects: uniqueSubjects(article.subjects).map((subject) => ({
+              ...subject,
+              articleCount: 1,
+            })),
+          })),
+        ),
+      ),
     upsert: (records, signal) =>
       settle(signal, () => {
         checkUpsert(records);
@@ -103,6 +131,14 @@ export function createInMemoryArticleStore(): InMemoryArticleStore {
         return rank(scored, filters, limit);
       }),
   };
+}
+
+/** An article counts once per subject label and origin, however often its record repeats it. */
+function uniqueSubjects(subjects: Article['subjects']): Article['subjects'] {
+  const seen = new Map(
+    subjects.map((subject) => [`${subject.origin}\u0000${subject.label}`, subject]),
+  );
+  return [...seen.values()];
 }
 
 function cosine(a: Float32Array, b: Float32Array): number {

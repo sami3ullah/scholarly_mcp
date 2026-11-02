@@ -4,6 +4,7 @@ import {
   type ArticleReader,
   type ArticleSearch,
   type IndexMeta,
+  type JournalDirectory,
 } from '@scholarly-mcp/core';
 import { createSqliteIndexStore, type SqliteIndexStore } from './create-sqlite-index-store.js';
 import { readIndexMeta } from './database/index-meta-row.js';
@@ -13,6 +14,7 @@ import { openDatabase, type Db } from './database/open-database.js';
 export interface IndexReader {
   readonly reader: ArticleReader;
   readonly search: ArticleSearch;
+  readonly journals: JournalDirectory;
   /** The description of the index currently open. */
   meta(): IndexMeta;
   /**
@@ -45,12 +47,14 @@ export function openIndexReader(path: string, modelVersion: string): IndexReader
       findByDoi: (doi, signal) => store().reader.findByDoi(doi, signal),
       findManyByDoi: (dois, signal) => store().reader.findManyByDoi(dois, signal),
       findChunks: (ids, signal) => store().reader.findChunks(ids, signal),
+      findArticleChunks: (doi, signal) => store().reader.findArticleChunks(doi, signal),
       indexMeta: (signal) => store().reader.indexMeta(signal),
     },
     search: {
       lexical: (query, signal) => store().search.lexical(query, signal),
       vector: (query, signal) => store().search.vector(query, signal),
     },
+    journals: { journals: (signal) => store().journals.journals(signal) },
     meta: () => current.meta,
     refresh() {
       const next = open(path, modelVersion);

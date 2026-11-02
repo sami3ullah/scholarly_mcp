@@ -2,7 +2,7 @@ export { accessStatusSchema, type AccessStatus } from './access/access-status.js
 export { activeLicense } from './article/active-license.js';
 export { articleSchema, type Article } from './article/article.js';
 export { authorSchema, type Author } from './article/author.js';
-export { doiSchema, normalizeDoi, type Doi } from './article/doi.js';
+export { canonicalDoiSchema, doiSchema, normalizeDoi, type Doi } from './article/doi.js';
 export { enrichArticle, withoutFullText } from './article/enrich-article.js';
 export { fullTextRefSchema, type FullTextRef } from './article/full-text-ref.js';
 export { hashArticleContent, type ArticleContent } from './article/hash-article-content.js';
@@ -16,7 +16,12 @@ export {
   type PublishedDate,
 } from './article/published-date.js';
 export { subjectSchema, type Subject } from './article/subject.js';
-export { TEASER_MAX_LENGTH, articleCardSchema, type ArticleCard } from './card/article-card.js';
+export {
+  TEASER_MAX_LENGTH,
+  UNKNOWN_LICENSE,
+  articleCardSchema,
+  type ArticleCard,
+} from './card/article-card.js';
 export { articleSections } from './chunk/article-sections.js';
 export {
   DEFAULT_CHUNKING,
@@ -60,7 +65,14 @@ export {
   landingSessionSchema,
   type LandingSession,
 } from './landing/landing-session.js';
+export { LANDING_PATH, buildLandingUrl, type LandingLink } from './landing/landing-url.js';
 export { tokenSchema, type Token } from './landing/token.js';
+export {
+  JOURNAL_SUBJECT_LIMIT,
+  journalSummarySchema,
+  type JournalSummary,
+} from './journal/journal-summary.js';
+export { mergeJournalTallies, type JournalTally } from './journal/merge-journal-tallies.js';
 export { toolNameSchema, type ToolName } from './metering/tool-name.js';
 export { usageEventSchema, type UsageEvent } from './metering/usage-event.js';
 export type { ArticleEnricher, Enrichment } from './ports/article-enricher.js';
@@ -76,6 +88,7 @@ export type { ArticleRecord, ArticleWriter } from './ports/article-writer.js';
 export type { Clock } from './ports/clock.js';
 export type { Embedder } from './ports/embedder.js';
 export type { AccessDecision, Caller, Entitlements } from './ports/entitlements.js';
+export type { JournalDirectory } from './ports/journal-directory.js';
 export type { LogFields, Logger } from './ports/logger.js';
 export type { Meter } from './ports/meter.js';
 export type { RandomToken } from './ports/random-token.js';

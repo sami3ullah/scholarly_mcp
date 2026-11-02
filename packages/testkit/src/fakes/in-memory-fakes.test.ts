@@ -15,7 +15,7 @@ import { createInMemorySyncStateStore } from './in-memory-sync-state-store.js';
 
 runArticleStoreContract('in-memory article store', () => {
   const store = createInMemoryArticleStore();
-  return { reader: store, writer: store, search: store };
+  return { reader: store, writer: store, search: store, journals: store };
 });
 
 runSessionStoreContract('in-memory session store', createInMemorySessionStore);

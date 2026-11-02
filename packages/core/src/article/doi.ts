@@ -24,3 +24,11 @@ export const doiSchema = z.string().transform((value, ctx): Doi => {
   }
   return doi;
 });
+
+/**
+ * Accepts only a DOI already in canonical form, without transforming it. For output
+ * schemas: a transform cannot be written as JSON Schema, and outputs are canonical anyway.
+ */
+export const canonicalDoiSchema = z.string().refine((value) => normalizeDoi(value) === value, {
+  message: 'Expected a lowercase DOI without prefix, such as 10.1055/a-1234-5678',
+});

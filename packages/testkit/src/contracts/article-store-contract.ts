@@ -4,6 +4,7 @@ import {
   type ArticleSearch,
   type ArticleWriter,
   type Doi,
+  type JournalDirectory,
   type SearchFilters,
 } from '@scholarly-mcp/core';
 import fc from 'fast-check';
@@ -11,11 +12,12 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { aChunk } from '../builders/a-chunk.js';
 import { anArticle } from '../builders/an-article.js';
 
-/** The three faces of a store. Real adapters may back them with separate connections. */
+/** The four faces of a store. Real adapters may back them with separate connections. */
 export interface ArticleStoreUnderTest {
   readonly reader: ArticleReader;
   readonly writer: ArticleWriter;
   readonly search: ArticleSearch;
+  readonly journals: JournalDirectory;
 }
 
 const signal = new AbortController().signal;
@@ -86,6 +88,14 @@ export function runArticleStoreContract(
         expect(found).toEqual([record.chunks[1], record.chunks[0]]);
       });
 
+      it("returns all of an article's chunks in ordinal order, and none for an unknown DOI", async () => {
+        await store.writer.upsert([recordOf(DOI_A, anArticle().withDoi(DOI_A), 3)], signal);
+        const chunks = await store.reader.findArticleChunks(DOI_A, signal);
+        expect(chunks.map(({ ordinal }) => ordinal)).toEqual([0, 1, 2]);
+        expect(chunks[0]?.embedding).toBeInstanceOf(Float32Array);
+        expect(await store.reader.findArticleChunks(DOI_B, signal)).toEqual([]);
+      });
+
       it('removes an article with its chunks, and ignores unknown DOIs', async () => {
         await store.writer.upsert([recordOf(DOI_A)], signal);
         await store.writer.remove(DOI_A, signal);
@@ -132,6 +142,55 @@ export function runArticleStoreContract(
         const aborted = AbortSignal.abort();
         await expect(store.reader.findByDoi(DOI_A, aborted)).rejects.toThrow();
         await expect(store.writer.upsert([recordOf(DOI_A)], aborted)).rejects.toThrow();
+      });
+    });
+
+    describe('journals', () => {
+      it('lists no journals in an empty index', async () => {
+        expect(await store.journals.journals(signal)).toEqual([]);
+      });
+
+      it('summarises each journal from its indexed articles', async () => {
+        const mesh = { label: 'Atrial Fibrillation', origin: 'mesh' as const };
+        const keyword = { label: 'anticoagulation', origin: 'keyword' as const };
+        await store.writer.upsert(
+          [
+            recordOf(
+              DOI_A,
+              anArticle()
+                .withDoi(DOI_A)
+                .inJournal('Thrombosis and Haemostasis', '0340-6245')
+                .publishedIn(2024)
+                .withSubjects(mesh, keyword)
+                .openAccess(),
+            ),
+            recordOf(
+              DOI_B,
+              anArticle()
+                .withDoi(DOI_B)
+                .inJournal('Thrombosis and Haemostasis', '0340-6245')
+                .publishedIn(2026)
+                .withSubjects(mesh, mesh),
+            ),
+            recordOf(DOI_C, anArticle().withDoi(DOI_C).inJournal('Aktuelle Urologie', '0001-7868')),
+          ],
+          signal,
+        );
+        expect(await store.journals.journals(signal)).toEqual([
+          expect.objectContaining({ name: 'Aktuelle Urologie', articleCount: 1 }),
+          {
+            name: 'Thrombosis and Haemostasis',
+            issnPrint: '0340-6245',
+            articleCount: 2,
+            openAccessCount: 1,
+            firstYear: 2024,
+            lastYear: 2026,
+            subjects: [
+              { ...mesh, articleCount: 2 },
+              { ...keyword, articleCount: 1 },
+            ],
+          },
+        ]);
       });
     });
 
@@ -250,7 +309,10 @@ export function runArticleStoreContract(
         await store.writer.upsert(
           [
             {
-              article: anArticle().withDoi(DOI_A).publishedIn(2023).openAccess().build(),
+              article: {
+                ...anArticle().withDoi(DOI_A).publishedIn(2023).openAccess().build(),
+                journal: { name: 'Thrombosis and Haemostasis', issnElectronic: '2567-689X' },
+              },
               chunks: [chunk(DOI_A)],
             },
             {
@@ -277,7 +339,14 @@ export function runArticleStoreContract(
         ['keeps open access only', { openAccessOnly: true }, [DOI_A]],
         ['applies yearFrom', { yearFrom: 2024 }, [DOI_B]],
         ['applies yearTo', { yearTo: 2024 }, [DOI_A]],
-        ['matches the journal by ISSN', { journalIssn: '0723-7065' }, [DOI_B]],
+        ['matches the journal by print ISSN', { journalIssns: ['0723-7065'] }, [DOI_B]],
+        ['matches the journal by electronic ISSN', { journalIssns: ['2567-689X'] }, [DOI_A]],
+        [
+          'matches any of several ISSNs',
+          { journalIssns: ['2567-689X', '0723-7065'] },
+          [DOI_A, DOI_B],
+        ],
+        ['matches nothing for no ISSNs', { journalIssns: [] }, []],
         ['matches the language', { language: 'de' }, [DOI_B]],
       ])('%s', async (_case, filters, expected) => {
         expect(await run(filters)).toEqual(expected);

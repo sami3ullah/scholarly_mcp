@@ -1,6 +1,7 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
-import { doiSchema, normalizeDoi } from './doi.js';
+import { z } from 'zod';
+import { canonicalDoiSchema, doiSchema, normalizeDoi } from './doi.js';
 
 const doiArb = fc
   .tuple(
@@ -73,5 +74,20 @@ describe('doiSchema', () => {
     const result = doiSchema.safeParse('not a doi');
     expect(result.success).toBe(false);
     expect(result.error?.issues[0]?.message).toContain('Expected a DOI');
+  });
+});
+
+describe('canonicalDoiSchema', () => {
+  it.each([
+    ['10.1055/a-1', true],
+    ['10.1055/A-1', false],
+    ['https://doi.org/10.1055/a-1', false],
+    ['not a doi', false],
+  ])('accepts %j: %s', (value, expected) => {
+    expect(canonicalDoiSchema.safeParse(value).success).toBe(expected);
+  });
+
+  it('can be written as JSON Schema for tool outputs', () => {
+    expect(() => z.toJSONSchema(canonicalDoiSchema, { io: 'output' })).not.toThrow();
   });
 });

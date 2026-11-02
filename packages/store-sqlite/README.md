@@ -28,7 +28,10 @@ if (report.ok) build.commit(meta);
 // Server: read-only, follows swaps.
 const index = openIndexReader(indexPath, embedder.modelVersion);
 setInterval(() => index.refresh(), 30_000);
+await index.journals.journals(signal); // every journal, built from its articles
 ```
+
+`journals` tallies articles per journal name and ISSN pair with two aggregate queries (about 0.4 s on the 70k-article index; callers cache it per index version), and core's `mergeJournalTallies` joins tallies sharing an ISSN ([ADR 0025](../../docs/adr/0025-mcp-server-and-tool-rules.md)).
 
 ## Text matching
 

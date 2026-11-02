@@ -10,9 +10,10 @@ export function matchesFilters(article: Article, chunk: Chunk, filters: SearchFi
   if (filters.yearFrom !== undefined && published.year < filters.yearFrom) return false;
   if (filters.yearTo !== undefined && published.year > filters.yearTo) return false;
   if (
-    filters.journalIssn !== undefined &&
-    journal.issnPrint !== filters.journalIssn &&
-    journal.issnElectronic !== filters.journalIssn
+    filters.journalIssns !== undefined &&
+    !filters.journalIssns.some(
+      (issn) => issn === journal.issnPrint || issn === journal.issnElectronic,
+    )
   ) {
     return false;
   }
