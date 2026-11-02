@@ -124,7 +124,8 @@ describe('full text is for matching only', () => {
           const queryWord = words[pick % words.length] ?? '';
           const { search, logs } = await indexWith(openArticle(), `${words.join(' ')}.`);
           const shown = (await search(queryWord)) + JSON.stringify(logs);
-          for (const other of words.filter((candidate) => candidate !== queryWord)) {
+          // A word inside the typed term ("ototype" in "ototypeaaa") is shown as the query's own.
+          for (const other of words.filter((candidate) => !queryWord.includes(candidate))) {
             expect(shown).not.toContain(other);
           }
         },
