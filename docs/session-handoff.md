@@ -85,3 +85,10 @@ Append-only. Newest entry at the bottom.
   3. Record counts (articles with full text, full-text chunks, file size) and `pnpm eval bench --rounds 5` latency in the SM-06 ticket and ADR 0024 consequences; try a full-text-only query.
   4. Tick the exit task, mark SM-06 `done` in `tickets/README.md` and ✅ in the README roadmap, commit, push, check CI.
   5. Then SM-08 (golden set and eval) or SM-09.
+
+## 2026-11-02 - session 7, moving on while the SM-06 build runs
+
+- **Build status at handoff:** 13 of ~72 pages after 44 min (12,879 articles, 1,149 with full text, 0 skipped, 0 warnings); expected to finish ~3 h later. PID 48192, log `data/ingest-epmc.log`. A new conversation is not notified when it exits: check the log for `Index swapped in` and `exit 0`. If the process is gone without them, rerun the command in the previous entry (it resumes the build).
+- **User decision:** continue with the next ticket in a fresh conversation meanwhile. Recommended: **SM-09** (MCP server). Do not start SM-08 tuning until the enriched index is swapped in, as its numbers would change.
+- **Safe while the build runs:** editing code and `pnpm build` / `pnpm check` (the running process already loaded its modules). Avoid: deleting `data/`, running another `ingest` command, or `pnpm eval bench` (it would compete for CPU and measure the old index).
+- **Still owed for SM-06:** next steps 2-4 of the previous entry (incremental `written: 0`, verify, record size and latency, mark done, push).
