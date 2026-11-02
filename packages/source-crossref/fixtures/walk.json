@@ -1,0 +1,1584 @@
+[
+  {
+    "cursor": "*",
+    "body": {
+      "status": "ok",
+      "message-type": "work-list",
+      "message-version": "1.0.0",
+      "message": {
+        "facets": {},
+        "next-cursor": "MTc5MTc1Nzg3ODAwMCwxNzkxNzU3ODcyMDAwLDEwLjEwNTUlMkZzLTAwNDYtMTgyNzI1NA==",
+        "total-results": 6,
+        "items": [
+          {
+            "indexed": {
+              "date-parts": [
+                [
+                  2026,
+                  10,
+                  11
+                ]
+              ],
+              "date-time": "2026-10-11T22:46:05Z",
+              "timestamp": 1791758765438,
+              "version": "4.3.4"
+            },
+            "reference-count": 31,
+            "publisher": "Georg Thieme Verlag KG",
+            "license": [
+              {
+                "start": {
+                  "date-parts": [
+                    [
+                      2026,
+                      10,
+                      11
+                    ]
+                  ],
+                  "date-time": "2026-10-11T00:00:00Z",
+                  "timestamp": 1791676800000
+                },
+                "content-version": "vor",
+                "delay-in-days": 0,
+                "URL": "https://creativecommons.org/licenses/by/4.0/"
+              }
+            ],
+            "content-domain": {
+              "domain": [],
+              "crossmark-restriction": false
+            },
+            "short-container-title": [
+              "Eur J Dent"
+            ],
+            "abstract": "<jats:title>Abstract</jats:title>\n                  <jats:p>The development of biomimetic scaffolds capable of simultaneously supporting stem cell viability and enhancing osteogenic differentiation remains a major challenge in bone tissue engineering. This study evaluated the effects of porous polycaprolactone (PCL)/multiwalled carbon nanotube (MWCNT) composite scaffolds containing different MWCNT concentrations on cytocompatibility, cellular adhesion, morphology, and osteogenic mineralization using stem cells from human exfoliated deciduous teeth (SHED) and MC3T3-E1 preosteoblasts.</jats:p>\n                  <jats:p>Porous PCL scaffolds containing 0.5, 1.5, and 2.5 wt% MWCNTs were fabricated using a solvent casting–salt leaching technique. Scaffold cytocompatibility was assessed by Alamar Blue assays after 1, 3, and 7 days of culture. Cell attachment and morphology were examined by scanning electron microscopy (SEM). Osteogenic differentiation was evaluated by Alizarin Red S staining at 7, 14, and 21 days to quantify extracellular matrix mineralization under osteogenic medium. Statistical analyses of cytocompatibility were performed in triplicate using one-way analysis of variance followed by Tukey's post hoc test (p &lt; 0.05).</jats:p>\n                  <jats:p>All PCL/MWCNT scaffolds exhibited excellent cytocompatibility above the ISO 10993-5 threshold. SEM demonstrated progressive cell spreading, extensive filopodia formation, and intimate cell–scaffold interactions, with more pronounced adhesion on MWCNT-containing scaffolds than on pristine PCL. Mineralization increased in a time-dependent manner in both SHED and MC3T3-E1 cultures. Among all formulations, the 1.5 wt% MWCNT scaffold consistently produced the greatest calcium-rich mineralized matrix, whereas higher MWCNT loading (2.5 wt%) did not provide additional osteogenic benefits, suggesting concentration-dependent optimization of scaffold bioactivity.</jats:p>\n                  <jats:p>Incorporation of MWCNTs significantly enhanced the biological performance of porous PCL scaffolds by promoting cell attachment and extracellular matrix mineralization while preserving cytocompatibility. The 1.5 wt% MWCNT formulation demonstrated the optimal balance between biocompatibility and osteogenic activity.</jats:p>",
+            "DOI": "10.1055/s-0046-1829081",
+            "type": "journal-article",
+            "created": {
+              "date-parts": [
+                [
+                  2026,
+                  10,
+                  11
+                ]
+              ],
+              "date-time": "2026-10-11T22:30:26Z",
+              "timestamp": 1791757826000
+            },
+            "source": "Crossref",
+            "is-referenced-by-count": 0,
+            "title": [
+              "Nanostructured PCL/MWCNT Composite Scaffolds Promote Cell Adhesion and Mineralized Matrix Formation for Bone Regeneration: SHED and MC3T3 Evaluation"
+            ],
+            "prefix": "10.1055",
+            "author": [
+              {
+                "ORCID": "https://orcid.org/0000-0002-5518-3372",
+                "authenticated-orcid": false,
+                "given": "Hendrik Setia",
+                "family": "Budi",
+                "sequence": "additional",
+                "affiliation": [
+                  {
+                    "name": "Oral Biology Division, Department of Basic Dental Sciences and Public Health, Faculty of Dental Medicine, Universitas Airlangga, Surabaya, Indonesia"
+                  },
+                  {
+                    "name": "Regenerative Dentistry Research Group, Faculty of Dental Medicine, Universitas Airlangga, Surabaya, Indonesia"
+                  }
+                ],
+                "role": [
+                  {
+                    "vocabulary": "crossref",
+                    "role": "author"
+                  }
+                ]
+              },
+              {
+                "ORCID": "https://orcid.org/0000-0003-4209-3551",
+                "authenticated-orcid": false,
+                "given": "Yung Kang",
+                "family": "Shen",
+                "sequence": "additional",
+                "affiliation": [
+                  {
+                    "name": "School of Dental Technology, College of Oral Medicine, Taipei Medical University, Taipei, Taiwan"
+                  }
+                ],
+                "role": [
+                  {
+                    "vocabulary": "crossref",
+                    "role": "author"
+                  }
+                ]
+              },
+              {
+                "given": "Silvia",
+                "family": "Anitasari",
+                "sequence": "additional",
+                "affiliation": [
+                  {
+                    "name": "Department of Dental Material and Devices, Faculty of Dentistry, Universitas Mulawarman, Samarinda, Indonesia"
+                  }
+                ],
+                "role": [
+                  {
+                    "vocabulary": "crossref",
+                    "role": "author"
+                  }
+                ]
+              },
+              {
+                "given": "Aqsa Syuhada",
+                "family": "Oki",
+                "sequence": "additional",
+                "affiliation": [
+                  {
+                    "name": "Oral Biology Division, Department of Basic Dental Sciences and Public Health, Faculty of Dental Medicine, Universitas Airlangga, Surabaya, Indonesia"
+                  }
+                ],
+                "role": [
+                  {
+                    "vocabulary": "crossref",
+                    "role": "author"
+                  }
+                ]
+              },
+              {
+                "given": "Oki",
+                "family": "Fadhila",
+                "sequence": "additional",
+                "affiliation": [
+                  {
+                    "name": "Oral Biology Division, Department of Basic Dental Sciences and Public Health, Faculty of Dental Medicine, Universitas Airlangga, Surabaya, Indonesia"
+                  }
+                ],
+                "role": [
+                  {
+                    "vocabulary": "crossref",
+                    "role": "author"
+                  }
+                ]
+              },
+              {
+                "given": "Asma",
+                "family": "Suhail",
+                "sequence": "additional",
+                "affiliation": [
+                  {
+                    "name": "Master Program of Dental Science, Faculty of Dental Medicine, Universitas Airlangga, Surabaya, Indonesia"
+                  }
+                ],
+                "role": [
+                  {
+                    "vocabulary": "crossref",
+                    "role": "author"
+                  }
+                ]
+              },
+              {
+                "given": "Neny",
+                "family": "Roeswahjuni",
+                "sequence": "additional",
+                "affiliation": [
+                  {
+                    "name": "Doctoral Program of Dental Medicine, Faculty of Dental Medicine, Universitas Airlangga, Surabaya, Indonesia"
+                  }
+                ],
+                "role": [
+                  {
+                    "vocabulary": "crossref",
+                    "role": "author"
+                  }
+                ]
+              },
+              {
+                "given": "Dinda Ayu",
+                "family": "Lestari",
+                "sequence": "additional",
+                "affiliation": [
+                  {
+                    "name": "Institute of Life Sciences, Engineering & Technology (LIHTR), Universitas Airlangga, Surabaya, Indonesia"
+                  }
+                ],
+                "role": [
+                  {
+                    "vocabulary": "crossref",
+                    "role": "author"
+                  }
+                ]
+              }
+            ],
+            "member": "194",
+            "published-online": {
+              "date-parts": [
+                [
+                  2026,
+                  10,
+                  11
+                ]
+              ]
+            },
+            "container-title": [
+              "European Journal of Dentistry"
+            ],
+            "language": "en",
+            "link": [
+              {
+                "URL": "http://www.thieme-connect.de/products/ejournals/pdf/10.1055/s-0046-1829081.pdf",
+                "content-type": "unspecified",
+                "content-version": "vor",
+                "intended-application": "similarity-checking"
+              }
+            ],
+            "deposited": {
+              "date-parts": [
+                [
+                  2026,
+                  10,
+                  11
+                ]
+              ],
+              "date-time": "2026-10-11T22:30:30Z",
+              "timestamp": 1791757830000
+            },
+            "score": 0,
+            "resource": {
+              "primary": {
+                "URL": "http://www.thieme-connect.de/DOI/DOI?10.1055/s-0046-1829081"
+              }
+            },
+            "issued": {
+              "date-parts": [
+                [
+                  2026,
+                  10,
+                  11
+                ]
+              ]
+            },
+            "references-count": 31,
+            "URL": "https://doi.org/10.1055/s-0046-1829081",
+            "archive": [
+              "Portico",
+              "CLOCKSS"
+            ],
+            "ISSN": [
+              "1305-7456",
+              "1305-7464"
+            ],
+            "issn-type": [
+              {
+                "value": "1305-7456",
+                "type": "print"
+              },
+              {
+                "value": "1305-7464",
+                "type": "electronic"
+              }
+            ],
+            "published": {
+              "date-parts": [
+                [
+                  2026,
+                  10,
+                  11
+                ]
+              ]
+            }
+          },
+          {
+            "indexed": {
+              "date-parts": [
+                [
+                  2026,
+                  10,
+                  11
+                ]
+              ],
+              "date-time": "2026-10-11T22:46:03Z",
+              "timestamp": 1791758763831,
+              "version": "4.3.4"
+            },
+            "reference-count": 12,
+            "publisher": "Georg Thieme Verlag KG",
+            "license": [
+              {
+                "start": {
+                  "date-parts": [
+                    [
+                      2026,
+                      10,
+                      11
+                    ]
+                  ],
+                  "date-time": "2026-10-11T00:00:00Z",
+                  "timestamp": 1791676800000
+                },
+                "content-version": "vor",
+                "delay-in-days": 0,
+                "URL": "https://creativecommons.org/licenses/by/4.0/"
+              }
+            ],
+            "content-domain": {
+              "domain": [],
+              "crossmark-restriction": false
+            },
+            "short-container-title": [
+              "European Journal of General Dentistry"
+            ],
+            "DOI": "10.1055/s-0046-1829383",
+            "type": "journal-article",
+            "created": {
+              "date-parts": [
+                [
+                  2026,
+                  10,
+                  11
+                ]
+              ],
+              "date-time": "2026-10-11T22:31:12Z",
+              "timestamp": 1791757872000
+            },
+            "source": "Crossref",
+            "is-referenced-by-count": 0,
+            "title": [
+              "Applications of Artificial Intelligence in Dentistry: Applications, Workflow, and Educational Integration"
+            ],
+            "prefix": "10.1055",
+            "author": [
+              {
+                "ORCID": "https://orcid.org/0000-0002-8399-3356",
+                "authenticated-orcid": false,
+                "given": "Ahmad Badruddin",
+                "family": "Ghazali",
+                "sequence": "additional",
+                "affiliation": [
+                  {
+                    "name": "Department of Oral Maxillofacial Surgery and Oral Diagnosis, Kulliyyah of Dentistry, International Islamic University Malaysia, Kuantan, Pahang, Malaysia"
+                  }
+                ],
+                "role": [
+                  {
+                    "vocabulary": "crossref",
+                    "role": "author"
+                  }
+                ]
+              },
+              {
+                "given": "Nur Imanina",
+                "family": "Abdullah Thaidi",
+                "sequence": "additional",
+                "affiliation": [
+                  {
+                    "name": "Department of Bioprocess Technology, Faculty of Biotechnology and Biomolecular Sciences, Universiti Putra Malaysia, Serdang, Selangor, Malaysia"
+                  }
+                ],
+                "role": [
+                  {
+                    "vocabulary": "crossref",
+                    "role": "author"
+                  }
+                ]
+              },
+              {
+                "ORCID": "https://orcid.org/0000-0003-3788-8499",
+                "authenticated-orcid": false,
+                "given": "Aga Satria",
+                "family": "Nurrachman",
+                "sequence": "additional",
+                "affiliation": [
+                  {
+                    "name": "Department of Oral and Maxillofacial Radiology, Faculty of Dental Medicine, Universitas Airlangga, Surabaya, Indonesia"
+                  }
+                ],
+                "role": [
+                  {
+                    "vocabulary": "crossref",
+                    "role": "author"
+                  }
+                ]
+              },
+              {
+                "ORCID": "https://orcid.org/0000-0002-5857-6294",
+                "authenticated-orcid": false,
+                "given": "Fadhlil Ulum",
+                "family": "A. Rahman",
+                "sequence": "additional",
+                "affiliation": [
+                  {
+                    "name": "Department of Oral & Maxillofacial Radiology, Faculty of Dentistry, Hasanuddin University, Makassar, Indonesia"
+                  }
+                ],
+                "role": [
+                  {
+                    "vocabulary": "crossref",
+                    "role": "author"
+                  }
+                ]
+              }
+            ],
+            "member": "194",
+            "published-online": {
+              "date-parts": [
+                [
+                  2026,
+                  10,
+                  11
+                ]
+              ]
+            },
+            "container-title": [
+              "European Journal of General Dentistry"
+            ],
+            "language": "en",
+            "link": [
+              {
+                "URL": "http://www.thieme-connect.de/products/ejournals/pdf/10.1055/s-0046-1829383.pdf",
+                "content-type": "unspecified",
+                "content-version": "vor",
+                "intended-application": "similarity-checking"
+              }
+            ],
+            "deposited": {
+              "date-parts": [
+                [
+                  2026,
+                  10,
+                  11
+                ]
+              ],
+              "date-time": "2026-10-11T22:31:13Z",
+              "timestamp": 1791757873000
+            },
+            "score": 0,
+            "resource": {
+              "primary": {
+                "URL": "http://www.thieme-connect.de/DOI/DOI?10.1055/s-0046-1829383"
+              }
+            },
+            "issued": {
+              "date-parts": [
+                [
+                  2026,
+                  10,
+                  11
+                ]
+              ]
+            },
+            "references-count": 12,
+            "URL": "https://doi.org/10.1055/s-0046-1829383",
+            "archive": [
+              "Portico",
+              "CLOCKSS"
+            ],
+            "ISSN": [
+              "2278-9626",
+              "2320-4753"
+            ],
+            "issn-type": [
+              {
+                "value": "2278-9626",
+                "type": "print"
+              },
+              {
+                "value": "2320-4753",
+                "type": "electronic"
+              }
+            ],
+            "published": {
+              "date-parts": [
+                [
+                  2026,
+                  10,
+                  11
+                ]
+              ]
+            }
+          },
+          {
+            "indexed": {
+              "date-parts": [
+                [
+                  2026,
+                  10,
+                  11
+                ]
+              ],
+              "date-time": "2026-10-11T22:46:03Z",
+              "timestamp": 1791758763853,
+              "version": "4.3.4"
+            },
+            "reference-count": 38,
+            "publisher": "Georg Thieme Verlag KG",
+            "license": [
+              {
+                "start": {
+                  "date-parts": [
+                    [
+                      2026,
+                      10,
+                      11
+                    ]
+                  ],
+                  "date-time": "2026-10-11T00:00:00Z",
+                  "timestamp": 1791676800000
+                },
+                "content-version": "vor",
+                "delay-in-days": 0,
+                "URL": "https://creativecommons.org/licenses/by/4.0/"
+              }
+            ],
+            "content-domain": {
+              "domain": [],
+              "crossmark-restriction": false
+            },
+            "short-container-title": [
+              "European Journal of General Dentistry"
+            ],
+            "abstract": "<jats:title>Abstract</jats:title>\n                  <jats:p>The goal of the current in vitro investigation was to assess how artificial aging via thermocycling affected color stability, fracture resistance, and shear bond strength of CAD-on restorations made on zirconia copings veneered with polymer-infiltrated ceramic network (PICN; VITA Enamic) and lithium disilicate materials.</jats:p>\n                  <jats:p>Three groups were created from 18 standardized crown specimens that resembled mandibular molar restorations (n = 6 per group): hand-layered zirconia restorations (control), zirconia copings veneered with PICN (VITA Enamic), and zirconia copings veneered with lithium disilicate using CAD-on technology. To mimic intraoral thermal aging, each specimen was thermocycled for 10,000 cycles between 5 and 55°C. Using a spectrophotometer, color stability was assessed and reported as ΔE00 values. Universal testing equipment was used to evaluate fracture resistance under compressive pressure. A chisel-edge loading method was used to measure the shear bond strength at the veneer–coping interface. One-way ANOVA and Tukey's post hoc test (α = 0.05) were used in the statistical study.</jats:p>\n                  <jats:p>Following thermocycling, all ΔE00 values remained within clinically acceptable ranges, and there were no statistically significant differences in color stability between the groups (p &gt; 0.05). The experimental group's fracture resistance values did not significantly alter before or after thermocycling (p &gt; 0.05). However, there were statistically significant differences in shear bond strength between the groups before and after thermocycling (p &lt; 0.05). Shear bond strength values were highest in the hand-layered zirconia group and lowest in the PICN-veneered CAD-on restorations.</jats:p>\n                  <jats:p>Within the constraints of current in vitro investigation, CAD-on restorations made on zirconia copings veneered with PICN (VITA Enamic) and lithium disilicate materials showed respectable color stability and fracture resistance following thermocycling. In contrast to the CAD-on designs, the traditional hand-layered zirconia restorations showed better shear bond strength.</jats:p>\n                  <jats:p>Zirconia-based CAD-on restorations may provide satisfactory esthetic and mechanical performance following thermal aging. However, the durability of the veneer–coping interface remains influenced by the veneering technique and material selection, which should be considered when planning long-term prosthetic restorations.</jats:p>",
+            "DOI": "10.1055/s-0046-1827254",
+            "type": "journal-article",
+            "created": {
+              "date-parts": [
+                [
+                  2026,
+                  10,
+                  11
+                ]
+              ],
+              "date-time": "2026-10-11T22:31:12Z",
+              "timestamp": 1791757872000
+            },
+            "source": "Crossref",
+            "is-referenced-by-count": 0,
+            "title": [
+              "Effect of Thermocycling on Color Stability, Fracture Resistance, and Shear Bond Strength of CAD-on Restorations (Lithium Disilicate and Polymer-Infiltrated Ceramic Network) Fabricated on Zirconia Copings"
+            ],
+            "prefix": "10.1055",
+            "author": [
+              {
+                "given": "Tanu",
+                "family": "Patel",
+                "sequence": "additional",
+                "affiliation": [
+                  {
+                    "name": "Department of Prosthodontics, Saveetha Dental College and Hospitals, Saveetha Institute of Medical and Technical Sciences, Chennai, Tamil Nadu, India"
+                  }
+                ],
+                "role": [
+                  {
+                    "vocabulary": "crossref",
+                    "role": "author"
+                  }
+                ]
+              },
+              {
+                "given": "Kiran Kumar",
+                "family": "Pandurangan",
+                "sequence": "additional",
+                "affiliation": [
+                  {
+                    "name": "Department of Prosthodontics, Saveetha Dental College and Hospitals, Saveetha Institute of Medical and Technical Sciences, Chennai, Tamil Nadu, India"
+                  }
+                ],
+                "role": [
+                  {
+                    "vocabulary": "crossref",
+                    "role": "author"
+                  }
+                ]
+              },
+              {
+                "given": "Subhabrata",
+                "family": "Maiti",
+                "sequence": "additional",
+                "affiliation": [
+                  {
+                    "name": "Department of Prosthodontics, Saveetha Dental College and Hospitals, Saveetha Institute of Medical and Technical Sciences, Chennai, Tamil Nadu, India"
+                  }
+                ],
+                "role": [
+                  {
+                    "vocabulary": "crossref",
+                    "role": "author"
+                  }
+                ]
+              },
+              {
+                "given": "Delphine Priscilla",
+                "family": "Antony",
+                "sequence": "additional",
+                "affiliation": [
+                  {
+                    "name": "Department of Conservative and Endodontics, Saveetha Dental College and Hospitals, Saveetha Institute of Medical and Technical Sciences, Chennai, Tamil Nadu, India"
+                  }
+                ],
+                "role": [
+                  {
+                    "vocabulary": "crossref",
+                    "role": "author"
+                  }
+                ]
+              },
+              {
+                "given": "Khushali K.",
+                "family": "Shah",
+                "sequence": "additional",
+                "affiliation": [
+                  {
+                    "name": "Department of Prosthodontics, Saveetha Dental College and Hospitals, Saveetha Institute of Medical and Technical Sciences, Chennai, Tamil Nadu, India"
+                  }
+                ],
+                "role": [
+                  {
+                    "vocabulary": "crossref",
+                    "role": "author"
+                  }
+                ]
+              },
+              {
+                "given": "Klara",
+                "family": "Avetisyan",
+                "sequence": "additional",
+                "affiliation": [
+                  {
+                    "name": "Oman Dental College (ODC), Muscat, Sultanate of Oman"
+                  }
+                ],
+                "role": [
+                  {
+                    "vocabulary": "crossref",
+                    "role": "author"
+                  }
+                ]
+              },
+              {
+                "ORCID": "https://orcid.org/0000-0001-6727-7969",
+                "authenticated-orcid": false,
+                "given": "Mario Alberto",
+                "family": "Alarcón-Sánchez",
+                "sequence": "additional",
+                "affiliation": [
+                  {
+                    "name": "Molecular Biology in Medicine Program, University Center of Health Sciences, University of Guadalajara (CUCS-UdeG), Guadalajara, Jalisco, Mexico"
+                  },
+                  {
+                    "name": "Department of Integral Dental Clinics, Institute of Research in Dentistry, University Center of Health Sciences, University of Guadalajara (CUCS-UdeG), Guadalajara, Jalisco, Mexico"
+                  }
+                ],
+                "role": [
+                  {
+                    "vocabulary": "crossref",
+                    "role": "author"
+                  }
+                ]
+              },
+              {
+                "ORCID": "https://orcid.org/0000-0001-8329-3205",
+                "authenticated-orcid": false,
+                "given": "Artak",
+                "family": "Heboyan",
+                "sequence": "additional",
+                "affiliation": [
+                  {
+                    "name": "Department of Research Analytics, Saveetha Dental College and Hospitals, Saveetha Institute of Medical and Technical Sciences, Chennai, India"
+                  },
+                  {
+                    "name": "Department of Prosthodontics, Faculty of Stomatology, Yerevan State Medical University after Mkhitar Heratsi, Yerevan, Armenia"
+                  },
+                  {
+                    "name": "Department of Prosthodontics, School of Dentistry, Tehran University of Medical Sciences, North Karegar St, Tehran, Iran"
+                  }
+                ],
+                "role": [
+                  {
+                    "vocabulary": "crossref",
+                    "role": "author"
+                  }
+                ]
+              },
+              {
+                "given": "Gustavo Eder",
+                "family": "González-Alvarez",
+                "sequence": "additional",
+                "affiliation": [
+                  {
+                    "name": "Department of Medical and Life Sciences, La Ciénega University Center, University of Guadalajara (CUCIENEGA-UdeG), Ocotlán, Jalisco, Mexico"
+                  }
+                ],
+                "role": [
+                  {
+                    "vocabulary": "crossref",
+                    "role": "author"
+                  }
+                ]
+              },
+              {
+                "given": "Sarah Monserrat",
+                "family": "Lomelí-Martínez",
+                "sequence": "additional",
+                "affiliation": [
+                  {
+                    "name": "Department of Medical and Life Sciences, La Ciénega University Center, University of Guadalajara (CUCIENEGA-UdeG), Ocotlán, Jalisco, Mexico"
+                  }
+                ],
+                "role": [
+                  {
+                    "vocabulary": "crossref",
+                    "role": "author"
+                  }
+                ]
+              }
+            ],
+            "member": "194",
+            "published-online": {
+              "date-parts": [
+                [
+                  2026,
+                  10,
+                  11
+                ]
+              ]
+            },
+            "container-title": [
+              "European Journal of General Dentistry"
+            ],
+            "language": "en",
+            "link": [
+              {
+                "URL": "http://www.thieme-connect.de/products/ejournals/pdf/10.1055/s-0046-1827254.pdf",
+                "content-type": "unspecified",
+                "content-version": "vor",
+                "intended-application": "similarity-checking"
+              }
+            ],
+            "deposited": {
+              "date-parts": [
+                [
+                  2026,
+                  10,
+                  11
+                ]
+              ],
+              "date-time": "2026-10-11T22:31:18Z",
+              "timestamp": 1791757878000
+            },
+            "score": 0,
+            "resource": {
+              "primary": {
+                "URL": "http://www.thieme-connect.de/DOI/DOI?10.1055/s-0046-1827254"
+              }
+            },
+            "issued": {
+              "date-parts": [
+                [
+                  2026,
+                  10,
+                  11
+                ]
+              ]
+            },
+            "references-count": 38,
+            "URL": "https://doi.org/10.1055/s-0046-1827254",
+            "archive": [
+              "Portico",
+              "CLOCKSS"
+            ],
+            "ISSN": [
+              "2278-9626",
+              "2320-4753"
+            ],
+            "issn-type": [
+              {
+                "value": "2278-9626",
+                "type": "print"
+              },
+              {
+                "value": "2320-4753",
+                "type": "electronic"
+              }
+            ],
+            "published": {
+              "date-parts": [
+                [
+                  2026,
+                  10,
+                  11
+                ]
+              ]
+            }
+          }
+        ],
+        "items-per-page": 3,
+        "query": {
+          "start-index": 0,
+          "search-terms": null
+        }
+      }
+    }
+  },
+  {
+    "cursor": "MTc5MTc1Nzg3ODAwMCwxNzkxNzU3ODcyMDAwLDEwLjEwNTUlMkZzLTAwNDYtMTgyNzI1NA==",
+    "body": {
+      "status": "ok",
+      "message-type": "work-list",
+      "message-version": "1.0.0",
+      "message": {
+        "facets": {},
+        "next-cursor": "MTc5MTc1NzkwMjAwMCwxNzkxNzU3OTAwMDAwLDEwLjEwNTUlMkZhLTI5NTQtODEyMA==",
+        "total-results": 6,
+        "items": [
+          {
+            "indexed": {
+              "date-parts": [
+                [
+                  2026,
+                  10,
+                  11
+                ]
+              ],
+              "date-time": "2026-10-11T22:46:05Z",
+              "timestamp": 1791758765383,
+              "version": "4.3.4"
+            },
+            "reference-count": 56,
+            "publisher": "Georg Thieme Verlag KG",
+            "issue": "08",
+            "content-domain": {
+              "domain": [],
+              "crossmark-restriction": false
+            },
+            "short-container-title": [
+              "TumorDiagnostik &amp; Therapie"
+            ],
+            "published-print": {
+              "date-parts": [
+                [
+                  2026,
+                  10
+                ]
+              ]
+            },
+            "abstract": "<jats:title>Zusammenfassung</jats:title>\n                  <jats:p>Das anaplastische Schilddrüsenkarzinom (ATC) ist eine seltene, hochaggressive Tumorerkrankung, die eine rasche Diagnosestellung und interdisziplinäre Therapieplanung erfordert. Die aktuelle S3-Leitlinie empfiehlt ein multimodales Behandlungskonzept aus Chirurgie, Strahlentherapie und systemischer Therapie. Klassische Chemotherapien bleiben dabei ein Bestandteil der Behandlung, zeigen jedoch insgesamt nur eine begrenzte Wirksamkeit.In den letzten Jahren hat sich die Therapie des ATC deutlich weiterentwickelt. Insbesondere molekular zielgerichtete Ansätze haben zu einem Paradigmenwechsel geführt: Die Kombination aus BRAF- und MEK-Inhibition ermöglicht bei BRAFV600E-mutierten Tumoren erstmals hohe Ansprechraten und relevante Überlebensvorteile und kann in ausgewählten Fällen sogar eine sekundäre Operabilität erreichen. Weitere zielgerichtete Therapien, etwa bei seltenen RET- oder NTRK-Alterationen, sowie immunonkologische Strategien erweitern das therapeutische Spektrum. Während Immuntherapien als Monotherapie nur begrenzt wirksam sind, zeigen sie insbesondere in Kombination mit zielgerichteten Therapien oder Tyrosinkinase-Inhibitoren vielversprechende Ergebnisse. Insgesamt entwickelt sich die Behandlung des ATC zunehmend hin zu einer individualisierten, molekular gesteuerten Therapie. Entscheidend für den Behandlungserfolg sind dabei eine schnelle molekulare Diagnostik, strukturierte Abläufe und die Versorgung in spezialisierten Zentren.</jats:p>",
+            "DOI": "10.1055/a-2939-8928",
+            "type": "journal-article",
+            "created": {
+              "date-parts": [
+                [
+                  2026,
+                  10,
+                  11
+                ]
+              ],
+              "date-time": "2026-10-11T22:31:40Z",
+              "timestamp": 1791757900000
+            },
+            "page": "528-537",
+            "source": "Crossref",
+            "is-referenced-by-count": 0,
+            "title": [
+              "Aktuelle Therapieoptionen beim anaplastischen Schilddrüsenkarzinom im Kontext der S3-Leitlinie"
+            ],
+            "prefix": "10.1055",
+            "volume": "47",
+            "author": [
+              {
+                "given": "Yara Maria",
+                "family": "Machlah",
+                "sequence": "additional",
+                "affiliation": [
+                  {
+                    "name": "Universitätsklinikum Essen, Nordrhein-Westfalen, Deutschland",
+                    "place": [
+                      "Essen"
+                    ],
+                    "department": [
+                      "Klinik für Endokrinologie, Diabetologie und Stoffwechsel"
+                    ]
+                  },
+                  {
+                    "name": "Universitätsklinikum Essen, Universität Essen-Duisburg, Nordrhein-Westfalen, Deutschland",
+                    "place": [
+                      "Essen"
+                    ],
+                    "department": [
+                      "Endokrines Tumorzentrum am WTZ"
+                    ]
+                  },
+                  {
+                    "name": "Universitätsklinikum Essen, Universität Duisburg-Essen, Member of ENDO-ERN und EURACAN, Nordrhein-Westfalen, Deutschland",
+                    "place": [
+                      "Essen"
+                    ],
+                    "department": [
+                      "Centrum für Endokrine Medizin"
+                    ]
+                  }
+                ],
+                "role": [
+                  {
+                    "vocabulary": "crossref",
+                    "role": "author"
+                  }
+                ]
+              },
+              {
+                "given": "Dagmar",
+                "family": "Führer",
+                "sequence": "additional",
+                "affiliation": [
+                  {
+                    "name": "Universitätsklinikum Essen, Nordrhein-Westfalen, Deutschland",
+                    "place": [
+                      "Essen"
+                    ],
+                    "department": [
+                      "Klinik für Endokrinologie, Diabetologie und Stoffwechsel"
+                    ]
+                  },
+                  {
+                    "name": "Universitätsklinikum Essen, Universität Essen-Duisburg, Nordrhein-Westfalen, Deutschland",
+                    "place": [
+                      "Essen"
+                    ],
+                    "department": [
+                      "Endokrines Tumorzentrum am WTZ"
+                    ]
+                  },
+                  {
+                    "name": "Universitätsklinikum Essen, Universität Duisburg-Essen, Member of ENDO-ERN und EURACAN, Nordrhein-Westfalen, Deutschland",
+                    "place": [
+                      "Essen"
+                    ],
+                    "department": [
+                      "Centrum für Endokrine Medizin"
+                    ]
+                  }
+                ],
+                "role": [
+                  {
+                    "vocabulary": "crossref",
+                    "role": "author"
+                  }
+                ]
+              },
+              {
+                "given": "Tim",
+                "family": "Brandenburg",
+                "sequence": "additional",
+                "affiliation": [
+                  {
+                    "name": "Universitätsklinikum Essen, Nordrhein-Westfalen, Deutschland",
+                    "place": [
+                      "Essen"
+                    ],
+                    "department": [
+                      "Klinik für Endokrinologie, Diabetologie und Stoffwechsel"
+                    ]
+                  },
+                  {
+                    "name": "Universitätsklinikum Essen, Universität Essen-Duisburg, Nordrhein-Westfalen, Deutschland",
+                    "place": [
+                      "Essen"
+                    ],
+                    "department": [
+                      "Endokrines Tumorzentrum am WTZ"
+                    ]
+                  },
+                  {
+                    "name": "Universitätsklinikum Essen, Universität Duisburg-Essen, Member of ENDO-ERN und EURACAN, Nordrhein-Westfalen, Deutschland",
+                    "place": [
+                      "Essen"
+                    ],
+                    "department": [
+                      "Centrum für Endokrine Medizin"
+                    ]
+                  }
+                ],
+                "role": [
+                  {
+                    "vocabulary": "crossref",
+                    "role": "author"
+                  }
+                ]
+              }
+            ],
+            "member": "194",
+            "published-online": {
+              "date-parts": [
+                [
+                  2026,
+                  10,
+                  11
+                ]
+              ]
+            },
+            "container-title": [
+              "TumorDiagnostik &amp; Therapie"
+            ],
+            "language": "de",
+            "link": [
+              {
+                "URL": "http://www.thieme-connect.de/products/ejournals/pdf/10.1055/a-2939-8928.pdf",
+                "content-type": "unspecified",
+                "content-version": "vor",
+                "intended-application": "similarity-checking"
+              }
+            ],
+            "deposited": {
+              "date-parts": [
+                [
+                  2026,
+                  10,
+                  11
+                ]
+              ],
+              "date-time": "2026-10-11T22:31:41Z",
+              "timestamp": 1791757901000
+            },
+            "score": 0,
+            "resource": {
+              "primary": {
+                "URL": "http://www.thieme-connect.de/DOI/DOI?10.1055/a-2939-8928"
+              }
+            },
+            "issued": {
+              "date-parts": [
+                [
+                  2026,
+                  10
+                ]
+              ]
+            },
+            "references-count": 56,
+            "journal-issue": {
+              "issue": "08",
+              "published-online": {
+                "date-parts": [
+                  [
+                    2026,
+                    10,
+                    12
+                  ]
+                ]
+              },
+              "published-print": {
+                "date-parts": [
+                  [
+                    2026,
+                    10
+                  ]
+                ]
+              }
+            },
+            "URL": "https://doi.org/10.1055/a-2939-8928",
+            "archive": [
+              "Portico",
+              "CLOCKSS"
+            ],
+            "ISSN": [
+              "0722-219X",
+              "1439-1279"
+            ],
+            "issn-type": [
+              {
+                "value": "0722-219X",
+                "type": "print"
+              },
+              {
+                "value": "1439-1279",
+                "type": "electronic"
+              }
+            ],
+            "published": {
+              "date-parts": [
+                [
+                  2026,
+                  10
+                ]
+              ]
+            }
+          },
+          {
+            "indexed": {
+              "date-parts": [
+                [
+                  2026,
+                  10,
+                  11
+                ]
+              ],
+              "date-time": "2026-10-11T22:46:03Z",
+              "timestamp": 1791758763872,
+              "version": "4.3.4"
+            },
+            "reference-count": 19,
+            "publisher": "Georg Thieme Verlag KG",
+            "issue": "08",
+            "content-domain": {
+              "domain": [],
+              "crossmark-restriction": false
+            },
+            "short-container-title": [
+              "TumorDiagnostik &amp; Therapie"
+            ],
+            "published-print": {
+              "date-parts": [
+                [
+                  2026,
+                  10
+                ]
+              ]
+            },
+            "abstract": "<jats:title>Zusammenfassung</jats:title>\n                  <jats:p>Immuntherapeutika wie Checkpoint-Inhibitoren und T-Zell-aktivierende Therapien haben die Onkologie revolutioniert, bergen jedoch Risiken schwerer Toxizitäten. Das Management umfasst eine gradadaptierte Immunsuppression, Steroide, IL-6-/IL-1-Inhibitoren und eine interdisziplinäre Intensivtherapie. Trotz etablierter Therapie-Algorithmen bleibt die Prognose bei Multi-Organbeteiligung oder anderen höhergradigen Toxizitäten kritisch. Eine frühzeitige Diagnostik und individualisierte Risiko-Nutzen-Abwägung sind entscheidend für den Therapie-Erfolg.</jats:p>",
+            "DOI": "10.1055/a-2941-7027",
+            "type": "journal-article",
+            "created": {
+              "date-parts": [
+                [
+                  2026,
+                  10,
+                  11
+                ]
+              ],
+              "date-time": "2026-10-11T22:31:40Z",
+              "timestamp": 1791757900000
+            },
+            "page": "538-542",
+            "source": "Crossref",
+            "is-referenced-by-count": 0,
+            "title": [
+              "Immuntherapie-induzierte Nebenwirkungen: Im Brennpunkt der Intensivmedizin"
+            ],
+            "prefix": "10.1055",
+            "volume": "47",
+            "author": [
+              {
+                "given": "Boris",
+                "family": "Böll",
+                "sequence": "additional",
+                "affiliation": [
+                  {
+                    "name": "Uniklinik Köln, Deutschland",
+                    "place": [
+                      "Köln"
+                    ],
+                    "department": [
+                      "Klinik I für Innere Medizin"
+                    ]
+                  }
+                ],
+                "role": [
+                  {
+                    "vocabulary": "crossref",
+                    "role": "author"
+                  }
+                ]
+              },
+              {
+                "given": "Jorge",
+                "family": "Garcia Borrega",
+                "sequence": "additional",
+                "affiliation": [
+                  {
+                    "name": "Uniklinik Köln, Deutschland",
+                    "place": [
+                      "Köln"
+                    ],
+                    "department": [
+                      "Klinik I für Innere Medizin"
+                    ]
+                  }
+                ],
+                "role": [
+                  {
+                    "vocabulary": "crossref",
+                    "role": "author"
+                  }
+                ]
+              },
+              {
+                "given": "Franziska",
+                "family": "Bach",
+                "sequence": "additional",
+                "affiliation": [
+                  {
+                    "name": "Uniklinik Köln, Deutschland",
+                    "place": [
+                      "Köln"
+                    ],
+                    "department": [
+                      "Klinik I für Innere Medizin"
+                    ]
+                  }
+                ],
+                "role": [
+                  {
+                    "vocabulary": "crossref",
+                    "role": "author"
+                  }
+                ]
+              },
+              {
+                "given": "Judit",
+                "family": "Grans-Siebel",
+                "sequence": "additional",
+                "affiliation": [
+                  {
+                    "name": "Uniklinik Köln, Deutschland",
+                    "place": [
+                      "Köln"
+                    ],
+                    "department": [
+                      "Klinik I für Innere Medizin"
+                    ]
+                  }
+                ],
+                "role": [
+                  {
+                    "vocabulary": "crossref",
+                    "role": "author"
+                  }
+                ]
+              },
+              {
+                "given": "Cäcilia",
+                "family": "Kaul",
+                "sequence": "additional",
+                "affiliation": [
+                  {
+                    "name": "Uniklinik Köln, Deutschland",
+                    "place": [
+                      "Köln"
+                    ],
+                    "department": [
+                      "Klinik I für Innere Medizin"
+                    ]
+                  }
+                ],
+                "role": [
+                  {
+                    "vocabulary": "crossref",
+                    "role": "author"
+                  }
+                ]
+              }
+            ],
+            "member": "194",
+            "published-online": {
+              "date-parts": [
+                [
+                  2026,
+                  10,
+                  11
+                ]
+              ]
+            },
+            "container-title": [
+              "TumorDiagnostik &amp; Therapie"
+            ],
+            "language": "de",
+            "link": [
+              {
+                "URL": "http://www.thieme-connect.de/products/ejournals/pdf/10.1055/a-2941-7027.pdf",
+                "content-type": "unspecified",
+                "content-version": "vor",
+                "intended-application": "similarity-checking"
+              }
+            ],
+            "deposited": {
+              "date-parts": [
+                [
+                  2026,
+                  10,
+                  11
+                ]
+              ],
+              "date-time": "2026-10-11T22:31:42Z",
+              "timestamp": 1791757902000
+            },
+            "score": 0,
+            "resource": {
+              "primary": {
+                "URL": "http://www.thieme-connect.de/DOI/DOI?10.1055/a-2941-7027"
+              }
+            },
+            "issued": {
+              "date-parts": [
+                [
+                  2026,
+                  10
+                ]
+              ]
+            },
+            "references-count": 19,
+            "journal-issue": {
+              "issue": "08",
+              "published-online": {
+                "date-parts": [
+                  [
+                    2026,
+                    10,
+                    12
+                  ]
+                ]
+              },
+              "published-print": {
+                "date-parts": [
+                  [
+                    2026,
+                    10
+                  ]
+                ]
+              }
+            },
+            "URL": "https://doi.org/10.1055/a-2941-7027",
+            "archive": [
+              "Portico",
+              "CLOCKSS"
+            ],
+            "ISSN": [
+              "0722-219X",
+              "1439-1279"
+            ],
+            "issn-type": [
+              {
+                "value": "0722-219X",
+                "type": "print"
+              },
+              {
+                "value": "1439-1279",
+                "type": "electronic"
+              }
+            ],
+            "published": {
+              "date-parts": [
+                [
+                  2026,
+                  10
+                ]
+              ]
+            }
+          },
+          {
+            "indexed": {
+              "date-parts": [
+                [
+                  2026,
+                  10,
+                  11
+                ]
+              ],
+              "date-time": "2026-10-11T22:46:05Z",
+              "timestamp": 1791758765389,
+              "version": "4.3.4"
+            },
+            "reference-count": 31,
+            "publisher": "Georg Thieme Verlag KG",
+            "issue": "08",
+            "content-domain": {
+              "domain": [],
+              "crossmark-restriction": false
+            },
+            "short-container-title": [
+              "TumorDiagnostik &amp; Therapie"
+            ],
+            "published-print": {
+              "date-parts": [
+                [
+                  2026,
+                  10
+                ]
+              ]
+            },
+            "abstract": "<jats:title>Was ist neu?</jats:title>\n                  <jats:p>Die Subtypen des cholangiozellulären Karzinoms (CCC) unterscheiden sich u.a. im Vorhandensein molekularer Alterationen. Besonders das iCCC vom Small-Duct-Typ weist häufig therapeutisch relevante Veränderungen wie FGFR2-Fusionen und IDH1-Mutationen auf. Extrahepatische CCCs und Gallenblasenkarzinome zeigen häufiger HER2- und KRAS-Alterationen und gewinnen durch neue HER2-gerichtete Therapien sowie neuste Entwicklungen der KRAS-Inhibition zunehmend an Bedeutung.</jats:p>\n                  <jats:p>Beim fortgeschrittenen CCC sollte die molekulare Analyse idealerweise bereits bei Erstdiagnose beziehungsweise parallel zur Einleitung der Erstlinientherapie erfolgen. Da es unter der Erstlinientherapie zu einer raschen Krankheitsprogression kommen kann, sollten zielgerichtete Therapieoptionen der Zweitlinie frühzeitig detektiert worden sein. Vor allem für FGFR2-, NTRK, NRG1- und RET-Fusionen ist daher eine fusionssensitive Analytik mit RNA-Komponente von großer Bedeutung.</jats:p>\n                  <jats:p>Es gibt bislang keine etablierten Biomarker, die das Ansprechen auf die Chemoimmuntherapie beim CCC verlässlich vorhersagen können. Translationale Ansätze wie die Analyse des Tumormikromilieus und räumlicher Immunprofile rücken zunehmend in den Fokus. Kommt es zu einem Progress unter der Erstlinie, richtet sich die weitere Therapiestrategie zunehmend nach dem molekularen Profil.</jats:p>\n                  <jats:p>Mit Zanidatamab steht für vorbehandelte HER2-positive biliäre Karzinome mit einem IHC-Score von 3+ eine neue zielgerichtete Option in der Zweitlinie zur Verfügung. Trastuzumab-Deruxtecan (Enhertu) ist in der EU für vorbehandelte, nicht resektable oder metastasierte HER2-positive (IHC 3+) solide Tumoren ohne zufriedenstellende weitere Therapieoption zugelassen. Die laufende Phase-III-Studie HERIZON-BTC-302 prüft, ob eine HER2-gerichtete Strategie bereits in der Erstlinie zusätzlichen Nutzen bietet.</jats:p>\n                  <jats:p>Präzisionsonkologie ist beim CCC klinische Realität, ihre Umsetzung bleibt jedoch optimierungsbedürftig. Entscheidend sind eine frühe Testung aller Patient*innen mit fortgeschrittener Erkrankung, methodisch vollständige Diagnostik einschließlich RNA-basierter Fusionsanalytik, zeitgerechte Befundverfügbarkeit und die interdisziplinäre Bewertung im molekularen Tumorboard.</jats:p>",
+            "DOI": "10.1055/a-2954-8120",
+            "type": "journal-article",
+            "created": {
+              "date-parts": [
+                [
+                  2026,
+                  10,
+                  11
+                ]
+              ],
+              "date-time": "2026-10-11T22:31:40Z",
+              "timestamp": 1791757900000
+            },
+            "page": "543-550",
+            "source": "Crossref",
+            "is-referenced-by-count": 0,
+            "title": [
+              "Cholangiozelluläres Karzinom als Modellerkrankung: Neue Wege in der personalisierten Medizin"
+            ],
+            "prefix": "10.1055",
+            "volume": "47",
+            "author": [
+              {
+                "given": "Maryam",
+                "family": "Barsch",
+                "sequence": "additional",
+                "affiliation": [
+                  {
+                    "name": "Universitätsklinikum Freiburg",
+                    "place": [
+                      "Freiburg"
+                    ],
+                    "department": [
+                      "Klinik für Innere Medizin II, Gastroenterologie, Hepatologie, Endokrinologie und Infektiologie"
+                    ]
+                  }
+                ],
+                "role": [
+                  {
+                    "vocabulary": "crossref",
+                    "role": "author"
+                  }
+                ]
+              },
+              {
+                "given": "Bertram",
+                "family": "Bengsch",
+                "sequence": "additional",
+                "affiliation": [
+                  {
+                    "name": "Universitätsklinikum Freiburg, Baden-Württemberg, Germany",
+                    "place": [
+                      "Freiburg"
+                    ],
+                    "department": [
+                      "Department Innere Medizin, Klinik für Innere Medizin II, Gastroenterologie, Hepatologie, Endokrinologie und Infektiologie, Universitätsklinikum Freiburg, Medizinische Fakultät, Albert-Ludwigs-Universität Freiburg"
+                    ]
+                  }
+                ],
+                "role": [
+                  {
+                    "vocabulary": "crossref",
+                    "role": "author"
+                  }
+                ]
+              }
+            ],
+            "member": "194",
+            "published-online": {
+              "date-parts": [
+                [
+                  2026,
+                  10,
+                  11
+                ]
+              ]
+            },
+            "container-title": [
+              "TumorDiagnostik &amp; Therapie"
+            ],
+            "language": "de",
+            "link": [
+              {
+                "URL": "http://www.thieme-connect.de/products/ejournals/pdf/10.1055/a-2954-8120.pdf",
+                "content-type": "unspecified",
+                "content-version": "vor",
+                "intended-application": "similarity-checking"
+              }
+            ],
+            "deposited": {
+              "date-parts": [
+                [
+                  2026,
+                  10,
+                  11
+                ]
+              ],
+              "date-time": "2026-10-11T22:31:42Z",
+              "timestamp": 1791757902000
+            },
+            "score": 0,
+            "resource": {
+              "primary": {
+                "URL": "http://www.thieme-connect.de/DOI/DOI?10.1055/a-2954-8120"
+              }
+            },
+            "issued": {
+              "date-parts": [
+                [
+                  2026,
+                  10
+                ]
+              ]
+            },
+            "references-count": 31,
+            "journal-issue": {
+              "issue": "08",
+              "published-online": {
+                "date-parts": [
+                  [
+                    2026,
+                    10,
+                    12
+                  ]
+                ]
+              },
+              "published-print": {
+                "date-parts": [
+                  [
+                    2026,
+                    10
+                  ]
+                ]
+              }
+            },
+            "URL": "https://doi.org/10.1055/a-2954-8120",
+            "archive": [
+              "Portico",
+              "CLOCKSS"
+            ],
+            "ISSN": [
+              "0722-219X",
+              "1439-1279"
+            ],
+            "issn-type": [
+              {
+                "value": "0722-219X",
+                "type": "print"
+              },
+              {
+                "value": "1439-1279",
+                "type": "electronic"
+              }
+            ],
+            "published": {
+              "date-parts": [
+                [
+                  2026,
+                  10
+                ]
+              ]
+            }
+          }
+        ],
+        "items-per-page": 3,
+        "query": {
+          "start-index": 0,
+          "search-terms": null
+        }
+      }
+    }
+  },
+  {
+    "cursor": "MTc5MTc1NzkwMjAwMCwxNzkxNzU3OTAwMDAwLDEwLjEwNTUlMkZhLTI5NTQtODEyMA==",
+    "body": {
+      "status": "ok",
+      "message-type": "work-list",
+      "message-version": "1.0.0",
+      "message": {
+        "facets": {},
+        "total-results": 6,
+        "items": [],
+        "items-per-page": 3,
+        "query": {
+          "start-index": 0,
+          "search-terms": null
+        }
+      }
+    }
+  }
+]

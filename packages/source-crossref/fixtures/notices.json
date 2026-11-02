@@ -1,0 +1,806 @@
+{
+  "status": "ok",
+  "message-type": "work-list",
+  "message-version": "1.0.0",
+  "message": {
+    "facets": {},
+    "total-results": 4,
+    "items": [
+      {
+        "indexed": {
+          "date-parts": [
+            [
+              2026,
+              5,
+              21
+            ]
+          ],
+          "date-time": "2026-05-21T00:00:07Z",
+          "timestamp": 1779321607750,
+          "version": "3.51.4"
+        },
+        "update-to": [
+          {
+            "DOI": "10.1055/s-2004-817674",
+            "type": "retraction",
+            "label": "Retraction",
+            "source": "retraction-watch",
+            "updated": {
+              "date-parts": [
+                [
+                  2023,
+                  1,
+                  1
+                ]
+              ],
+              "date-time": "2023-01-01T00:00:00Z",
+              "timestamp": 1672531200000
+            },
+            "record-id": "70644"
+          }
+        ],
+        "reference-count": 0,
+        "publisher": "Georg Thieme Verlag KG",
+        "issue": "02",
+        "content-domain": {
+          "domain": [],
+          "crossmark-restriction": false
+        },
+        "short-container-title": [
+          "Anästhesiol Intensivmed Notfallmed Schmerzther"
+        ],
+        "published-print": {
+          "date-parts": [
+            [
+              2004,
+              2
+            ]
+          ]
+        },
+        "DOI": "10.1055/s-2004-817674",
+        "type": "journal-article",
+        "created": {
+          "date-parts": [
+            [
+              2004,
+              2,
+              9
+            ]
+          ],
+          "date-time": "2004-02-09T10:39:15Z",
+          "timestamp": 1076323155000
+        },
+        "page": "71-77",
+        "source": "Crossref",
+        "is-referenced-by-count": 10,
+        "title": [
+          "Beeinflusst die Gabe von Hydroxyethylstärke die Nierenfunktion?"
+        ],
+        "prefix": "10.1055",
+        "volume": "39",
+        "author": [
+          {
+            "given": "Stefan",
+            "family": "Suttner",
+            "sequence": "additional",
+            "affiliation": [],
+            "role": [
+              {
+                "role": "author",
+                "vocabulary": "crossref"
+              }
+            ]
+          },
+          {
+            "given": "Joachim",
+            "family": "Boldt",
+            "sequence": "additional",
+            "affiliation": [],
+            "role": [
+              {
+                "role": "author",
+                "vocabulary": "crossref"
+              }
+            ]
+          }
+        ],
+        "member": "194",
+        "published-online": {
+          "date-parts": [
+            [
+              2004,
+              2,
+              9
+            ]
+          ]
+        },
+        "updated-by": [
+          {
+            "DOI": "10.1055/s-2004-817674",
+            "type": "retraction",
+            "label": "Retraction",
+            "source": "retraction-watch",
+            "updated": {
+              "date-parts": [
+                [
+                  2023,
+                  1,
+                  1
+                ]
+              ],
+              "date-time": "2023-01-01T00:00:00Z",
+              "timestamp": 1672531200000
+            },
+            "record-id": "70644"
+          }
+        ],
+        "container-title": [
+          "AINS - Anästhesiologie · Intensivmedizin · Notfallmedizin · Schmerztherapie"
+        ],
+        "language": "de",
+        "link": [
+          {
+            "URL": "http://www.thieme-connect.de/products/ejournals/pdf/10.1055/s-2004-817674.pdf",
+            "content-type": "unspecified",
+            "content-version": "vor",
+            "intended-application": "similarity-checking"
+          }
+        ],
+        "deposited": {
+          "date-parts": [
+            [
+              2023,
+              4,
+              12
+            ]
+          ],
+          "date-time": "2023-04-12T23:23:52Z",
+          "timestamp": 1681341832000
+        },
+        "score": 0,
+        "resource": {
+          "primary": {
+            "URL": "http://www.thieme-connect.de/DOI/DOI?10.1055/s-2004-817674"
+          }
+        },
+        "issued": {
+          "date-parts": [
+            [
+              2004,
+              2
+            ]
+          ]
+        },
+        "references-count": 0,
+        "journal-issue": {
+          "issue": "02",
+          "published-online": {
+            "date-parts": [
+              [
+                2004,
+                2,
+                4
+              ]
+            ]
+          },
+          "published-print": {
+            "date-parts": [
+              [
+                2004,
+                2
+              ]
+            ]
+          }
+        },
+        "URL": "https://doi.org/10.1055/s-2004-817674",
+        "archive": [
+          "Portico",
+          "CLOCKSS"
+        ],
+        "ISSN": [
+          "0939-2661",
+          "1439-1074"
+        ],
+        "issn-type": [
+          {
+            "value": "0939-2661",
+            "type": "print"
+          },
+          {
+            "value": "1439-1074",
+            "type": "electronic"
+          }
+        ],
+        "published": {
+          "date-parts": [
+            [
+              2004,
+              2
+            ]
+          ]
+        }
+      },
+      {
+        "indexed": {
+          "date-parts": [
+            [
+              2025,
+              12,
+              31
+            ]
+          ],
+          "date-time": "2025-12-31T04:13:53Z",
+          "timestamp": 1767154433100,
+          "version": "build-2238731810"
+        },
+        "update-to": [
+          {
+            "DOI": "10.1055/a-2458-7088",
+            "type": "retraction",
+            "label": "Retraction",
+            "source": "retraction-watch",
+            "updated": {
+              "date-parts": [
+                [
+                  2025,
+                  4,
+                  7
+                ]
+              ],
+              "date-time": "2025-04-07T00:00:00Z",
+              "timestamp": 1743984000000
+            },
+            "record-id": "63599"
+          }
+        ],
+        "reference-count": 0,
+        "publisher": "Georg Thieme Verlag KG",
+        "issue": "01",
+        "content-domain": {
+          "domain": [],
+          "crossmark-restriction": false
+        },
+        "short-container-title": [
+          "Horm Metab Res"
+        ],
+        "published-print": {
+          "date-parts": [
+            [
+              2025,
+              1
+            ]
+          ]
+        },
+        "DOI": "10.1055/a-2575-5491",
+        "type": "journal-article",
+        "created": {
+          "date-parts": [
+            [
+              2025,
+              4,
+              7
+            ]
+          ],
+          "date-time": "2025-04-07T19:00:44Z",
+          "timestamp": 1744052444000
+        },
+        "page": "e1-e1",
+        "source": "Crossref",
+        "is-referenced-by-count": 0,
+        "title": [
+          "Retraction Note: Prediction of the Survival Status, Immunotherapy Response, and Medication of Lung Adenocarcinoma Patients Based on Hypoxia- and Apoptosis-Related Genes"
+        ],
+        "prefix": "10.1055",
+        "volume": "57",
+        "author": [
+          {
+            "given": "Ziliang",
+            "family": "Shi",
+            "sequence": "additional",
+            "affiliation": [
+              {
+                "name": "Thoracic Surgery, The Affiliated Anyang Tumor Hospital of Henan University of Science and Technology, Anyang, China"
+              }
+            ],
+            "role": [
+              {
+                "role": "author",
+                "vocabulary": "crossref"
+              }
+            ]
+          },
+          {
+            "given": "Zi",
+            "family": "Sang",
+            "sequence": "additional",
+            "affiliation": [
+              {
+                "name": "Thoracic Surgery, The Affiliated Anyang Tumor Hospital of Henan University of Science and Technology, Anyang, China"
+              }
+            ],
+            "role": [
+              {
+                "role": "author",
+                "vocabulary": "crossref"
+              }
+            ]
+          },
+          {
+            "given": "Junmeng",
+            "family": "Xiao",
+            "sequence": "additional",
+            "affiliation": [
+              {
+                "name": "Thoracic Surgery, The Affiliated Anyang Tumor Hospital of Henan University of Science and Technology, Anyang, China"
+              }
+            ],
+            "role": [
+              {
+                "role": "author",
+                "vocabulary": "crossref"
+              }
+            ]
+          },
+          {
+            "given": "Jianbin",
+            "family": "Hou",
+            "sequence": "additional",
+            "affiliation": [
+              {
+                "name": "Thoracic Surgery, The Affiliated Anyang Tumor Hospital of Henan University of Science and Technology, Anyang, China"
+              }
+            ],
+            "role": [
+              {
+                "role": "author",
+                "vocabulary": "crossref"
+              }
+            ]
+          },
+          {
+            "given": "Mingfei",
+            "family": "Geng",
+            "sequence": "additional",
+            "affiliation": [
+              {
+                "name": "Thoracic Surgery, The Affiliated Anyang Tumor Hospital of Henan University of Science and Technology, Anyang, China"
+              }
+            ],
+            "role": [
+              {
+                "role": "author",
+                "vocabulary": "crossref"
+              }
+            ]
+          }
+        ],
+        "member": "194",
+        "published-online": {
+          "date-parts": [
+            [
+              2025,
+              4,
+              7
+            ]
+          ]
+        },
+        "container-title": [
+          "Hormone and Metabolic Research"
+        ],
+        "language": "en",
+        "link": [
+          {
+            "URL": "http://www.thieme-connect.de/products/ejournals/pdf/10.1055/a-2575-5491.pdf",
+            "content-type": "unspecified",
+            "content-version": "vor",
+            "intended-application": "similarity-checking"
+          }
+        ],
+        "deposited": {
+          "date-parts": [
+            [
+              2025,
+              4,
+              7
+            ]
+          ],
+          "date-time": "2025-04-07T19:00:44Z",
+          "timestamp": 1744052444000
+        },
+        "score": 0,
+        "resource": {
+          "primary": {
+            "URL": "http://www.thieme-connect.de/DOI/DOI?10.1055/a-2575-5491"
+          }
+        },
+        "issued": {
+          "date-parts": [
+            [
+              2025,
+              1
+            ]
+          ]
+        },
+        "references-count": 0,
+        "journal-issue": {
+          "issue": "01",
+          "published-online": {
+            "date-parts": [
+              [
+                2025,
+                1,
+                10
+              ]
+            ]
+          },
+          "published-print": {
+            "date-parts": [
+              [
+                2025,
+                1
+              ]
+            ]
+          }
+        },
+        "URL": "https://doi.org/10.1055/a-2575-5491",
+        "archive": [
+          "Portico",
+          "CLOCKSS"
+        ],
+        "ISSN": [
+          "0018-5043",
+          "1439-4286"
+        ],
+        "issn-type": [
+          {
+            "value": "0018-5043",
+            "type": "print"
+          },
+          {
+            "value": "1439-4286",
+            "type": "electronic"
+          }
+        ],
+        "published": {
+          "date-parts": [
+            [
+              2025,
+              1
+            ]
+          ]
+        }
+      },
+      {
+        "indexed": {
+          "date-parts": [
+            [
+              2025,
+              8,
+              19
+            ]
+          ],
+          "date-time": "2025-08-19T09:59:41Z",
+          "timestamp": 1755597581682,
+          "version": "3.28.0"
+        },
+        "reference-count": 0,
+        "publisher": "Georg Thieme Verlag KG",
+        "issue": "01",
+        "license": [
+          {
+            "start": {
+              "date-parts": [
+                [
+                  2024,
+                  7,
+                  4
+                ]
+              ],
+              "date-time": "2024-07-04T00:00:00Z",
+              "timestamp": 1720051200000
+            },
+            "content-version": "vor",
+            "delay-in-days": 185,
+            "URL": "https://creativecommons.org/licenses/by-nc-nd/4.0/"
+          }
+        ],
+        "content-domain": {
+          "domain": [],
+          "crossmark-restriction": false
+        },
+        "short-container-title": [
+          "Indographics"
+        ],
+        "published-print": {
+          "date-parts": [
+            [
+              2024,
+              1
+            ]
+          ]
+        },
+        "DOI": "10.1055/s-0044-1788560",
+        "type": "journal-article",
+        "created": {
+          "date-parts": [
+            [
+              2024,
+              7,
+              4
+            ]
+          ],
+          "date-time": "2024-07-04T23:10:00Z",
+          "timestamp": 1720134600000
+        },
+        "page": "e1-e1",
+        "source": "Crossref",
+        "is-referenced-by-count": 1,
+        "title": [
+          "Erratum"
+        ],
+        "prefix": "10.1055",
+        "volume": "03",
+        "member": "194",
+        "published-online": {
+          "date-parts": [
+            [
+              2024,
+              7,
+              4
+            ]
+          ]
+        },
+        "container-title": [
+          "Indographics"
+        ],
+        "language": "en",
+        "link": [
+          {
+            "URL": "http://www.thieme-connect.de/products/ejournals/pdf/10.1055/s-0044-1788560.pdf",
+            "content-type": "unspecified",
+            "content-version": "vor",
+            "intended-application": "similarity-checking"
+          }
+        ],
+        "deposited": {
+          "date-parts": [
+            [
+              2024,
+              11,
+              5
+            ]
+          ],
+          "date-time": "2024-11-05T13:54:10Z",
+          "timestamp": 1730814850000
+        },
+        "score": 0,
+        "resource": {
+          "primary": {
+            "URL": "http://www.thieme-connect.de/DOI/DOI?10.1055/s-0044-1788560"
+          }
+        },
+        "issued": {
+          "date-parts": [
+            [
+              2024,
+              1
+            ]
+          ]
+        },
+        "references-count": 0,
+        "journal-issue": {
+          "issue": "01",
+          "published-online": {
+            "date-parts": [
+              [
+                2024,
+                1,
+                9
+              ]
+            ]
+          },
+          "published-print": {
+            "date-parts": [
+              [
+                2024,
+                1
+              ]
+            ]
+          }
+        },
+        "URL": "https://doi.org/10.1055/s-0044-1788560",
+        "archive": [
+          "Portico",
+          "CLOCKSS"
+        ],
+        "ISSN": [
+          "2583-8229"
+        ],
+        "issn-type": [
+          {
+            "type": "electronic",
+            "value": "2583-8229"
+          }
+        ],
+        "published": {
+          "date-parts": [
+            [
+              2024,
+              1
+            ]
+          ]
+        }
+      },
+      {
+        "indexed": {
+          "date-parts": [
+            [
+              2025,
+              10,
+              24
+            ]
+          ],
+          "date-time": "2025-10-24T16:49:52Z",
+          "timestamp": 1761324592506,
+          "version": "3.28.0"
+        },
+        "reference-count": 0,
+        "publisher": "Georg Thieme Verlag KG",
+        "issue": "02",
+        "content-domain": {
+          "domain": [],
+          "crossmark-restriction": false
+        },
+        "short-container-title": [
+          "Heilpflanzen"
+        ],
+        "published-print": {
+          "date-parts": [
+            [
+              2024,
+              6
+            ]
+          ]
+        },
+        "DOI": "10.1055/a-2367-4608",
+        "type": "journal-article",
+        "created": {
+          "date-parts": [
+            [
+              2024,
+              7,
+              23
+            ]
+          ],
+          "date-time": "2024-07-23T22:51:03Z",
+          "timestamp": 1721775063000
+        },
+        "page": "E1-E1",
+        "source": "Crossref",
+        "is-referenced-by-count": 1,
+        "title": [
+          "Erratum: Pflanzen der Alpenwiesen"
+        ],
+        "prefix": "10.1055",
+        "volume": "04",
+        "author": [
+          {
+            "given": "Ellen",
+            "family": "Huber",
+            "sequence": "first",
+            "affiliation": [],
+            "role": [
+              {
+                "role": "author",
+                "vocabulary": "crossref"
+              }
+            ]
+          }
+        ],
+        "member": "194",
+        "published-online": {
+          "date-parts": [
+            [
+              2024,
+              7,
+              23
+            ]
+          ]
+        },
+        "container-title": [
+          "Heilpflanzen"
+        ],
+        "language": "de",
+        "link": [
+          {
+            "URL": "http://www.thieme-connect.de/products/ejournals/pdf/10.1055/a-2367-4608.pdf",
+            "content-type": "unspecified",
+            "content-version": "vor",
+            "intended-application": "similarity-checking"
+          }
+        ],
+        "deposited": {
+          "date-parts": [
+            [
+              2024,
+              11,
+              5
+            ]
+          ],
+          "date-time": "2024-11-05T14:04:08Z",
+          "timestamp": 1730815448000
+        },
+        "score": 0,
+        "resource": {
+          "primary": {
+            "URL": "http://www.thieme-connect.de/DOI/DOI?10.1055/a-2367-4608"
+          }
+        },
+        "subtitle": [
+          "Erratum: Vegetation in den verschiedenen Höhenlagen"
+        ],
+        "issued": {
+          "date-parts": [
+            [
+              2024,
+              6
+            ]
+          ]
+        },
+        "references-count": 0,
+        "journal-issue": {
+          "issue": "02",
+          "published-online": {
+            "date-parts": [
+              [
+                2024,
+                6,
+                14
+              ]
+            ]
+          },
+          "published-print": {
+            "date-parts": [
+              [
+                2024,
+                6
+              ]
+            ]
+          }
+        },
+        "URL": "https://doi.org/10.1055/a-2367-4608",
+        "archive": [
+          "Portico",
+          "CLOCKSS"
+        ],
+        "ISSN": [
+          "2747-4410",
+          "2747-4429"
+        ],
+        "issn-type": [
+          {
+            "type": "print",
+            "value": "2747-4410"
+          },
+          {
+            "type": "electronic",
+            "value": "2747-4429"
+          }
+        ],
+        "published": {
+          "date-parts": [
+            [
+              2024,
+              6
+            ]
+          ]
+        }
+      }
+    ],
+    "items-per-page": 4,
+    "query": {
+      "start-index": 0,
+      "search-terms": null
+    }
+  }
+}
