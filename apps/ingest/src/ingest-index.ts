@@ -2,7 +2,9 @@ import { existsSync } from 'node:fs';
 import {
   appError,
   type ArticleEnricher,
+  type ArticleRecord,
   type Clock,
+  type Doi,
   type Embedder,
   type Logger,
   type Source,
@@ -184,6 +186,90 @@ export async function purgeLicense(
   } catch (error) {
     if (build.db.open) build.close();
     throw error;
+  }
+}
+
+export interface SubsetDeps {
+  /** The index to copy from; it is only read. */
+  readonly sourcePath: string;
+  /** Where the subset index is built and swapped in. */
+  readonly indexPath: string;
+  readonly modelVersion: string;
+  readonly clock: Clock;
+  readonly logger: Logger;
+}
+
+export interface SubsetOutcome {
+  readonly written: number;
+  /** Requested DOIs the source index does not hold. */
+  readonly missing: readonly string[];
+  readonly verify: VerifyReport;
+  readonly committed: boolean;
+}
+
+/** Articles copied per transaction. */
+const SUBSET_BATCH = 100;
+
+/**
+ * `ingest subset`: builds a small index from chosen articles of a bigger one, such as the
+ * committed eval index (SM-08). Articles keep their chunks and embeddings, so nothing is
+ * fetched or embedded, and the subset is verified like any other build.
+ */
+export async function extractSubset(
+  dois: readonly string[],
+  deps: SubsetDeps,
+  signal: AbortSignal,
+): Promise<SubsetOutcome> {
+  const source = openDatabase(deps.sourcePath, { readonly: true, mustExist: true });
+  try {
+    const store = createSqliteIndexStore(source);
+    const meta = await store.reader.indexMeta(signal);
+    if (meta?.modelVersion !== deps.modelVersion) {
+      throw appError(
+        'INVALID_INPUT',
+        `The source index was built with ${meta?.modelVersion ?? 'no model'}, not ${deps.modelVersion}`,
+        { field: 'from' },
+      );
+    }
+    const build = beginIndexBuild({
+      indexPath: deps.indexPath,
+      kind: 'full',
+      now: deps.clock.now(),
+    });
+    try {
+      const missing: string[] = [];
+      let written = 0;
+      const wanted = [...new Set(dois)];
+      for (let start = 0; start < wanted.length; start += SUBSET_BATCH) {
+        const records: ArticleRecord[] = [];
+        for (const doi of wanted.slice(start, start + SUBSET_BATCH)) {
+          const record = await store.findRecord(doi as Doi, signal);
+          if (record === undefined) missing.push(doi);
+          else records.push(record);
+        }
+        await build.store.writer.upsert(records, signal);
+        written += records.length;
+      }
+      const verify = await verifyIndex(build.db, { modelVersion: deps.modelVersion }, signal);
+      if (!verify.ok) {
+        build.discard();
+        return { written, missing, verify, committed: false };
+      }
+      const builtAt = deps.clock.now();
+      build.commit({
+        version: builtAt.toISOString(),
+        modelVersion: deps.modelVersion,
+        articleCount: verify.articleCount,
+        chunkCount: verify.chunkCount,
+        builtAt,
+      });
+      return { written, missing, verify, committed: true };
+    } catch (error) {
+      if (build.db.open) build.close();
+      throw error;
+    }
+  } finally {
+    source.close();
   }
 }
 

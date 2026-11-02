@@ -2,12 +2,13 @@
 
 The ingestion CLI: the only writer of the index (key design decision 3). It pages through Crossref, adds Europe PMC subjects and matching-only full text when enabled, chunks and embeds what changed, builds the index next to the live one, verifies it and swaps it in. How to run and schedule it: [ingestion guide](../../docs/guides/ingestion.md). Design rules: [ADR 0022](../../docs/adr/0022-sqlite-index-files-and-builds.md).
 
-| Command                      | What it does                                                                                                           |
-| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `ingest full`                | Re-fetches everything into a new file, reusing embeddings of unchanged articles                                        |
-| `ingest incremental`         | Fetches records updated since the last run (1-day overlap); becomes `full` when one is due                             |
-| `ingest verify`              | Checks the live index (integrity, counts, model version, sample queries) without changing it                           |
-| `ingest purge-license <url>` | Removes all full text indexed under a licence through a verified build; take it off `FULLTEXT_LICENSE_ALLOWLIST` first |
+| Command                                                    | What it does                                                                                                                                                                                                      |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ingest full`                                              | Re-fetches everything into a new file, reusing embeddings of unchanged articles                                                                                                                                   |
+| `ingest incremental`                                       | Fetches records updated since the last run (1-day overlap); becomes `full` when one is due                                                                                                                        |
+| `ingest verify`                                            | Checks the live index (integrity, counts, model version, sample queries) without changing it                                                                                                                      |
+| `ingest purge-license <url>`                               | Removes all full text indexed under a licence through a verified build; take it off `FULLTEXT_LICENSE_ALLOWLIST` first                                                                                            |
+| `ingest subset --from <index> --dois <file> --out <index>` | Builds a verified index of chosen articles from a bigger one, reusing their chunks and embeddings, such as the eval index ([ADR 0026](../../docs/adr/0026-golden-set-eval-and-tuning.md)); writes only to `--out` |
 
 Exit codes: `0` done, `1` failed or not verified (the live index is unchanged), `2` bad usage.
 

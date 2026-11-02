@@ -11,6 +11,7 @@ import {
 } from '@scholarly-mcp/testkit';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
+  extractSubset,
   ingestIndex,
   purgeLicense,
   verifyLiveIndex,
@@ -176,6 +177,41 @@ describe('ingestIndex on SQLite files', () => {
         purgeLicense(CC_BY_NC_ND, purgeDeps([CC_BY_NC_ND.replace('https', 'http')]), signal),
       ).rejects.toMatchObject({ code: 'INVALID_INPUT' });
       expect(fullTextChunks()).toBe(1);
+    });
+  });
+
+  describe('extractSubset', () => {
+    const subsetDeps = () => ({
+      sourcePath: indexPath,
+      indexPath: join(dir, 'subset.sqlite'),
+      modelVersion: embedder.modelVersion,
+      clock: createFakeClock(),
+      logger: createTestLogger(),
+    });
+
+    it('copies the chosen articles with their embeddings into a verified index', async () => {
+      await ingestIndex('full', deps(numbered(5)), signal);
+      const before = embedder.calls();
+      const [one, three] = [article(1).doi, article(3).doi];
+
+      const outcome = await extractSubset([one, three, '10.1055/missing'], subsetDeps(), signal);
+      expect(outcome).toMatchObject({ written: 2, missing: ['10.1055/missing'], committed: true });
+      expect(outcome.verify).toMatchObject({ ok: true, articleCount: 2 });
+      expect(embedder.calls()).toBe(before);
+
+      const subset = openIndexReader(subsetDeps().indexPath, embedder.modelVersion);
+      expect(subset.meta()).toMatchObject({ articleCount: 2 });
+      const found = await subset.reader.findManyByDoi([one, three], signal);
+      expect(found.map(({ doi }) => doi).sort()).toEqual([one, three].sort());
+      subset.close();
+    });
+
+    it('refuses a source index built with another model', async () => {
+      await ingestIndex('full', deps(numbered(2)), signal);
+      await expect(
+        extractSubset([article(1).doi], { ...subsetDeps(), modelVersion: 'other@1' }, signal),
+      ).rejects.toMatchObject({ code: 'INVALID_INPUT' });
+      expect(existsSync(subsetDeps().indexPath)).toBe(false);
     });
   });
 });

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-import { mkdirSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { mkdirSync, readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { parseArgs } from 'node:util';
 import { fulltextConfigSchema, parseConfig, type Clock } from '@scholarly-mcp/core';
 import {
   MODEL_VERSION,
@@ -12,13 +13,15 @@ import { createCrossrefSource, crossrefConfigSchema } from '@scholarly-mcp/sourc
 import { createEuropepmcEnricher, europepmcConfigSchema } from '@scholarly-mcp/source-europepmc';
 import { sqliteConfigSchema } from '@scholarly-mcp/store-sqlite';
 import { ingestConfigSchema } from './config/ingest-config.js';
-import { ingestIndex, purgeLicense, verifyLiveIndex } from './ingest-index.js';
+import { extractSubset, ingestIndex, purgeLicense, verifyLiveIndex } from './ingest-index.js';
 
-const USAGE = 'Usage: ingest <full|incremental|verify|purge-license <licence-url>>';
+const USAGE =
+  'Usage: ingest <full|incremental|verify|purge-license <licence-url>|subset --from <index> --dois <file> --out <index>>';
 
 /**
  * The composition root (PLAN.md "Backend conventions"): reads config, creates the real
- * adapters and runs one command. Exit codes: 0 done, 1 failed or not verified, 2 bad usage.
+ * adapters and runs one command. `subset` writes only to its `--out` path, never to
+ * `INDEX_PATH`, so it cannot replace the live index by mistake. Exit codes: 0 done, 1 failed or not verified, 2 bad usage.
  * SIGINT and SIGTERM abort the run; its build file is kept and the next run resumes it.
  */
 async function main(argv: readonly string[]): Promise<number> {
@@ -72,6 +75,41 @@ async function main(argv: readonly string[]): Promise<number> {
         : 'Purge failed verification; the live index is unchanged',
     );
     return outcome.committed ? 0 : 1;
+  }
+  if (command === 'subset') {
+    const { values } = parseArgs({
+      args: argv.slice(1),
+      options: {
+        from: { type: 'string' },
+        dois: { type: 'string' },
+        out: { type: 'string' },
+      },
+    });
+    const { from, dois, out } = values;
+    if (
+      from === undefined ||
+      dois === undefined ||
+      out === undefined ||
+      resolve(from) === resolve(out)
+    ) {
+      process.stderr.write(`${USAGE}\n`);
+      return 2;
+    }
+    mkdirSync(dirname(out), { recursive: true });
+    const outcome = await extractSubset(
+      readFileSync(dois, 'utf8')
+        .split('\n')
+        .map((line) => line.trim())
+        .filter((line) => line !== '' && !line.startsWith('#')),
+      { sourcePath: from, indexPath: out, modelVersion: MODEL_VERSION, clock, logger },
+      controller.signal,
+    );
+    const { written, missing, verify, committed } = outcome;
+    logger.info(
+      { written, missing, verify },
+      committed ? 'Subset index written' : 'Subset failed verification; nothing was written',
+    );
+    return committed ? 0 : 1;
   }
   if (command !== 'full' && command !== 'incremental') {
     process.stderr.write(`${USAGE}\n`);
