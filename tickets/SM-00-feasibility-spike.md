@@ -3,6 +3,7 @@
 **Goal:** prove the data and model are good enough before building. Plan: "Phase 0" and "Risks".
 
 ## Tasks
+
 - [x] Pull 500 Crossref records for prefix 10.1055 (journal-article, from 2024-01-01) via the polite pool; measure abstract, license and language coverage
 - [x] Save 20 JATS abstract samples as fixtures (`packages/testkit/fixtures/jats/`)
 - [x] Check Europe PMC full-text coverage for the open access subset
@@ -11,4 +12,5 @@
 - [x] Cross-language test: 10 German queries vs 10 English abstracts; record hit rate
 
 ## Exit
+
 Coverage numbers and cross-language result written to `docs/spike-results.md`; go/no-go on the model recorded as an ADR.

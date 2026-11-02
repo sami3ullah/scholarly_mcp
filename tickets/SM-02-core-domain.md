@@ -1,6 +1,7 @@
 # SM-02 Core domain, ports, config, errors, testkit (Phase 1)
 
 ## Tasks
+
 - [ ] `packages/core`: zod schemas + types for Article, Chunk, SyncState, UsageEvent, IndexMeta, LandingSession, ArticleCard (plan: "Canonical records", "The article card")
 - [ ] DOI normalisation (lowercase, strip `https://doi.org/`, `doi:`) with property tests
 - [ ] Ports: `Source`, `ArticleReader`, `ArticleWriter`, `ArticleSearch`, `SessionStore`, `Embedder`, `Entitlements`, `Meter`, `Clock`, `RandomToken`
@@ -10,4 +11,5 @@
 - [ ] ADRs 0001-0013 for the key design decisions
 
 ## Exit
+
 Ports compile; contract suite passes against the in-memory fake; CI green.

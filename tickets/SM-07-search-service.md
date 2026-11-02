@@ -1,6 +1,7 @@
 # SM-07 Search service (Phase 3)
 
 ## Tasks
+
 - [ ] Query validation: trim, NFC, strip control chars and soft hyphens, cap 500 chars; empty = INVALID_INPUT; stopword-only = vector-only
 - [ ] DOI shortcut; exact title boost
 - [ ] Language detection; dual stemming when uncertain; DE/EN abbreviation map
@@ -12,4 +13,5 @@
 - [ ] 2 s budget via AbortSignal, TIMEOUT; LRU query-embedding cache
 
 ## Exit
+
 All search edge cases tested; p95 < 500 ms on the local corpus.

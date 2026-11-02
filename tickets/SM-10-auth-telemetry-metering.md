@@ -1,6 +1,7 @@
 # SM-10 Auth, rate limits, telemetry, metering, entitlements (Phase 4)
 
 ## Tasks
+
 - [ ] API keys hashed, identified by prefix; auth decisions cached for seconds only; UNAUTHORIZED
 - [ ] OAuth 2.1 resource-server mode (audience check) behind config
 - [ ] Per-key token bucket; RATE_LIMITED with `retryAfter`
@@ -11,4 +12,5 @@
 - [ ] SIGTERM drains in-flight requests and flushes the outbox
 
 ## Exit
+
 Every server/ops and metering edge case has a test.

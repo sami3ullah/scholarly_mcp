@@ -1,0 +1,14 @@
+/** A DOI in canonical form: lowercase, without resolver or `doi:` prefix. */
+export type Doi = string & { readonly __brand: 'Doi' };
+
+const PREFIXES = /^(?:https?:\/\/(?:dx\.)?doi\.org\/|doi:\s*)/i;
+const SHAPE = /^10\.\d{4,9}\/\S+$/;
+
+/**
+ * Normalises a DOI to its canonical form, or returns undefined when the input is not a DOI.
+ * DOIs are case-insensitive by spec, so lowercasing makes them safe as primary keys.
+ */
+export function normalizeDoi(input: string): Doi | undefined {
+  const candidate = input.trim().replace(PREFIXES, '').toLowerCase();
+  return SHAPE.test(candidate) ? (candidate as Doi) : undefined;
+}

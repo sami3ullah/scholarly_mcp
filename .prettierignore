@@ -1,0 +1,7 @@
+pnpm-lock.yaml
+docs/PLAN.md
+packages/testkit/fixtures/
+spikes/
+coverage/
+dist/
+.turbo/
