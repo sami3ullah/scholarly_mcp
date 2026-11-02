@@ -25,6 +25,8 @@ Everything beyond the quick start lives here. New guides are added as the featur
 | [ONNX embedder](../packages/embedder-onnx/README.md)     | Configuration and usage of the embedding model adapter                     |
 | [SQLite store](../packages/store-sqlite/README.md)       | Index and runtime files, text matching, build and swap                     |
 | [Ingest CLI](../apps/ingest/README.md)                   | Commands and configuration of the ingestion CLI                            |
+| [Search service](../packages/search/README.md)           | Query pipeline, fusion, teasers, cursors and search settings               |
+| [Eval CLI](../apps/eval/README.md)                       | Search latency bench on the live index                                     |
 
 ## Guides
 

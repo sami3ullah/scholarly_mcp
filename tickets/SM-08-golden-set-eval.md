@@ -6,6 +6,9 @@
 - [ ] Eval script: recall@10, MRR, nDCG@10; CI fails on regression
 - [ ] Small committed index for CI eval
 - [ ] Tune chunk size and candidate counts against the eval; record results
+- [ ] Add the eval as a command of `apps/eval` next to `bench` (ADR 0023), using `createSearchService` as the server will
+- [ ] Decide with the eval: stem in the detected language only (current, per plan) or always in both (`LexicalQuery.language`); BM25 column weights (ADR 0022); `SEARCH_CANDIDATES`; abbreviation expansions in the embedded text
+- [ ] Re-run `pnpm eval bench` after tuning; p95 was 132 ms at 50 candidates
 
 ## Exit
 

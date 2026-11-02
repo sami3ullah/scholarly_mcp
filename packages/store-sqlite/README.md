@@ -32,4 +32,4 @@ setInterval(() => index.refresh(), 30_000);
 
 ## Text matching
 
-German has no FTS5 stemmer, so text is folded (`ä` to `ae`, `ß` to `ss`, other diacritics removed) and Snowball-stemmed in TypeScript before it reaches FTS5, at index and at query time alike. Each chunk row also carries its article's title. Query words are reduced to letters and digits and quoted, so FTS syntax in user input is plain text.
+German has no FTS5 stemmer, so text is folded (`ä` to `ae`, `ß` to `ss`, other diacritics removed) and Snowball-stemmed in TypeScript before it reaches FTS5, at index and at query time alike. Each chunk row also carries its article's title. Query words are reduced to letters and digits and quoted, so FTS syntax in user input is plain text. A lexical query may carry the query's language; its words are then stemmed in that language only, otherwise in German and English.

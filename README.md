@@ -130,6 +130,7 @@ pnpm check        # format, lint, typecheck, layering rules, tests with coverage
 | `pnpm depcruise`                          | Enforces the layering rules between packages                          |
 | `pnpm format`                             | Prettier                                                              |
 | `pnpm ingest <full\|incremental\|verify>` | Build, refresh or check the index ([guide](docs/guides/ingestion.md)) |
+| `pnpm eval bench`                         | Times every search end to end on the live index                       |
 
 </details>
 
@@ -141,7 +142,8 @@ touching search or the tools.
 ```
 scholarly-mcp/
 ├── packages/
-│   ├── core/              domain types, zod schemas, ports, search + RRF, article cards
+│   ├── core/              domain types, zod schemas, ports, article cards
+│   ├── search/            search service: query pipeline, RRF fusion, teasers, cursors
 │   ├── source-crossref/   Crossref adapter (metadata, abstracts, licenses)
 │   ├── source-europepmc/  open access full text, used for matching only
 │   ├── store-sqlite/      FTS5 + trigram + sqlite-vec, landing sessions
@@ -151,6 +153,7 @@ scholarly-mcp/
 │   └── testkit/           contract suites, fixtures, golden set
 ├── apps/
 │   ├── ingest/            CLI: full, incremental, verify
+│   ├── eval/              CLI: search latency bench (golden-set eval in SM-08)
 │   ├── server/            MCP server: tools, auth, metering, health
 │   └── landing/           Next.js reference landing page
 └── docs/                  plan, ADRs, guides
@@ -197,7 +200,7 @@ Read more in the [engineering plan](docs/PLAN.md#high-level-architecture) and th
 | [SM-04](tickets/SM-04-chunker-embedder.md)        | Chunker and ONNX embedder                            |   ✅   |
 | [SM-05](tickets/SM-05-sqlite-store-ingest.md)     | SQLite store and ingest CLI                          |   ✅   |
 | [SM-06](tickets/SM-06-europepmc-source.md)        | Europe PMC full-text source                          |   ⬜   |
-| [SM-07](tickets/SM-07-search-service.md)          | Search service                                       |   ⬜   |
+| [SM-07](tickets/SM-07-search-service.md)          | Search service                                       |   ✅   |
 | [SM-08](tickets/SM-08-golden-set-eval.md)         | Golden set, eval and tuning                          |   ⬜   |
 | [SM-09](tickets/SM-09-mcp-server.md)              | MCP server: six tools and transports                 |   ⬜   |
 | [SM-10](tickets/SM-10-auth-telemetry-metering.md) | Auth, rate limits, telemetry, metering               |   ⬜   |
