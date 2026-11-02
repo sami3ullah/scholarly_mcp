@@ -86,16 +86,18 @@ Six read-only MCP tools. Every one returns article cards, never article content.
   "teaser": "At most 280 characters, cut at a word boundary…",
   "whyMatched": "matched in Results: local therapy",
   "access": "open",
+  "license": "https://creativecommons.org/licenses/by/4.0/",
   "url": "https://…/mcp/landing?t=<token>&doi=10.1055/a-2209-6022&utm_source=mcp&utm_medium=ai&utm_campaign=search_articles",
-  "doi": "10.1055/a-2209-6022",
-  "notice": "Evidence pointers, not clinical advice. Independent prototype, not affiliated with Thieme."
+  "doi": "10.1055/a-2209-6022"
 }
 ```
 
+Every response also carries `"notice": "Evidence pointers, not clinical advice. Independent prototype, not affiliated with Thieme."` and a plain-text version with linked titles.
+
 </details>
 
-> [!IMPORTANT]
-> The tools are being built. See the [roadmap](#roadmap) for what works today.
+> [!NOTE]
+> All six tools work over stdio and Streamable HTTP (loopback only until API keys land in SM-10). Connect Claude Desktop or MCP Inspector with the [client guide](docs/guides/connecting-clients.md).
 
 ## Quick start
 
@@ -120,17 +122,18 @@ pnpm check        # format, lint, typecheck, layering rules, tests with coverage
 <details>
 <summary><b>All scripts</b></summary>
 
-| Script                                    | What it does                                                          |
-| ----------------------------------------- | --------------------------------------------------------------------- |
-| `pnpm check`                              | Everything CI runs, in order                                          |
-| `pnpm test`                               | Unit and contract tests (Vitest)                                      |
-| `pnpm test:coverage`                      | Tests with the 85% coverage gate                                      |
-| `pnpm lint`                               | ESLint, strict and type-aware                                         |
-| `pnpm typecheck`                          | `tsc` across all packages (Turborepo)                                 |
-| `pnpm depcruise`                          | Enforces the layering rules between packages                          |
-| `pnpm format`                             | Prettier                                                              |
-| `pnpm ingest <full\|incremental\|verify>` | Build, refresh or check the index ([guide](docs/guides/ingestion.md)) |
-| `pnpm eval bench`                         | Times every search end to end on the live index                       |
+| Script                                    | What it does                                                                    |
+| ----------------------------------------- | ------------------------------------------------------------------------------- |
+| `pnpm check`                              | Everything CI runs, in order                                                    |
+| `pnpm test`                               | Unit and contract tests (Vitest)                                                |
+| `pnpm test:coverage`                      | Tests with the 85% coverage gate                                                |
+| `pnpm lint`                               | ESLint, strict and type-aware                                                   |
+| `pnpm typecheck`                          | `tsc` across all packages (Turborepo)                                           |
+| `pnpm depcruise`                          | Enforces the layering rules between packages                                    |
+| `pnpm format`                             | Prettier                                                                        |
+| `pnpm ingest <full\|incremental\|verify>` | Build, refresh or check the index ([guide](docs/guides/ingestion.md))           |
+| `pnpm eval bench`                         | Times every search end to end on the live index                                 |
+| `node apps/server/dist/main.js`           | The MCP server, after `pnpm build` ([guide](docs/guides/connecting-clients.md)) |
 
 </details>
 
@@ -144,6 +147,7 @@ scholarly-mcp/
 ├── packages/
 │   ├── core/              domain types, zod schemas, ports, article cards
 │   ├── search/            search service: query pipeline, RRF fusion, teasers, cursors
+│   ├── cite/              citations: Vancouver, APA, AMA, BibTeX, RIS
 │   ├── source-crossref/   Crossref adapter (metadata, abstracts, licenses)
 │   ├── source-europepmc/  open access full text, used for matching only
 │   ├── store-sqlite/      FTS5 + trigram + sqlite-vec, landing sessions
@@ -154,7 +158,7 @@ scholarly-mcp/
 ├── apps/
 │   ├── ingest/            CLI: full, incremental, verify
 │   ├── eval/              CLI: search latency bench (golden-set eval in SM-08)
-│   ├── server/            MCP server: tools, auth, metering, health
+│   ├── server/            MCP server: six tools, stdio and Streamable HTTP
 │   └── landing/           Next.js reference landing page
 └── docs/                  plan, ADRs, guides
 ```
@@ -187,7 +191,9 @@ Read more in the [engineering plan](docs/PLAN.md#high-level-architecture) and th
 | **Thin abstracts.** About half of recent Thieme articles have no abstract in Crossref.                                                                                                                                                                                                                                                                                        | Those articles match on title, journal and subjects, plus their full text when they are open access in Europe PMC (used for matching only, [ADR 0024](docs/adr/0024-europe-pmc-enrichment.md)). | A publisher's own content API removes it.        |
 | **Coarse subjects for some articles.** Crossref has no subjects; Europe PMC covers only part of the corpus ([ADR 0004](docs/adr/0004-subjects-from-europe-pmc.md)).                                                                                                                                                                                                           | Articles outside Europe PMC get journal-level subjects.                                                                                                                                         | A publisher's own taxonomy via a source adapter. |
 | **Embargoes open on a full run.** An article whose open licence starts in the future is indexed as closed; incremental runs skip unchanged records, so it opens at the next full run, which `ingest incremental` triggers every 7 days by default ([ADR 0020](docs/adr/0020-crossref-source-ingestion-rules.md), [ADR 0022](docs/adr/0022-sqlite-index-files-and-builds.md)). | Until then it shows as paywalled, with the abstract and a subscribe link.                                                                                                                       |
-| **Early development.** Most tools are not built yet.                                                                                                                                                                                                                                                                                                                          | See the roadmap.                                                                                                                                                                                | -                                                |
+| **Local only.** The HTTP transport binds to loopback; there are no API keys, rate limits or metering yet.                                                                                                                                                                                                                                                                     | Use it from your own machine (Claude Desktop, MCP Inspector).                                                                                                                                   | SM-10.                                           |
+| **Citations without volume, issue and pages.** The canonical article record does not carry them yet.                                                                                                                                                                                                                                                                          | Citations name the journal, date and DOI only (AMA prints "Published online").                                                                                                                  | SM-14 adds them at the next full rebuild.        |
+| **No journal page links by default.** No verified ISSN-based journal URL is known for the publisher's site.                                                                                                                                                                                                                                                                   | `get_journal` and `get_article` omit the journal link.                                                                                                                                          | Set `JOURNAL_URL_TEMPLATE`.                      |
 
 ## Roadmap
 
@@ -202,7 +208,7 @@ Read more in the [engineering plan](docs/PLAN.md#high-level-architecture) and th
 | [SM-06](tickets/SM-06-europepmc-source.md)        | Europe PMC full-text source                          |   🚧   |
 | [SM-07](tickets/SM-07-search-service.md)          | Search service                                       |   ✅   |
 | [SM-08](tickets/SM-08-golden-set-eval.md)         | Golden set, eval and tuning                          |   ⬜   |
-| [SM-09](tickets/SM-09-mcp-server.md)              | MCP server: six tools and transports                 |   ⬜   |
+| [SM-09](tickets/SM-09-mcp-server.md)              | MCP server: six tools and transports                 |   ✅   |
 | [SM-10](tickets/SM-10-auth-telemetry-metering.md) | Auth, rate limits, telemetry, metering               |   ⬜   |
 | [SM-11](tickets/SM-11-landing.md)                 | Landing sessions and Next.js landing page            |   ⬜   |
 | [SM-12](tickets/SM-12-mcp-apps-funnel.md)         | MCP Apps cards and funnel dashboard                  |   ⬜   |

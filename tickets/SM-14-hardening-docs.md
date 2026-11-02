@@ -8,6 +8,8 @@
 - [ ] E2E smoke script: compose up, call every tool over HTTP
 - [ ] README (order per plan), `ADAPTERS.md`, `LANDING.md`, `OPERATIONS.md`, `SECURITY.md`; `presets/thieme.env`, `presets/thieme.subjects.json` (journal-level subjects by ISSN)
 - [ ] Release workflow: tag -> GHCR image + SBOM
+- [ ] Add volume, issue and pages to `Article` (Crossref mapping) at a planned full rebuild, so citations carry them (ADR 0025)
+- [ ] Verify an ISSN-based journal page URL for the Thieme preset and set `JOURNAL_URL_TEMPLATE` (ADR 0025)
 
 ## Exit
 

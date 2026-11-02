@@ -14,7 +14,7 @@ Status values: `todo`, `in-progress`, `done`, `blocked`. Update the table when a
 | SM-06 | Europe PMC full-text source                          | 2     | SM-05        | in-progress                 |
 | SM-07 | Search service                                       | 3     | SM-05        | done                        |
 | SM-08 | Golden set, eval and tuning                          | 3     | SM-07        | todo                        |
-| SM-09 | MCP server: six tools and transports                 | 4     | SM-07        | todo                        |
+| SM-09 | MCP server: six tools and transports                 | 4     | SM-07        | done                        |
 | SM-10 | Auth, rate limits, telemetry, metering, entitlements | 4     | SM-09        | todo                        |
 | SM-11 | Landing sessions and Next.js landing page            | 4b    | SM-09        | todo                        |
 | SM-12 | MCP Apps cards and funnel dashboard                  | 4b    | SM-10, SM-11 | todo                        |

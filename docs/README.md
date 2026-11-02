@@ -29,6 +29,8 @@ Everything beyond the quick start lives here. New guides are added as the featur
 | [Ingest CLI](../apps/ingest/README.md)                        | Commands and configuration of the ingestion CLI                            |
 | [Search service](../packages/search/README.md)                | Query pipeline, fusion, teasers, cursors and search settings               |
 | [Eval CLI](../apps/eval/README.md)                            | Search latency bench on the live index                                     |
+| [MCP server](../apps/server/README.md)                        | The six tools, their inputs and outputs, layout and configuration          |
+| [Citations](../packages/cite/README.md)                       | Citation styles, how records map to CSL, the vendored AMA style            |
 
 ## Guides
 
@@ -36,13 +38,13 @@ Everything beyond the quick start lives here. New guides are added as the featur
 | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | [Ingestion](guides/ingestion.md)                     | Building, refreshing and verifying the index                                                     |
 | [How ingestion works](guides/how-ingestion-works.md) | Every step from Crossref to a swapped-in index, how full text stays hidden, and how it was built |
+| [Connecting clients](guides/connecting-clients.md)   | Running the MCP server and connecting Claude Desktop or MCP Inspector, over stdio or HTTP        |
 
 Planned:
 
 | Guide                                                               | Ships with |
 | ------------------------------------------------------------------- | ---------- |
 | `guides/development.md` - local setup, scripts, testing conventions | SM-02      |
-| `guides/connecting-clients.md` - Claude, ChatGPT and MCP Inspector  | SM-09      |
 | `ADAPTERS.md` - plugging in your own content API or store           | SM-13      |
 | `LANDING.md` - rebuilding the landing page in your own stack        | SM-11      |
 | `OPERATIONS.md` - deploying, scaling, monitoring                    | SM-14      |
