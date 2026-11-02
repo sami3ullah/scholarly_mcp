@@ -197,6 +197,15 @@ importers:
       '@scholarly-mcp/core':
         specifier: workspace:*
         version: link:../core
+      better-sqlite3:
+        specifier: ^13.0.3
+        version: 13.0.3
+      snowball-stemmers:
+        specifier: ^0.6.0
+        version: 0.6.0
+      sqlite-vec:
+        specifier: ^0.1.9
+        version: 0.1.9
       zod:
         specifier: ^4.6.7
         version: 4.6.7
@@ -1058,6 +1067,10 @@ packages:
     resolution: {integrity: sha512-BLrgEcRTwX2o6gGxGOCNyMvGSp35YofuYzw9h1IMTRmKqttAZZVU67bdb9Pr2vUHA8+j3i2tJfjO6C6+4myGTA==}
     engines: {node: 18 || 20 || >=22}
 
+  better-sqlite3@13.0.3:
+    resolution: {integrity: sha512-RbOBxmLBG8uvFUc15X9+9SFemKcQ0WBuISBVkpuiaUB2qblC8UWlHEjdWVoZ8AdhSwmoEgsiXKfopX0CQxaACQ==}
+    engines: {node: '>=22'}
+
   brace-expansion@5.0.12:
     resolution: {integrity: sha512-YovQ3rzhaLMIrDjNDMkNS01tea93qhEhG5xy8f6+R0l+dw3Ki+5sCoIoI942iuLZTHWogWktgwVDhU09iNEimQ==}
     engines: {node: 20 || >=22}
@@ -1651,6 +1664,10 @@ packages:
   natural-compare@1.4.0:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
 
+  node-addon-api@8.9.2:
+    resolution: {integrity: sha512-VijLXbi3UACN69I0JVXJsX4tjACjNoQDgv2gTF6sx2wWEi8tkSg2eX8p5gSIFi8z2+DL3oHmY6OyKce38SDolg==}
+    engines: {node: ^18 || ^20 || >= 21}
+
   object-keys@1.1.1:
     resolution: {integrity: sha512-NuAESUOUMrlIXOfHKzD6bpPu3tYt3xvjNdRIQ+FeT0lNb4K8WR70CaDxhuNguS2XG+GjkyMwOzsN5ZktImfhLA==}
     engines: {node: '>= 0.4'}
@@ -1854,6 +1871,9 @@ packages:
   sisteransi@1.0.5:
     resolution: {integrity: sha512-bLGGlR1QxBcynn2d5YmDX4MGjlZvy2MRBDRNHLJ8VI6l6+9FUiyTFNJ0IveOSP0bcXgVDPRcfGqA0pjaqUpfVg==}
 
+  snowball-stemmers@0.6.0:
+    resolution: {integrity: sha512-47VTJvsZzEme3VxhbUFc9wR0CX8fYKNMgL7AiBdJcHUrwbmN7htFroeX+8ESIAaoNgwEgwI2wnv1HIcqQqAdcA==}
+
   sonic-boom@4.2.1:
     resolution: {integrity: sha512-w6AxtubXa2wTXAUsZMMWERrsIRAdrK0Sc+FUytWvYAhBJLyuI4llrMIC1DtlNSdI99EI86KZum2MMq3EAZlF9Q==}
 
@@ -1864,6 +1884,34 @@ packages:
   split2@4.2.0:
     resolution: {integrity: sha512-UcjcJOWknrNkF6PLX83qcHM6KHgVKNkV62Y8a5uYDVv9ydGQVwAHMKqHdJje1VTWpljG0WYpCDhrCdAOYH4TWg==}
     engines: {node: '>= 10.x'}
+
+  sqlite-vec-darwin-arm64@0.1.9:
+    resolution: {integrity: sha512-jSsZpE42OfBkGL/ItyJTVCUwl6o6Ka3U5rc4j+UBDIQzC1ulSSKMEhQLthsOnF/MdAf1MuAkYhkdKmmcjaIZQg==}
+    cpu: [arm64]
+    os: [darwin]
+
+  sqlite-vec-darwin-x64@0.1.9:
+    resolution: {integrity: sha512-KDlVyqQT7pnOhU1ymB9gs7dMbSoVmKHitT+k1/xkjarcX8bBqPxWrGlK/R+C5WmWkfvWwyq5FfXfiBYCBs6PlA==}
+    cpu: [x64]
+    os: [darwin]
+
+  sqlite-vec-linux-arm64@0.1.9:
+    resolution: {integrity: sha512-5wXVJ9c9kR4CHm/wVqXb/R+XUHTdpZ4nWbPHlS+gc9qQFVHs92Km4bPnCKX4rtcPMzvNis+SIzMJR1SCEwpuUw==}
+    cpu: [arm64]
+    os: [linux]
+
+  sqlite-vec-linux-x64@0.1.9:
+    resolution: {integrity: sha512-w3tCH8xK2finW8fQJ/m8uqKodXUZ9KAuAar2UIhz4BHILfpE0WM/MTGCRfa7RjYbrYim5Luk3guvMOGI7T7JQA==}
+    cpu: [x64]
+    os: [linux]
+
+  sqlite-vec-windows-x64@0.1.9:
+    resolution: {integrity: sha512-y3gEIyy/17bq2QFPQOWLE68TYWcRZkBQVA2XLrTPHNTOp55xJi/BBBmOm40tVMDMjtP+Elpk6UBUXdaq+46b0Q==}
+    cpu: [x64]
+    os: [win32]
+
+  sqlite-vec@0.1.9:
+    resolution: {integrity: sha512-L7XJWRIBNvR9O5+vh1FQ+IGkh/3D2AzVksW5gdtk28m78Hy8skFD0pqReKH1Yp0/BUKRGcffgKvyO/EON5JXpA==}
 
   std-env@4.3.0:
     resolution: {integrity: sha512-OtU/EgQ1kIm5KwqQpBC6ZEMXrZRui11w8zgfTWp8cdO9B8OaPsbA8bTHO2P+HNo1VlUTGMVBwPhydu6poeXiag==}
@@ -2946,6 +2994,10 @@ snapshots:
 
   balanced-match@4.0.4: {}
 
+  better-sqlite3@13.0.3:
+    dependencies:
+      node-addon-api: 8.9.2
+
   brace-expansion@5.0.12:
     dependencies:
       balanced-match: 4.0.4
@@ -3493,6 +3545,8 @@ snapshots:
 
   natural-compare@1.4.0: {}
 
+  node-addon-api@8.9.2: {}
+
   object-keys@1.1.1: {}
 
   obug@3.0.0: {}
@@ -3726,6 +3780,8 @@ snapshots:
 
   sisteransi@1.0.5: {}
 
+  snowball-stemmers@0.6.0: {}
+
   sonic-boom@4.2.1:
     dependencies:
       atomic-sleep: 1.0.0
@@ -3733,6 +3789,29 @@ snapshots:
   source-map-js@1.2.2: {}
 
   split2@4.2.0: {}
+
+  sqlite-vec-darwin-arm64@0.1.9:
+    optional: true
+
+  sqlite-vec-darwin-x64@0.1.9:
+    optional: true
+
+  sqlite-vec-linux-arm64@0.1.9:
+    optional: true
+
+  sqlite-vec-linux-x64@0.1.9:
+    optional: true
+
+  sqlite-vec-windows-x64@0.1.9:
+    optional: true
+
+  sqlite-vec@0.1.9:
+    optionalDependencies:
+      sqlite-vec-darwin-arm64: 0.1.9
+      sqlite-vec-darwin-x64: 0.1.9
+      sqlite-vec-linux-arm64: 0.1.9
+      sqlite-vec-linux-x64: 0.1.9
+      sqlite-vec-windows-x64: 0.1.9
 
   std-env@4.3.0: {}
 
