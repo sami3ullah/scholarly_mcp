@@ -66,6 +66,14 @@ describe('SQLite lexical search with German text', () => {
     expect(hits).toContain('10.1055/a-4' as Doi);
   });
 
+  it('stems in the query language when one is given', async () => {
+    const hits = await store.search.lexical(
+      { terms: ['Patient'], language: 'de', filters, limit: 10 },
+      signal,
+    );
+    expect(hits.map((hit) => hit.doi)).toEqual(['10.1055/a-1']);
+  });
+
   it('keeps the limit when trigram hits top up the list', async () => {
     const hits = await store.search.lexical(
       { terms: ['Versorgung', 'Vorhofflimmern'], filters, limit: 2 },

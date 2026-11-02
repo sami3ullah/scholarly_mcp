@@ -1,4 +1,5 @@
 import type { Doi } from '../article/doi.js';
+import type { Language } from '../article/language.js';
 
 /** Filters applied identically to the lexical and the vector side of a search. */
 export interface SearchFilters {
@@ -17,6 +18,11 @@ export interface SearchFilters {
  */
 export interface LexicalQuery {
   readonly terms: readonly string[];
+  /**
+   * The query's language when it was detected with confidence. Adapters stem the terms in
+   * this language only, and in both German and English when it is absent.
+   */
+  readonly language?: Language;
   readonly filters: SearchFilters;
   readonly limit: number;
 }

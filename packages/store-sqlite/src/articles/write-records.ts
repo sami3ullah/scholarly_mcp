@@ -4,10 +4,10 @@ import {
   type ArticleRecord,
   type Chunk,
   type Doi,
+  foldText,
 } from '@scholarly-mcp/core';
 import { toJsonWithDates } from '../database/json-with-dates.js';
 import type { Db } from '../database/open-database.js';
-import { foldText } from '../text/fold-text.js';
 import { stemmedText } from '../text/terms.js';
 import { vectorBlob } from './rows.js';
 

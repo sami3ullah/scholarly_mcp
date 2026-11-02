@@ -46,12 +46,12 @@ export function createSqliteSearch(db: Db): ArticleSearch {
   };
 
   return {
-    lexical: ({ terms, filters, limit }, signal) =>
+    lexical: ({ terms, language, filters, limit }, signal) =>
       withSignal(signal, () => {
-        const main = mainMatch(terms);
+        const main = mainMatch(terms, language);
         if (main === undefined || limit <= 0) return [];
         const hits = lexicalRows('chunks_fts', BM25, main, filters, limit);
-        const trigram = trigramMatch(terms);
+        const trigram = trigramMatch(terms, language);
         if (hits.length < limit && trigram !== undefined) {
           const seen = new Set(hits.map((hit) => hit.id));
           const extra = lexicalRows(

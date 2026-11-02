@@ -1,5 +1,5 @@
 import snowball from 'snowball-stemmers';
-import { foldText } from './fold-text.js';
+import { foldText } from '@scholarly-mcp/core';
 
 const german = snowball.newStemmer('german');
 const english = snowball.newStemmer('english');
@@ -30,11 +30,14 @@ export function stemmedText(text: string, language: string | undefined): string 
 }
 
 /**
- * The forms a query word may take in the index: the folded word and its German and English
- * stems, because the language of a query is never certain (PLAN.md "Query pipeline").
+ * The forms a query word may take in the index: the folded word and its stems in the query's
+ * language, or in both German and English when it is unknown (PLAN.md "Query pipeline").
  */
-export function queryForms(word: string): { folded: string; stems: string[] } {
-  return { folded: word, stems: stemWord(word, undefined) };
+export function queryForms(
+  word: string,
+  language: string | undefined,
+): { folded: string; stems: string[] } {
+  return { folded: word, stems: stemWord(word, language) };
 }
 
 function unique(values: readonly string[]): string[] {

@@ -1,26 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { foldText } from './fold-text.js';
 import { mainMatch, trigramMatch } from './fts-match.js';
 import { foldedWords, stemWord, stemmedText } from './terms.js';
-
-describe('foldText', () => {
-  it.each([
-    ['Ärzte', 'Aerzte'],
-    ['Straße', 'Strasse'],
-    ['Übelkeit', 'Uebelkeit'],
-    ['Größe', 'Groesse'],
-  ])('folds %s and %s to the same text', (a, b) => {
-    expect(foldText(a)).toBe(foldText(b));
-  });
-
-  it('treats NFD umlauts like NFC ones', () => {
-    expect(foldText('Ärzte')).toBe(foldText('Ärzte'));
-  });
-
-  it('strips other diacritics', () => {
-    expect(foldText('Café Señor')).toBe('cafe senor');
-  });
-});
 
 describe('stemming', () => {
   it('splits on anything that is not a letter or digit', () => {
@@ -47,18 +27,25 @@ describe('stemming', () => {
 
 describe('FTS match expressions', () => {
   it('is undefined when no word is left', () => {
-    expect(mainMatch(['', '--', '"'])).toBeUndefined();
-    expect(trigramMatch(['ab'])).toBeUndefined();
+    expect(mainMatch(['', '--', '"'], undefined)).toBeUndefined();
+    expect(trigramMatch(['ab'], undefined)).toBeUndefined();
   });
 
   it('quotes every word, so query syntax stays text', () => {
-    const match = mainMatch(['NEAR(a', 'AND']) ?? '';
+    const match = mainMatch(['NEAR(a', 'AND'], undefined) ?? '';
     expect(match).not.toMatch(/(^|[^"])\b(NEAR|AND)\b(?!")/);
     expect(match).toContain('"near"');
     expect(match).toContain('"and"');
   });
 
   it('looks for stems of long words as substrings', () => {
-    expect(trigramMatch(['Vorhofflimmern'])).toBe('"vorhofflimm" OR "vorhofflimmern"');
+    expect(trigramMatch(['Vorhofflimmern'], undefined)).toBe('"vorhofflimm" OR "vorhofflimmern"');
+  });
+
+  it('stems in the query language alone when it is known', () => {
+    expect(mainMatch(['patients'], 'en')).toBe(
+      '({text_stemmed title_stemmed} : ("patient") OR text_folded : "patients")',
+    );
+    expect(trigramMatch(['Vorhofflimmern'], 'de')).toBe('"vorhofflimm"');
   });
 });

@@ -80,4 +80,5 @@ export {
 } from './sync/incremental-window.js';
 export { syncStateSchema, type SyncState } from './sync/sync-state.js';
 export { detectLanguage } from './text/detect-language.js';
+export { foldText } from './text/fold-text.js';
 export { normalizeText } from './text/normalize-text.js';
