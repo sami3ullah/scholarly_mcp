@@ -14,19 +14,21 @@ Everything beyond the quick start lives here. New guides are added as the featur
 
 ## Design
 
-| Document                                                 | What's inside                                                              |
-| -------------------------------------------------------- | -------------------------------------------------------------------------- |
-| [Architecture decisions (ADRs)](adr/README.md)           | Every decision that deviates from or confirms the plan, with its reasoning |
-| [Architecture overview](PLAN.md#high-level-architecture) | Components, ports and what each one is responsible for                     |
-| [Search design](PLAN.md#data-model-and-search-design)    | Canonical records, chunking, query pipeline and RRF fusion                 |
-| [Tool contracts](PLAN.md#mcp-tool-contracts)             | The article card, the six tools and their error codes                      |
-| [Edge cases](PLAN.md#edge-cases-and-failure-handling)    | How ingestion, search, the server and landing pages handle failure         |
-| [Crossref source](../packages/source-crossref/README.md) | Configuration, usage and fixtures of the Crossref adapter                  |
-| [ONNX embedder](../packages/embedder-onnx/README.md)     | Configuration and usage of the embedding model adapter                     |
-| [SQLite store](../packages/store-sqlite/README.md)       | Index and runtime files, text matching, build and swap                     |
-| [Ingest CLI](../apps/ingest/README.md)                   | Commands and configuration of the ingestion CLI                            |
-| [Search service](../packages/search/README.md)           | Query pipeline, fusion, teasers, cursors and search settings               |
-| [Eval CLI](../apps/eval/README.md)                       | Search latency bench on the live index                                     |
+| Document                                                      | What's inside                                                              |
+| ------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| [Architecture decisions (ADRs)](adr/README.md)                | Every decision that deviates from or confirms the plan, with its reasoning |
+| [Architecture overview](PLAN.md#high-level-architecture)      | Components, ports and what each one is responsible for                     |
+| [Search design](PLAN.md#data-model-and-search-design)         | Canonical records, chunking, query pipeline and RRF fusion                 |
+| [Tool contracts](PLAN.md#mcp-tool-contracts)                  | The article card, the six tools and their error codes                      |
+| [Edge cases](PLAN.md#edge-cases-and-failure-handling)         | How ingestion, search, the server and landing pages handle failure         |
+| [Crossref source](../packages/source-crossref/README.md)      | Configuration, usage and fixtures of the Crossref adapter                  |
+| [Europe PMC enricher](../packages/source-europepmc/README.md) | Subjects and matching-only open access full text, rules and fixtures       |
+| [HTTP client](../packages/http/README.md)                     | The shared retrying client for the Crossref and Europe PMC APIs            |
+| [ONNX embedder](../packages/embedder-onnx/README.md)          | Configuration and usage of the embedding model adapter                     |
+| [SQLite store](../packages/store-sqlite/README.md)            | Index and runtime files, text matching, build and swap                     |
+| [Ingest CLI](../apps/ingest/README.md)                        | Commands and configuration of the ingestion CLI                            |
+| [Search service](../packages/search/README.md)                | Query pipeline, fusion, teasers, cursors and search settings               |
+| [Eval CLI](../apps/eval/README.md)                            | Search latency bench on the live index                                     |
 
 ## Guides
 

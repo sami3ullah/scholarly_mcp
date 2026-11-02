@@ -13,6 +13,8 @@
 - [ ] `search_articles` calls `createSearchService` (`@scholarly-mcp/search`, config `SEARCH_*`) and builds cards from its hits: link with token (SM-11), access (SM-10); only `teaser` and `whyMatched` come from article text (ADR 0023)
 - [ ] Resolve `journal` (name or ISSN) to an ISSN from indexed records before searching; unknown journal = `INVALID_INPUT` on `journal` (shared with `get_journal`)
 - [ ] Empty results: add the "loosen your filters" hint; `get_article` teaser via `buildTeaser`
+- [ ] Extend the SM-06 full-text guardrail test to every tool's output: no full-text chunk text in any response, `Article.fullText` (a reference) not exposed beyond "full text indexed" (ADR 0003, ADR 0024)
+- [ ] `get_journal` / cards may show `mesh` and `keyword` subjects (labels only, ADR 0004)
 
 ## Exit
 

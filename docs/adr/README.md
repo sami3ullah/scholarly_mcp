@@ -29,3 +29,4 @@ Each ADR records one decision: the context, what we chose and what follows from 
 | [0021](0021-chunking-language-and-embedder-rules.md)    | Chunking, per-chunk language and embedder rules                  | accepted |
 | [0022](0022-sqlite-index-files-and-builds.md)           | SQLite index files, text matching and builds                     | accepted |
 | [0023](0023-search-service-rules.md)                    | Search service: query rules, fusion, teasers, cursors, budget    | accepted |
+| [0024](0024-europe-pmc-enrichment.md)                   | Europe PMC enrichment: subjects and matching-only full text      | accepted |
