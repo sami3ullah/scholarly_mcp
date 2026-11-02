@@ -1,0 +1,21 @@
+{
+  "name": "@scholarly-mcp/logger",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@scholarly-mcp/core": "workspace:*",
+    "pino": "^10.4.0",
+    "zod": "^4.6.7"
+  }
+}

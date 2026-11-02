@@ -29,6 +29,13 @@ module.exports = {
       to: { path: '^(packages/(source|store|embedder)-|apps/)', pathNot: '^packages/$1' },
     },
     {
+      name: 'logger-only-core',
+      comment: 'the logger package wraps pino and may import core, never adapters or apps',
+      severity: 'error',
+      from: { path: '^packages/logger/src' },
+      to: { path: '^(packages/(source|store|embedder)-|packages/testkit|apps/)' },
+    },
+    {
       name: 'testkit-not-apps',
       severity: 'error',
       from: { path: '^packages/testkit' },
