@@ -1,7 +1,9 @@
 export { accessStatusSchema, type AccessStatus } from './access/access-status.js';
+export { activeLicense } from './article/active-license.js';
 export { articleSchema, type Article } from './article/article.js';
 export { authorSchema, type Author } from './article/author.js';
 export { doiSchema, normalizeDoi, type Doi } from './article/doi.js';
+export { hashArticleContent, type ArticleContent } from './article/hash-article-content.js';
 export { issnSchema, journalSchema, type Journal } from './article/journal.js';
 export { languageSchema, type Language } from './article/language.js';
 export { licenseSchema, type License } from './article/license.js';
@@ -57,4 +59,10 @@ export type { RandomToken } from './ports/random-token.js';
 export type { SessionStore } from './ports/session-store.js';
 export type { Source, SourcePage, SourceRequest } from './ports/source.js';
 export type { SyncStateStore } from './ports/sync-state-store.js';
+export {
+  INCREMENTAL_OVERLAP_MS,
+  incrementalWindow,
+  type SyncWindow,
+} from './sync/incremental-window.js';
 export { syncStateSchema, type SyncState } from './sync/sync-state.js';
+export { normalizeText } from './text/normalize-text.js';
