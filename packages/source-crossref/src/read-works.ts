@@ -1,5 +1,5 @@
 import { appError } from '@scholarly-mcp/core';
-import type { CrossrefResponse } from './http/crossref-http.js';
+import type { HttpResponse } from '@scholarly-mcp/http';
 import {
   crossrefFailureSchema,
   crossrefWorkListSchema,
@@ -26,7 +26,7 @@ export type WorksPage =
  * can restart; any other refusal or an unexpected shape is an AppError, because retrying the
  * same request will not fix it.
  */
-export function readWorks(response: CrossrefResponse): WorksPage {
+export function readWorks(response: HttpResponse<unknown>): WorksPage {
   if (response.status === 200) {
     const list = crossrefWorkListSchema.safeParse(response.body);
     if (!list.success) {

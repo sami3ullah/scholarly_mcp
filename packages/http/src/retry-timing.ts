@@ -1,4 +1,4 @@
-/** Backoff bounds. Crossref asks clients to back off, not to give up quickly. */
+/** Backoff bounds. APIs such as Crossref ask clients to back off, not to give up quickly. */
 export const BASE_DELAY_MS = 1_000;
 export const MAX_DELAY_MS = 60_000;
 
@@ -20,8 +20,9 @@ export function retryAfterMs(header: string | null, now: Date): number | undefin
 }
 
 /**
- * The minimum gap between requests that Crossref's `x-rate-limit-limit` and
- * `x-rate-limit-interval` headers allow, e.g. 1 request per `1s` gives 1000 ms.
+ * The minimum gap between requests that `x-rate-limit-limit` and
+ * `x-rate-limit-interval` headers allow (as Crossref sends them), e.g. 1 request per `1s`
+ * gives 1000 ms.
  */
 export function minRequestGapMs(headers: Headers): number | undefined {
   const limit = Number(headers.get('x-rate-limit-limit'));

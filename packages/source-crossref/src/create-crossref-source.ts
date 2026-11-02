@@ -1,7 +1,12 @@
 import { setTimeout as delay } from 'node:timers/promises';
 import { appError, type Clock, type Doi, type Logger, type Source } from '@scholarly-mcp/core';
+import {
+  createHttpClient,
+  minRequestGapMs,
+  type HttpClient,
+  type Sleep,
+} from '@scholarly-mcp/http';
 import type { CrossrefConfig } from './config/crossref-config.js';
-import { createCrossrefHttp, type Sleep } from './http/crossref-http.js';
 import { decodeCursor, encodeCursor, type CursorState } from './paging/source-cursor.js';
 import { worksUrl } from './paging/works-url.js';
 import { pageArticles } from './page-articles.js';
@@ -30,7 +35,10 @@ export interface CrossrefSourceOptions {
 export function createCrossrefSource(options: CrossrefSourceOptions): Source {
   const { config, clock } = options;
   const logger = options.logger.child({ source: 'crossref' });
-  const http = createCrossrefHttp({
+  const http = createHttpClient({
+    name: 'Crossref',
+    accept: 'application/json',
+    gapFromHeaders: minRequestGapMs,
     fetch: options.fetch ?? globalThis.fetch,
     clock,
     sleep: options.sleep ?? ((ms, signal) => delay(ms, undefined, { signal })),
@@ -49,10 +57,10 @@ export function createCrossrefSource(options: CrossrefSourceOptions): Source {
         request.cursor === undefined
           ? { crossref: '*', ...(request.updatedSince && { from: request.updatedSince }) }
           : decodeCursor(request.cursor);
-      let page = readWorks(await http.getJson(walkUrl(config, state), signal));
+      let page = readWorks(await getJson(http, walkUrl(config, state), signal));
       if (page.kind === 'cursor-expired') {
         state = restart(state, logger);
-        page = readWorks(await http.getJson(walkUrl(config, state), signal));
+        page = readWorks(await getJson(http, walkUrl(config, state), signal));
       }
       if (page.kind === 'cursor-expired') {
         throw appError('SOURCE_UNAVAILABLE', 'Crossref rejected a fresh cursor');
@@ -64,7 +72,7 @@ export function createCrossrefSource(options: CrossrefSourceOptions): Source {
       );
       const watermark = latestDeposit(page.works, state.watermark);
       const lookup = async (dois: readonly Doi[]) => {
-        const found = readWorks(await http.getJson(worksUrl(config, { dois }), signal));
+        const found = readWorks(await getJson(http, worksUrl(config, { dois }), signal));
         return found.kind === 'page' ? found.works : [];
       };
       const { articles, skipped, followedUp } = await pageArticles(works, clock.now(), lookup);
@@ -112,6 +120,10 @@ function latestDeposit(
     const deposited = new Date(work.deposited['date-time']);
     return latest === undefined || deposited > latest ? deposited : latest;
   }, previous);
+}
+
+function getJson(http: HttpClient, url: URL, signal: AbortSignal) {
+  return http.get(url, (text) => JSON.parse(text) as unknown, signal);
 }
 
 function userAgent(config: CrossrefConfig): string {

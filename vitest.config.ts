@@ -9,6 +9,7 @@ export default defineConfig({
         'packages/core/src/**',
         'packages/search/src/**',
         'packages/logger/src/**',
+        'packages/http/src/**',
         'packages/source-*/src/**',
         'packages/embedder-*/src/**',
         'packages/store-*/src/**',

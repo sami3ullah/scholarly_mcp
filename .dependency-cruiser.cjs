@@ -36,6 +36,13 @@ module.exports = {
       to: { path: '^(packages/(source|store|embedder)-|packages/testkit|apps/)' },
     },
     {
+      name: 'http-only-core',
+      comment: 'the shared HTTP client may import core, never adapters, testkit or apps',
+      severity: 'error',
+      from: { path: '^packages/http/src', pathNot: '\\.test\\.ts$' },
+      to: { path: '^(packages/(source|store|embedder)-|packages/testkit|apps/)' },
+    },
+    {
       name: 'search-only-core',
       comment:
         'the search service is core logic in its own package: core and zod only, no adapters, apps or I/O',

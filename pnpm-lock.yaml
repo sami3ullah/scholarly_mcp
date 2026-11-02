@@ -139,6 +139,22 @@ importers:
         specifier: ^5.0.5
         version: 5.0.5(@types/node@24.19.2)(@vitest/coverage-v8@5.0.5)(msw@3.0.3(@types/node@24.19.2)(typescript@5.9.3)(vite@8.3.5(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))(vite@8.3.5(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1))
 
+  packages/http:
+    dependencies:
+      '@scholarly-mcp/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@scholarly-mcp/testkit':
+        specifier: workspace:*
+        version: link:../testkit
+      msw:
+        specifier: ^3.0.3
+        version: 3.0.3(@types/node@24.19.2)(typescript@5.9.3)(vite@8.3.5(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1))
+      vitest:
+        specifier: ^5.0.5
+        version: 5.0.5(@types/node@24.19.2)(@vitest/coverage-v8@5.0.5)(msw@3.0.3(@types/node@24.19.2)(typescript@5.9.3)(vite@8.3.5(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))(vite@8.3.5(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1))
+
   packages/logger:
     dependencies:
       '@scholarly-mcp/core':
@@ -175,6 +191,9 @@ importers:
       '@scholarly-mcp/core':
         specifier: workspace:*
         version: link:../core
+      '@scholarly-mcp/http':
+        specifier: workspace:*
+        version: link:../http
       htmlparser2:
         specifier: ^12.0.0
         version: 12.0.0
