@@ -6,7 +6,7 @@ import { cutAtWord } from './cut-at-word.js';
 export const WHY_MATCHED_MAX_LENGTH = 120;
 /** Words this long or longer may match by a shared prefix, like a stem. */
 const MIN_PREFIX = 4;
-/** How many letters of the shorter word's ending may differ (inflections, compound tails). */
+/** How many letters at the end of the query word may differ (inflections). */
 const MAX_ENDING = 3;
 
 /** What a match is explained from. Only labels and the query's own terms are shown, never text. */
@@ -57,11 +57,17 @@ function termsFoundIn(text: string, terms: readonly string[]): string[] {
   );
 }
 
-/** Equal, or sharing a prefix that leaves at most a short ending: "patient" and "patients". */
-function sameWord(a: string, b: string): boolean {
-  if (a === b) return true;
-  if (a.length < MIN_PREFIX || b.length < MIN_PREFIX) return false;
+/**
+ * Whether a text word matches a query word, roughly as stems and trigrams do in lexical
+ * search: equal, or starting with all of the query word but a short ending ("patients" for
+ * "patient", "Vorhofflimmertherapie" for "Vorhofflimmern"). The ending counts against the
+ * query word, so a text word that is only a stem or prefix of it ("duodenal" for
+ * "duodenography") does not match.
+ */
+function sameWord(wanted: string, word: string): boolean {
+  if (wanted === word) return true;
+  if (wanted.length < MIN_PREFIX || word.length < MIN_PREFIX) return false;
   let prefix = 0;
-  while (prefix < a.length && a[prefix] === b[prefix]) prefix += 1;
-  return prefix >= Math.max(MIN_PREFIX, Math.min(a.length, b.length) - MAX_ENDING);
+  while (prefix < wanted.length && wanted[prefix] === word[prefix]) prefix += 1;
+  return prefix >= Math.max(MIN_PREFIX, wanted.length - MAX_ENDING);
 }

@@ -24,6 +24,39 @@ describe('whyMatched', () => {
     ).toBe('Matched in abstract: Vorhofflimmern, Aerzte');
   });
 
+  it('does not name a term when the text only shares its stem or a shorter prefix', () => {
+    expect(
+      whyMatched({
+        chunk: { text: 'ERCP with the disposable duodenoscope aScope Duodeno', origin: 'metadata' },
+        title: 'ERCP with the disposable duodenoscope aScope Duodeno',
+        terms: ['duodenography'],
+      }),
+    ).toBe('Related in meaning (title)');
+    expect(
+      whyMatched({
+        chunk: results,
+        title: 'Malignant duodenal obstruction',
+        terms: ['duodenography'],
+      }),
+    ).toBe('Related in meaning (Results)');
+  });
+
+  it('matches an inflection that drops a short ending of the query word', () => {
+    expect(whyMatched({ chunk: results, title: 'T', terms: ['localising'] })).toBe(
+      'Related in meaning (Results)',
+    );
+    expect(
+      whyMatched({
+        chunk: { text: 'Tumour localisation', origin: 'abstract' },
+        title: 'T',
+        terms: ['localising'],
+      }),
+    ).toBe('Matched in abstract: localising');
+    expect(whyMatched({ chunk: results, title: 'T', terms: ['patient'] })).toBe(
+      'Matched in Results: patient',
+    );
+  });
+
   it('needs every word of an expansion', () => {
     expect(
       whyMatched({ chunk: results, title: 'T', terms: ['atrial fibrillation', 'dosing'] }),
