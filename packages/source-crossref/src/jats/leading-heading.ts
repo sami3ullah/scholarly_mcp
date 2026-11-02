@@ -28,8 +28,8 @@ const HEADING = new RegExp(
       'patienten und methoden?',
       'methoden?',
       'methodik',
-      'ergebnisse?',
-      'schlussfolgerungen?',
+      'ergebnis(?:se)?',
+      'schlussfolgerung(?:en)?',
       'diskussion',
       'fazit',
     ].join('|') +

@@ -11,6 +11,9 @@ describe('splitLeadingHeading', () => {
     ['Results A total of 504 samples', 'Results', 'A total of 504 samples'],
     ['Conclusions In PSC patients', 'Conclusions', 'In PSC patients'],
     ['Ergebnisse 42 Patienten', 'Ergebnisse', '42 Patienten'],
+    ['Ergebnis Sowohl Patienten', 'Ergebnis', 'Sowohl Patienten'],
+    ['Schlussfolgerung Für ein Ende', 'Schlussfolgerung', 'Für ein Ende'],
+    ['Schlussfolgerungen Für ein Ende', 'Schlussfolgerungen', 'Für ein Ende'],
     ['Material und Methoden Wir untersuchten', 'Material und Methoden', 'Wir untersuchten'],
   ])('splits the run-in heading from "%s"', (paragraph, label, text) => {
     expect(splitLeadingHeading(paragraph)).toEqual({ label, text });
