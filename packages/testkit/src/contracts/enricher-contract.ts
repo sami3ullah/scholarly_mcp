@@ -13,7 +13,10 @@ import { describe, expect, it } from 'vitest';
 export interface EnricherContractOptions {
   /** Returns an enricher backed by recorded data, never the network. */
   readonly create: () => ArticleEnricher | Promise<ArticleEnricher>;
-  /** Articles the recorded data matches; at least one has full text that may be indexed. */
+  /**
+   * Articles the recorded data matches; at least one has full text that may be indexed. The
+   * first one with a full-text reference must have its text recorded.
+   */
   readonly matched: readonly Article[];
   /** An article the recorded data has no record for. */
   readonly unmatched: Article;
@@ -70,11 +73,12 @@ export function runEnricherContract(name: string, options: EnricherContractOptio
     it('returns full-text sections with generic labels only', async () => {
       const enricher = await create();
       const found = await enricher.lookup(matched, signal);
-      const [doi, enrichment] = [...found].find(([, entry]) => entry.fullText) ?? [];
-      if (doi === undefined || enrichment?.fullText === undefined) {
+      const article = matched.find(({ doi }) => found.get(doi)?.fullText !== undefined);
+      const ref = article === undefined ? undefined : found.get(article.doi)?.fullText;
+      if (article === undefined || ref === undefined) {
         throw new Error('No full text in the recorded data');
       }
-      const sections = await enricher.fetchFullText(doi, enrichment.fullText, signal);
+      const sections = await enricher.fetchFullText(article.doi, ref, signal);
       expect(sections?.length).toBeGreaterThan(0);
       for (const section of sections ?? []) {
         expect(fullTextSectionSchema.strict().safeParse(section).success).toBe(true);

@@ -32,9 +32,9 @@ export interface HttpResponse<T> {
 
 /**
  * Turns a response body into a value. Throwing marks the body unreadable, e.g. JSON cut off
- * mid-stream, and the request is retried.
+ * mid-stream, and the request is retried. `status` lets a reader judge only successful bodies.
  */
-export type ReadBody<T> = (text: string) => T;
+export type ReadBody<T> = (text: string, status: number) => T;
 
 /** A GET client for one REST API, one request at a time. */
 export interface HttpClient {
@@ -82,7 +82,7 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
       }
       const text = await response.text();
       try {
-        return { status, body: read(text) };
+        return { status, body: read(text, status) };
       } catch {
         return { reason: 'unreadable body', status };
       }
