@@ -18,7 +18,7 @@ const steppingClock = () => {
 
 const article = anArticle().withDoi('10.1055/a-1').withTitle('Stroke prevention').build();
 
-const service: SearchService = {
+const service: Pick<SearchService, 'search'> = {
   search: ({ query }) => {
     if (query === 'bad') return Promise.reject(appError('TIMEOUT', 'slow'));
     if (query === 'none') return Promise.resolve({ hits: [], indexVersion: 'v1' });

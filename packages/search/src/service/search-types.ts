@@ -3,6 +3,7 @@ import type {
   ArticleReader,
   ArticleSearch,
   Clock,
+  Doi,
   Embedder,
   Language,
   Logger,
@@ -41,6 +42,20 @@ export interface SearchResult {
   readonly queryLanguage?: Language;
 }
 
+/** One "find related" call: the article to start from and how many neighbours to return. */
+export interface RelatedRequest {
+  readonly doi: Doi;
+  /** Results to return, 1 to 10. */
+  readonly limit: number;
+}
+
+/** The article a related search started from, with its nearest neighbours. */
+export interface RelatedResult {
+  readonly article: Article;
+  readonly hits: readonly SearchHit[];
+  readonly indexVersion: string;
+}
+
 /** Tuning knobs; SM-08 sets them from the golden set, not by feel. */
 export interface SearchOptions {
   /** Time budget per search (PLAN.md: 2 s). */
@@ -66,4 +81,6 @@ export interface SearchServiceDeps {
 /** Hybrid article search (PLAN.md "Query pipeline", steps 1 to 7 and 9). */
 export interface SearchService {
   search(request: SearchRequest, signal: AbortSignal): Promise<SearchResult>;
+  /** Nearest neighbours of an article by meaning; `NOT_FOUND` for an unknown DOI. */
+  related(request: RelatedRequest, signal: AbortSignal): Promise<RelatedResult>;
 }

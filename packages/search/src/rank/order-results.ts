@@ -11,13 +11,15 @@ export interface Candidate {
 /**
  * Orders results for the page: an article whose title, with or without its subtitle, is the
  * query goes first (a pasted title, PLAN.md edge cases), then by fused score; equal scores put the newer article
- * first, then the lower DOI, so ties are deterministic.
+ * first, then the lower DOI, so ties are deterministic. Without a query nothing is boosted.
  */
-export function orderResults(candidates: readonly Candidate[], query: string): Candidate[] {
-  const wanted = titleKey(query);
+export function orderResults(candidates: readonly Candidate[], query?: string): Candidate[] {
+  const wanted = query === undefined ? undefined : titleKey(query);
   const isTitle = ({ article }: Candidate) =>
-    titleKey(article.title) === wanted ||
-    (article.subtitle !== undefined && titleKey(`${article.title} ${article.subtitle}`) === wanted);
+    wanted !== undefined &&
+    (titleKey(article.title) === wanted ||
+      (article.subtitle !== undefined &&
+        titleKey(`${article.title} ${article.subtitle}`) === wanted));
   return [...candidates].sort(
     (a, b) =>
       Number(isTitle(b)) - Number(isTitle(a)) ||

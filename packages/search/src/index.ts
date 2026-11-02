@@ -11,6 +11,8 @@ export {
   createSearchService,
 } from './service/create-search-service.js';
 export type {
+  RelatedRequest,
+  RelatedResult,
   SearchHit,
   SearchOptions,
   SearchRequest,

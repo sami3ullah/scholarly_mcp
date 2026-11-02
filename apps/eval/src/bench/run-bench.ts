@@ -28,7 +28,7 @@ export interface BenchOptions {
  * failed search is timed too and its error code recorded, so a slow failure still counts.
  */
 export async function runBench(
-  service: SearchService,
+  service: Pick<SearchService, 'search'>,
   cases: readonly BenchCase[],
   { rounds, now }: BenchOptions,
   signal: AbortSignal,

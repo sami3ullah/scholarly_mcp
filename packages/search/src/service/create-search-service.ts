@@ -16,6 +16,7 @@ import type {
   SearchService,
   SearchServiceDeps,
 } from './search-types.js';
+import { relatedArticles } from './related-articles.js';
 import { withBudget } from './with-budget.js';
 
 /** The most results one page may hold (PLAN.md tool contracts). */
@@ -165,39 +166,56 @@ export function createSearchService(deps: SearchServiceDeps): SearchService {
     return { result, stats, offset };
   }
 
+  /** Runs one call under the budget and logs its outcome, never its input text. */
+  async function measured<T>(
+    kind: 'search' | 'related',
+    signal: AbortSignal,
+    work: (budget: AbortSignal) => Promise<{ value: T; fields: Record<string, unknown> }>,
+  ): Promise<T> {
+    const started = clock.now().getTime();
+    const elapsed = () => clock.now().getTime() - started;
+    try {
+      const { value, fields } = await withBudget(options.budgetMs, signal, work);
+      logger.info({ ...fields, durationMs: elapsed() }, `${kind} completed`);
+      return value;
+    } catch (error) {
+      const code = isAppError(error) ? error.code : 'INTERNAL';
+      const clientError =
+        code === 'INVALID_INPUT' || code === 'CURSOR_STALE' || code === 'NOT_FOUND';
+      logger[clientError ? 'info' : 'warn']({ code, durationMs: elapsed() }, `${kind} failed`);
+      throw error;
+    }
+  }
+
   return {
-    async search(request, signal) {
-      const started = clock.now().getTime();
-      const elapsed = () => clock.now().getTime() - started;
-      try {
+    related(request, signal) {
+      return measured('related', signal, async (budget) => {
+        checkLimit(request.limit);
+        const value = await relatedArticles(deps, options, request, budget);
+        return { value, fields: { results: value.hits.length } };
+      });
+    },
+    search(request, signal) {
+      return measured('search', signal, async (budget) => {
         const query = normalizeQuery(request.query);
         checkRequest(request);
-        const { result, stats, offset } = await withBudget(options.budgetMs, signal, (budget) =>
-          run(query, request, budget),
-        );
-        logger.info(
-          {
-            ...stats,
-            queryLength: query.length,
-            offset,
-            results: result.hits.length,
-            durationMs: elapsed(),
-          },
-          'search completed',
-        );
-        return result;
-      } catch (error) {
-        const code = isAppError(error) ? error.code : 'INTERNAL';
-        const clientError = code === 'INVALID_INPUT' || code === 'CURSOR_STALE';
-        logger[clientError ? 'info' : 'warn']({ code, durationMs: elapsed() }, 'search failed');
-        throw error;
-      }
+        const { result, stats, offset } = await run(query, request, budget);
+        return {
+          value: result,
+          fields: { ...stats, queryLength: query.length, offset, results: result.hits.length },
+        };
+      });
     },
   };
 }
 
 /** Checks what the tool schema cannot: the limit range and that the years are in order. */
 function checkRequest({ limit, filters }: SearchRequest): void {
+  checkLimit(limit);
+  checkYears(filters);
+}
+
+function checkLimit(limit: number): void {
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_SEARCH_LIMIT) {
     throw appError(
       'INVALID_INPUT',
@@ -207,7 +225,6 @@ function checkRequest({ limit, filters }: SearchRequest): void {
       },
     );
   }
-  checkYears(filters);
 }
 
 function checkYears({ yearFrom, yearTo }: SearchFilters): void {

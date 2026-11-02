@@ -28,7 +28,12 @@ const page = await search.search(
 );
 // page.hits: { article, matchedChunkId, teaser, whyMatched }[]
 // page.nextCursor: pass back as `cursor` for the next page
+
+const related = await search.related({ doi, limit: 5 }, signal);
+// related.article, related.hits: nearest articles to the mean of its chunk vectors
 ```
+
+`related` runs vector search only, leaves out retracted articles and the article itself, and fails with `NOT_FOUND` for an unknown DOI ([ADR 0025](../../docs/adr/0025-mcp-server-and-tool-rules.md)). Filter by journal with `journalIssns`, all of a journal's ISSNs.
 
 The tool layer turns each hit into an article card (landing link, access status) and shows only the teaser and `whyMatched` from the article's text.
 
@@ -40,5 +45,6 @@ The tool layer turns each hit into an article card (landing link, access status)
 | `CURSOR_STALE`      | The index was swapped since the first page                                                        |
 | `TIMEOUT`           | The search ran over its budget                                                                    |
 | `INDEX_UNAVAILABLE` | No index has been built yet                                                                       |
+| `NOT_FOUND`         | `related` for a DOI that is not indexed                                                           |
 
 No results is an empty page, not an error.
