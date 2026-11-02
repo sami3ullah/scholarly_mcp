@@ -6,6 +6,16 @@ const teaser = (abstract: string | undefined, language = 'en') =>
   buildTeaser(abstract === undefined ? { language } : { abstract, language });
 
 describe('buildTeaser', () => {
+  it('skips a heading that opens the abstract as a short question (DMW "Was ist neu?")', () => {
+    expect(
+      teaser(
+        'Was ist neu? Bei Verdacht auf Thrombose ist die Duplexsonografie die Methode der Wahl. Mehr folgt.',
+        'de',
+      ),
+    ).toBe('Bei Verdacht auf Thrombose ist die Duplexsonografie die Methode der Wahl.');
+    expect(teaser('Is it safe?')).toBe('Is it safe?');
+  });
+
   it('is empty when there is no abstract', () => {
     expect(teaser(undefined)).toBe('');
   });

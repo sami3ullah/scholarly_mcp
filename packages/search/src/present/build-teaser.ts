@@ -10,6 +10,8 @@ import { cutAtWord } from './cut-at-word.js';
 const CONCLUSION_LABEL = /conclusion|schlussfolgerung|fazit|interpretation|take.home/i;
 /** Sentences that open a conclusion in an abstract without section labels. */
 const CONCLUSION_LEAD = /^(?:in conclusion|in summary|to conclude|zusammenfassend|abschließend)\b/i;
+/** A question this short opening the abstract is a box heading, such as DMW's "Was ist neu?". */
+const HEADING_MAX_WORDS = 4;
 
 /**
  * Builds a card's teaser from the abstract: the first sentence of its conclusion section, or
@@ -34,5 +36,12 @@ export function buildTeaser(article: Pick<Article, 'abstract' | 'language'>): st
 }
 
 function pickSentence(sentences: readonly string[]): string | undefined {
-  return sentences.find((sentence) => CONCLUSION_LEAD.test(sentence)) ?? sentences[0];
+  const [first, ...rest] = sentences;
+  const body = first !== undefined && rest.length > 0 && isHeading(first) ? rest : sentences;
+  return body.find((sentence) => CONCLUSION_LEAD.test(sentence)) ?? body[0];
+}
+
+function isHeading(sentence: string): boolean {
+  const text = sentence.trim();
+  return text.endsWith('?') && text.split(/\s+/).length <= HEADING_MAX_WORDS;
 }
