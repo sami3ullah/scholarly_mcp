@@ -91,6 +91,16 @@ describe('index builds', () => {
     reader.close();
   });
 
+  it('starts a purge build from a copy of the live index too', async () => {
+    await buildFull('v1', 1);
+    const build = beginIndexBuild({ indexPath, kind: 'purge', now });
+    expect(build.resumed).toBe(false);
+    expect(
+      await build.store.writer.contentHashOf(recordNumber(1).article.doi, signal),
+    ).toBeDefined();
+    build.close();
+  });
+
   it('deletes a discarded build, so the next run starts over', async () => {
     const build = beginIndexBuild({ indexPath, kind: 'full', now });
     await build.store.writer.upsert([recordNumber(1)], signal);

@@ -15,6 +15,7 @@
     "@scholarly-mcp/embedder-onnx": "workspace:*",
     "@scholarly-mcp/logger": "workspace:*",
     "@scholarly-mcp/source-crossref": "workspace:*",
+    "@scholarly-mcp/source-europepmc": "workspace:*",
     "@scholarly-mcp/store-sqlite": "workspace:*",
     "zod": "^4.6.7"
   },

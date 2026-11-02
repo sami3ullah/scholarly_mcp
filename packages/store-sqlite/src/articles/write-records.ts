@@ -19,6 +19,18 @@ export interface RecordWriter {
   remove(doi: Doi): void;
   /** Throws, before anything is written, when records would mix embedding models. */
   check(records: readonly ArticleRecord[]): void;
+  /**
+   * Removes every full-text chunk under `licenseUrl` and the full-text reference of the
+   * articles they belonged to (ADR 0003 guardrail 3). Article content hashes are left as
+   * they were, so the next ingest run re-indexes those articles from what it fetches.
+   */
+  purgeFullText(licenseUrl: string): PurgeCounts;
+}
+
+/** What a purge removed. */
+export interface PurgeCounts {
+  readonly articles: number;
+  readonly chunks: number;
 }
 
 /** Prepares the statements that keep `chunks`, both FTS tables and `vec_chunks` in step. */
@@ -55,17 +67,25 @@ export function createRecordWriter(db: Db): RecordWriter {
      VALUES (@rowid, @embedding, @language, @year, @issnPrint, @issnElectronic, @isOpenAccess,
        @isRetracted)`,
   );
+  const fullTextChunks = db.prepare<[string], { rowid: number; doi: string }>(
+    "SELECT rowid, doi FROM chunks WHERE origin = 'fulltext' AND license_url = ?",
+  );
+  const dropFullTextRef = db.prepare(
+    "UPDATE articles SET record = json_remove(record, '$.fullText') WHERE doi = ?",
+  );
   const storedModel = db.prepare<[], { model_version: string }>(
     'SELECT model_version FROM chunks LIMIT 1',
   );
 
+  function removeChunk(rowid: number): void {
+    deleteFts.run(rowid);
+    deleteTrigram.run(rowid);
+    deleteVector.run(rowid);
+    deleteChunk.run(rowid);
+  }
+
   function removeChunks(doi: string): void {
-    for (const { rowid } of chunkRowids.all(doi)) {
-      deleteFts.run(rowid);
-      deleteTrigram.run(rowid);
-      deleteVector.run(rowid);
-      deleteChunk.run(rowid);
-    }
+    for (const { rowid } of chunkRowids.all(doi)) removeChunk(rowid);
   }
 
   function putChunkRows(chunk: Chunk, article: Article, filters: ArticleFilterColumns): void {
@@ -116,6 +136,13 @@ export function createRecordWriter(db: Db): RecordWriter {
     remove(doi) {
       removeChunks(doi);
       deleteArticle.run(doi);
+    },
+    purgeFullText(licenseUrl) {
+      const chunks = fullTextChunks.all(licenseUrl);
+      const dois = new Set(chunks.map(({ doi }) => doi));
+      for (const { rowid } of chunks) removeChunk(rowid);
+      for (const doi of dois) dropFullTextRef.run(doi);
+      return { articles: dois.size, chunks: chunks.length };
     },
     check(records) {
       const expected = storedModel.get()?.model_version ?? records[0]?.chunks[0]?.modelVersion;

@@ -1,6 +1,9 @@
 import {
   chunkSourceSchema,
+  enrichArticle,
   incrementalWindow,
+  type Article,
+  type ArticleEnricher,
   type ArticleRecord,
   type ArticleWriter,
   type Clock,
@@ -10,7 +13,7 @@ import {
   type SyncState,
   type SyncStateStore,
 } from '@scholarly-mcp/core';
-import type { BuildKind } from '@scholarly-mcp/store-sqlite';
+import type { IngestCommand } from './plan-run.js';
 import { prepareRecord, type RecordLookup } from './prepare-record.js';
 
 /** What a run needs; the composition root passes real adapters, tests pass fakes. */
@@ -21,13 +24,19 @@ export interface IngestDeps {
   readonly syncState: SyncStateStore;
   /** Records embedded by an earlier index, reused when their content is unchanged. */
   readonly previous?: RecordLookup;
+  /** Adds subjects and matching-only full text, e.g. Europe PMC; absent when turned off. */
+  readonly enricher?: ArticleEnricher;
   readonly clock: Clock;
   readonly logger: Logger;
 }
 
-/** Counts of one run. `written` is what changed in the index: 0 on a repeated run. */
+/**
+ * Counts of one run. `written` is what changed in the index: 0 on a repeated run.
+ * `withFullText` counts written articles with full-text chunks; `fullTextSkipped` those
+ * whose referenced full text proved unusable and were indexed from metadata.
+ */
 export interface IngestReport {
-  readonly kind: BuildKind;
+  readonly kind: IngestCommand;
   readonly resumed: boolean;
   readonly pages: number;
   readonly fetched: number;
@@ -35,6 +44,8 @@ export interface IngestReport {
   readonly reused: number;
   readonly embedded: number;
   readonly written: number;
+  readonly withFullText: number;
+  readonly fullTextSkipped: number;
 }
 
 /**
@@ -47,7 +58,7 @@ export interface IngestReport {
  */
 export async function runIngest(
   deps: IngestDeps,
-  kind: BuildKind,
+  kind: IngestCommand,
   signal: AbortSignal,
 ): Promise<IngestReport> {
   const { source, writer, syncState, clock } = deps;
@@ -55,7 +66,18 @@ export async function runIngest(
   const chunkSource = chunkSourceSchema.parse(source.name);
   let state = startState(source.name, await syncState.load(source.name, signal), kind, clock.now());
   const resumed = state.cursor !== undefined;
-  const counts = { pages: 0, fetched: 0, unchanged: 0, reused: 0, embedded: 0, written: 0 };
+  const counts = {
+    pages: 0,
+    fetched: 0,
+    unchanged: 0,
+    reused: 0,
+    embedded: 0,
+    written: 0,
+    withFullText: 0,
+    fullTextSkipped: 0,
+  };
+  const isStored = async (article: Article, check: AbortSignal) =>
+    (await writer.contentHashOf(article.doi, check)) === article.contentHash;
   logger.info({ resumed, updatedSince: state.windowFrom?.toISOString() }, 'Ingest run started');
   await syncState.save(state, signal);
 
@@ -68,14 +90,18 @@ export async function runIngest(
         },
         signal,
       );
+      const found = await deps.enricher?.lookup(page.articles, signal);
       const records: ArticleRecord[] = [];
-      for (const article of page.articles) {
-        if ((await writer.contentHashOf(article.doi, signal)) === article.contentHash) {
-          counts.unchanged += 1;
-          continue;
-        }
-        const prepared = await prepareRecord(article, { ...deps, chunkSource }, signal);
+      for (const fetched of page.articles) {
+        const article =
+          found === undefined ? fetched : await enrichArticle(fetched, found.get(fetched.doi));
+        const prepared = await prepareRecord(article, { ...deps, chunkSource, isStored }, signal);
         counts[prepared.kind] += 1;
+        if (prepared.fullTextSkipped) counts.fullTextSkipped += 1;
+        if (prepared.kind === 'unchanged') continue;
+        if (prepared.record.chunks.some((chunk) => chunk.origin === 'fulltext')) {
+          counts.withFullText += 1;
+        }
         records.push(prepared.record);
       }
       await writer.upsert(records, signal);
@@ -114,7 +140,7 @@ export async function runIngest(
 function startState(
   source: string,
   previous: SyncState | undefined,
-  kind: BuildKind,
+  kind: IngestCommand,
   now: Date,
 ): SyncState {
   if (previous !== undefined && previous.lastRunStatus !== 'succeeded' && previous.cursor) {

@@ -2,11 +2,13 @@ import { appError, type Article, type Source, type SyncState } from '@scholarly-
 import {
   createFakeClock,
   createInMemoryArticleStore,
+  createInMemoryEnricher,
   createInMemorySource,
   createInMemorySyncStateStore,
   createTestLogger,
 } from '@scholarly-mcp/testkit';
 import { beforeEach, describe, expect, it } from 'vitest';
+import type { RecordLookup } from './prepare-record.js';
 import { runIngest, type IngestDeps } from './run-ingest.js';
 import { article, countingEmbedder, recordingSyncState } from './testing/ingest-fixtures.js';
 
@@ -147,5 +149,117 @@ describe('runIngest', () => {
   it('refuses a source whose name is not a known chunk source', async () => {
     const unknown = createInMemorySource({ articles: [], name: 'memory' });
     await expect(runIngest(deps(unknown), 'full', signal)).rejects.toThrow();
+  });
+
+  describe('with an enricher', () => {
+    const CC_BY = 'https://creativecommons.org/licenses/by/4.0/';
+    const open = (n: number) => ({ ...article(n), isOpenAccess: true });
+    const ref = (revision = '2024-08-01') => ({
+      source: 'europepmc' as const,
+      id: 'PMC1',
+      licenseUrl: CC_BY,
+      revision,
+    });
+    const methods = [{ label: 'Methods' as const, paragraphs: ['We enrolled 412 adults.'] }];
+    const enricherFor = (sections = methods, revision?: string) =>
+      createInMemoryEnricher([
+        {
+          doi: open(1).doi,
+          enrichment: {
+            subjects: [{ label: 'Atrial Fibrillation', origin: 'mesh' }],
+            fullText: ref(revision),
+          },
+          ...(sections.length > 0 && { sections }),
+        },
+      ]);
+
+    /** Reads every chunk of an article back from the in-memory store. */
+    const lookupIn = (from: ReturnType<typeof createInMemoryArticleStore>): RecordLookup => ({
+      findRecord: async (doi, s) => {
+        const found = await from.findByDoi(doi, s);
+        const ids = Array.from({ length: 20 }, (_, i) => `${doi}#${String(i)}`);
+        return found && { article: found, chunks: await from.findChunks(ids, s) };
+      },
+    });
+
+    it('indexes subjects and matching-only full-text chunks under the licence', async () => {
+      const enricher = enricherFor();
+      const report = await runIngest(
+        deps(source([open(1), open(2)]), { enricher }),
+        'full',
+        signal,
+      );
+      expect(report).toMatchObject({ embedded: 2, withFullText: 1, fullTextSkipped: 0 });
+
+      const record = await lookupIn(store).findRecord(open(1).doi, signal);
+      expect(record?.article.subjects).toEqual([{ label: 'Atrial Fibrillation', origin: 'mesh' }]);
+      expect(record?.article.fullText).toEqual(ref());
+      const fullText = record?.chunks.filter((chunk) => chunk.origin === 'fulltext') ?? [];
+      expect(fullText).toHaveLength(1);
+      expect(fullText[0]).toMatchObject({
+        source: 'europepmc',
+        licenseUrl: CC_BY,
+        section: 'Methods',
+        text: 'We enrolled 412 adults.',
+      });
+      expect(record?.chunks.some((chunk) => chunk.origin !== 'fulltext')).toBe(true);
+    });
+
+    it('writes nothing and fetches no full text when the same records come again', async () => {
+      const enricher = enricherFor();
+      await runIngest(deps(source([open(1)]), { enricher }), 'full', signal);
+      const again = await runIngest(deps(source([open(1)]), { enricher }), 'incremental', signal);
+      expect(again).toMatchObject({ unchanged: 1, written: 0 });
+      expect(enricher.fullTextFetches()).toBe(1);
+    });
+
+    it('indexes from metadata when the full text is missing, and not again next time', async () => {
+      const enricher = enricherFor([]);
+      const first = await runIngest(deps(source([open(1)]), { enricher }), 'full', signal);
+      expect(first).toMatchObject({ embedded: 1, withFullText: 0, fullTextSkipped: 1 });
+      const record = await lookupIn(store).findRecord(open(1).doi, signal);
+      expect(record?.article).not.toHaveProperty('fullText');
+      expect(record?.chunks.every((chunk) => chunk.origin !== 'fulltext')).toBe(true);
+
+      const before = embedder.calls();
+      const again = await runIngest(deps(source([open(1)]), { enricher }), 'incremental', signal);
+      expect(again).toMatchObject({ unchanged: 1, written: 0, fullTextSkipped: 1 });
+      expect(embedder.calls()).toBe(before);
+    });
+
+    it('reuses full-text chunks in a rebuild without fetching the text again', async () => {
+      const enricher = enricherFor();
+      await runIngest(deps(source([open(1)]), { enricher }), 'full', signal);
+      const live = store;
+      store = createInMemoryArticleStore();
+      const rebuilt = await runIngest(
+        deps(source([open(1)]), { enricher, writer: store, previous: lookupIn(live) }),
+        'full',
+        signal,
+      );
+      expect(rebuilt).toMatchObject({ reused: 1, embedded: 0, withFullText: 1 });
+      expect(enricher.fullTextFetches()).toBe(1);
+    });
+
+    it('re-indexes when the full text gets a new revision', async () => {
+      await runIngest(deps(source([open(1)]), { enricher: enricherFor() }), 'full', signal);
+      const revised = enricherFor(methods, '2025-02-01');
+      const again = await runIngest(
+        deps(source([open(1)]), { enricher: revised }),
+        'incremental',
+        signal,
+      );
+      expect(again).toMatchObject({ embedded: 1, withFullText: 1 });
+      expect((await store.findByDoi(open(1).doi, signal))?.fullText?.revision).toBe('2025-02-01');
+    });
+
+    it('drops full text and subjects when enrichment is turned off', async () => {
+      await runIngest(deps(source([open(1)]), { enricher: enricherFor() }), 'full', signal);
+      const off = await runIngest(deps(source([open(1)])), 'incremental', signal);
+      expect(off).toMatchObject({ embedded: 1, withFullText: 0 });
+      const record = await lookupIn(store).findRecord(open(1).doi, signal);
+      expect(record?.article.subjects).toEqual([]);
+      expect(record?.chunks.every((chunk) => chunk.origin !== 'fulltext')).toBe(true);
+    });
   });
 });

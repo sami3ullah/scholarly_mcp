@@ -9,8 +9,11 @@ import {
 import { writeIndexMeta } from '../database/index-meta-row.js';
 import { openDatabase, type Db } from '../database/open-database.js';
 
-/** A full run starts from an empty file; an incremental run from a copy of the live index. */
-export type BuildKind = 'full' | 'incremental';
+/**
+ * A full run starts from an empty file; an incremental run and a purge (removing full text
+ * by licence) from a copy of the live index.
+ */
+export type BuildKind = 'full' | 'incremental' | 'purge';
 
 /** An index being built next to the live one, swapped in only after it is verified. */
 export interface IndexBuild {
@@ -50,7 +53,7 @@ export function beginIndexBuild(options: {
   leftover?.close();
   removeDatabaseFiles(buildPath);
 
-  if (kind === 'incremental') copyLiveIndex(indexPath, buildPath);
+  if (kind !== 'full') copyLiveIndex(indexPath, buildPath);
   const db = openDatabase(buildPath);
   if (kind === 'full') createIndexSchema(db);
   db.prepare('INSERT INTO index_build (id, kind, started_at) VALUES (1, ?, ?)').run(

@@ -3,9 +3,19 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { appError, type Article, type Source } from '@scholarly-mcp/core';
 import { buildPathOf, openDatabase, openIndexReader } from '@scholarly-mcp/store-sqlite';
-import { createFakeClock, createInMemorySource, createTestLogger } from '@scholarly-mcp/testkit';
+import {
+  createFakeClock,
+  createInMemoryEnricher,
+  createInMemorySource,
+  createTestLogger,
+} from '@scholarly-mcp/testkit';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { ingestIndex, verifyLiveIndex, type IngestIndexDeps } from './ingest-index.js';
+import {
+  ingestIndex,
+  purgeLicense,
+  verifyLiveIndex,
+  type IngestIndexDeps,
+} from './ingest-index.js';
 import { article, countingEmbedder } from './testing/ingest-fixtures.js';
 
 const signal = new AbortController().signal;
@@ -111,5 +121,61 @@ describe('ingestIndex on SQLite files', () => {
   it('fails verify on a missing index without creating one', async () => {
     await expect(verifyLiveIndex(indexPath, embedder.modelVersion, signal)).rejects.toThrow();
     expect(existsSync(indexPath)).toBe(false);
+  });
+
+  describe('purgeLicense', () => {
+    const CC_BY_NC_ND = 'https://creativecommons.org/licenses/by-nc-nd/4.0/';
+    const purgeDeps = (
+      allowlist: readonly string[] = ['https://creativecommons.org/licenses/by/4.0/'],
+    ) => ({
+      indexPath,
+      allowlist,
+      modelVersion: embedder.modelVersion,
+      clock: createFakeClock(),
+      logger: createTestLogger(),
+    });
+
+    async function indexWithFullText() {
+      const open = { ...article(1), isOpenAccess: true };
+      const enricher = createInMemoryEnricher([
+        {
+          doi: open.doi,
+          enrichment: {
+            subjects: [],
+            fullText: { source: 'europepmc', id: 'PMC1', licenseUrl: CC_BY_NC_ND, revision: '1' },
+          },
+          sections: [{ label: 'Methods', paragraphs: ['Thrombectomy registry methods.'] }],
+        },
+      ]);
+      await ingestIndex('full', { ...deps([open, article(2)]), enricher }, signal);
+    }
+
+    const fullTextChunks = () => {
+      const db = openDatabase(indexPath, { readonly: true });
+      const count = Number(
+        db.prepare("SELECT count(*) FROM chunks WHERE origin = 'fulltext'").pluck().get(),
+      );
+      db.close();
+      return count;
+    };
+
+    it('removes the licence’s full text through a verified build', async () => {
+      await indexWithFullText();
+      expect(fullTextChunks()).toBe(1);
+
+      const outcome = await purgeLicense(CC_BY_NC_ND, purgeDeps(), signal);
+      expect(outcome).toMatchObject({ purged: { articles: 1, chunks: 1 }, committed: true });
+      expect(outcome.verify.ok).toBe(true);
+      expect(fullTextChunks()).toBe(0);
+      expect(existsSync(buildPathOf(indexPath))).toBe(false);
+    });
+
+    it('refuses a licence that is still on the allowlist', async () => {
+      await indexWithFullText();
+      await expect(
+        purgeLicense(CC_BY_NC_ND, purgeDeps([CC_BY_NC_ND.replace('https', 'http')]), signal),
+      ).rejects.toMatchObject({ code: 'INVALID_INPUT' });
+      expect(fullTextChunks()).toBe(1);
+    });
   });
 });

@@ -1,5 +1,4 @@
 import type { SyncState } from '@scholarly-mcp/core';
-import type { BuildKind } from '@scholarly-mcp/store-sqlite';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -15,7 +14,7 @@ export interface LiveIndex {
 
 /** The kind of build to run, and why, for the log. */
 export interface RunPlan {
-  readonly kind: BuildKind;
+  readonly kind: IngestCommand;
   readonly reason: string;
 }
 

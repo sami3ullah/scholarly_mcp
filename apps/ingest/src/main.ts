@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { parseConfig, type Clock } from '@scholarly-mcp/core';
+import { fulltextConfigSchema, parseConfig, type Clock } from '@scholarly-mcp/core';
 import {
   MODEL_VERSION,
   embedderConfigSchema,
@@ -9,11 +9,12 @@ import {
 } from '@scholarly-mcp/embedder-onnx';
 import { createLogger, loggingConfigSchema } from '@scholarly-mcp/logger';
 import { createCrossrefSource, crossrefConfigSchema } from '@scholarly-mcp/source-crossref';
+import { createEuropepmcEnricher, europepmcConfigSchema } from '@scholarly-mcp/source-europepmc';
 import { sqliteConfigSchema } from '@scholarly-mcp/store-sqlite';
 import { ingestConfigSchema } from './config/ingest-config.js';
-import { ingestIndex, verifyLiveIndex } from './ingest-index.js';
+import { ingestIndex, purgeLicense, verifyLiveIndex } from './ingest-index.js';
 
-const USAGE = 'Usage: ingest <full|incremental|verify>';
+const USAGE = 'Usage: ingest <full|incremental|verify|purge-license <licence-url>>';
 
 /**
  * The composition root (PLAN.md "Backend conventions"): reads config, creates the real
@@ -27,6 +28,8 @@ async function main(argv: readonly string[]): Promise<number> {
       .extend(embedderConfigSchema.shape)
       .extend(loggingConfigSchema.shape)
       .extend(sqliteConfigSchema.shape)
+      .extend(europepmcConfigSchema.shape)
+      .extend(fulltextConfigSchema.shape)
       .extend(ingestConfigSchema.shape),
     process.env,
   );
@@ -45,6 +48,31 @@ async function main(argv: readonly string[]): Promise<number> {
     logger.info({ ...report }, report.ok ? 'Index verified' : 'Index failed verification');
     return report.ok ? 0 : 1;
   }
+  if (command === 'purge-license') {
+    const licenseUrl = argv[1];
+    if (licenseUrl === undefined || argv.length !== 2) {
+      process.stderr.write(`${USAGE}\n`);
+      return 2;
+    }
+    const outcome = await purgeLicense(
+      licenseUrl,
+      {
+        indexPath: config.INDEX_PATH,
+        allowlist: config.FULLTEXT_LICENSE_ALLOWLIST,
+        modelVersion: MODEL_VERSION,
+        clock,
+        logger,
+      },
+      controller.signal,
+    );
+    logger.info(
+      { purged: outcome.purged, verify: outcome.verify },
+      outcome.committed
+        ? 'Index swapped in'
+        : 'Purge failed verification; the live index is unchanged',
+    );
+    return outcome.committed ? 0 : 1;
+  }
   if (command !== 'full' && command !== 'incremental') {
     process.stderr.write(`${USAGE}\n`);
     return 2;
@@ -57,6 +85,9 @@ async function main(argv: readonly string[]): Promise<number> {
       indexPath: config.INDEX_PATH,
       fullRunDays: config.INGEST_FULL_RUN_DAYS,
       source: createCrossrefSource({ config, clock, logger }),
+      ...(config.EUROPEPMC_ENABLED && {
+        enricher: createEuropepmcEnricher({ config, fulltext: config, clock, logger }),
+      }),
       loadEmbedder: () => loadOnnxEmbedder(config),
       clock,
       logger,

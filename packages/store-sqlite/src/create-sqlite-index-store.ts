@@ -8,7 +8,7 @@ import {
   type SyncStateStore,
 } from '@scholarly-mcp/core';
 import { CHUNK_COLUMNS, articleFromRecord, chunkFromRow, type ChunkRow } from './articles/rows.js';
-import { createRecordWriter } from './articles/write-records.js';
+import { createRecordWriter, type PurgeCounts } from './articles/write-records.js';
 import { fromJsonWithDates, toJsonWithDates } from './database/json-with-dates.js';
 import { readIndexMeta, writeIndexMeta } from './database/index-meta-row.js';
 import type { Db } from './database/open-database.js';
@@ -23,6 +23,11 @@ export interface SqliteIndexStore {
   readonly syncState: SyncStateStore;
   /** An article with all its chunks, so a rebuild can reuse embeddings of unchanged articles. */
   findRecord(doi: Doi, signal: AbortSignal): Promise<ArticleRecord | undefined>;
+  /**
+   * Removes all full text indexed under a licence, in one transaction, e.g. when a rights
+   * holder asks (ADR 0003). Only a purge build calls it; the live index is never written.
+   */
+  purgeFullText(licenseUrl: string, signal: AbortSignal): Promise<PurgeCounts>;
 }
 
 /** Wraps an open index database, with the schema already created, in the store ports. */
@@ -52,6 +57,7 @@ export function createSqliteIndexStore(db: Db): SqliteIndexStore {
   const removeOne = db.transaction((doi: Doi) => {
     records.remove(doi);
   });
+  const purgeAll = db.transaction((licenseUrl: string) => records.purgeFullText(licenseUrl));
 
   const findArticle = (doi: string) => {
     const row = articleByDoi.get(doi);
@@ -107,5 +113,6 @@ export function createSqliteIndexStore(db: Db): SqliteIndexStore {
         if (article === undefined) return undefined;
         return { article, chunks: chunksByDoi.all(doi).map(chunkFromRow) };
       }),
+    purgeFullText: (licenseUrl, signal) => withSignal(signal, () => purgeAll(licenseUrl)),
   };
 }
