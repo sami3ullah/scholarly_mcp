@@ -6,6 +6,10 @@ export {
   type ArticleStoreUnderTest,
 } from './contracts/article-store-contract.js';
 export {
+  runEnricherContract,
+  type EnricherContractOptions,
+} from './contracts/enricher-contract.js';
+export {
   runEmbedderContract,
   type EmbedderContractOptions,
 } from './contracts/embedder-contract.js';
@@ -18,6 +22,7 @@ export {
   createInMemoryArticleStore,
   type InMemoryArticleStore,
 } from './fakes/in-memory-article-store.js';
+export { createInMemoryEnricher, type EnricherEntry } from './fakes/in-memory-enricher.js';
 export { createInMemorySessionStore } from './fakes/in-memory-session-store.js';
 export { createInMemorySource, type InMemorySourceOptions } from './fakes/in-memory-source.js';
 export { createInMemorySyncStateStore } from './fakes/in-memory-sync-state-store.js';

@@ -3,6 +3,8 @@ export { activeLicense } from './article/active-license.js';
 export { articleSchema, type Article } from './article/article.js';
 export { authorSchema, type Author } from './article/author.js';
 export { doiSchema, normalizeDoi, type Doi } from './article/doi.js';
+export { enrichArticle, withoutFullText } from './article/enrich-article.js';
+export { fullTextRefSchema, type FullTextRef } from './article/full-text-ref.js';
 export { hashArticleContent, type ArticleContent } from './article/hash-article-content.js';
 export { issnSchema, journalSchema, type Journal } from './article/journal.js';
 export { languageSchema, type Language } from './article/language.js';
@@ -35,6 +37,12 @@ export {
   type ChunkOrigin,
   type ChunkSource,
 } from './chunk/chunk.js';
+export {
+  fullTextLabelSchema,
+  fullTextSectionSchema,
+  type FullTextLabel,
+  type FullTextSection,
+} from './chunk/full-text-section.js';
 export { parseAbstract, type AbstractSection } from './chunk/parse-abstract.js';
 export { splitSentences } from './chunk/split-sentences.js';
 export {
@@ -55,6 +63,7 @@ export {
 export { tokenSchema, type Token } from './landing/token.js';
 export { toolNameSchema, type ToolName } from './metering/tool-name.js';
 export { usageEventSchema, type UsageEvent } from './metering/usage-event.js';
+export type { ArticleEnricher, Enrichment } from './ports/article-enricher.js';
 export type { ArticleReader } from './ports/article-reader.js';
 export type {
   ArticleSearch,

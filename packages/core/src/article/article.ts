@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { authorSchema } from './author.js';
 import { doiSchema } from './doi.js';
+import { fullTextRefSchema } from './full-text-ref.js';
 import { journalSchema } from './journal.js';
 import { languageSchema } from './language.js';
 import { licenseSchema } from './license.js';
@@ -10,7 +11,7 @@ import { subjectSchema } from './subject.js';
 /**
  * The canonical article record every source emits and every store holds.
  * `abstract` is plain text with section labels kept; it is absent, never invented, when the
- * source has none.
+ * source has none. `subjects` and `fullText` come from an enricher such as Europe PMC.
  */
 export const articleSchema = z.object({
   doi: doiSchema,
@@ -25,6 +26,8 @@ export const articleSchema = z.object({
   licenses: z.array(licenseSchema),
   isOpenAccess: z.boolean(),
   isRetracted: z.boolean(),
+  /** Open access full text indexed for matching only; never shown (ADR 0003). */
+  fullText: fullTextRefSchema.optional(),
   landingUrl: z.url(),
   contentHash: z.string().regex(/^[a-f0-9]{64}$/, 'Expected a hex SHA-256 digest'),
   sourceUpdatedAt: z.date(),
