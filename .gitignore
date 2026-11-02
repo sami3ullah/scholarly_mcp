@@ -11,3 +11,4 @@ spikes/out/
 data/
 *.sqlite
 *.sqlite-*
+.cache/

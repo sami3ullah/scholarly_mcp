@@ -23,6 +23,13 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # The embedder tests load the real model; key on its pinned revision (model.ts).
+      - id: model-revision
+        run: echo "sha=$(grep -oE '[0-9a-f]{40}' packages/embedder-onnx/src/model.ts)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        with:
+          path: .cache/models
+          key: models-${{ steps.model-revision.outputs.sha }}-q8
       - run: pnpm format:check
       - run: pnpm lint
       - run: pnpm typecheck
