@@ -1,0 +1,109 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`formatCitation > ama > formats a German article with a subtitle and seven authors 1`] = `"Müller J, Schmidt A, Weber, et al. Vorhofflimmern im Alter: Eine Kohortenstudie. DMW - Deutsche Medizinische Wochenschrift. Published online January 2025. doi:10.1055/a-2300-0001"`;
+
+exports[`formatCitation > ama > formats a fully dated article 1`] = `"Lovelace A. Rivaroxaban dosing in patients with atrial fibrillation. Thrombosis and Haemostasis. Published online March 14, 2024. doi:10.1055/a-2245-1234"`;
+
+exports[`formatCitation > ama > formats a year-only article without authors 1`] = `"Rivaroxaban dosing in patients with atrial fibrillation. Thrombosis and Haemostasis. Published online 2024. doi:10.1055/s-0044-1"`;
+
+exports[`formatCitation > apa > formats a German article with a subtitle and seven authors 1`] = `"Müller, J., Schmidt, A., Weber, Fischer, L., Wagner, P., Becker, E., & Hoffmann, T. (2025). Vorhofflimmern im Alter: Eine Kohortenstudie. DMW - Deutsche Medizinische Wochenschrift. https://doi.org/10.1055/a-2300-0001"`;
+
+exports[`formatCitation > apa > formats a fully dated article 1`] = `"Lovelace, A. (2024). Rivaroxaban dosing in patients with atrial fibrillation. Thrombosis and Haemostasis. https://doi.org/10.1055/a-2245-1234"`;
+
+exports[`formatCitation > apa > formats a year-only article without authors 1`] = `"Rivaroxaban dosing in patients with atrial fibrillation. (2024). Thrombosis and Haemostasis. https://doi.org/10.1055/s-0044-1"`;
+
+exports[`formatCitation > bibtex > formats a German article with a subtitle and seven authors 1`] = `
+"@article{Muller2025Vorhofflimmern,
+	author = {M{\\" u}ller, J{\\" o}rg and Schmidt, Anna and {Weber} and Fischer, Lena and Wagner, Paul and Becker, Eva and Hoffmann, Tim},
+	journal = {DMW - Deutsche Medizinische Wochenschrift},
+	doi = {10.1055/a-2300-0001},
+	issn = {0012-0472},
+	year = {2025},
+	month = {1},
+	title = {Vorhofflimmern im {Alter}: Eine {Kohortenstudie}},
+	url = {https://www.thieme-connect.de/products/ejournals/abstract/10.1055/a-2300-0001},
+	howpublished = {https://www.thieme-connect.de/products/ejournals/abstract/10.1055/a-2300-0001},
+}"
+`;
+
+exports[`formatCitation > bibtex > formats a fully dated article 1`] = `
+"@article{Lovelace2024Rivaroxaban,
+	author = {Lovelace, Ada},
+	journal = {Thrombosis and Haemostasis},
+	doi = {10.1055/a-2245-1234},
+	issn = {0340-6245},
+	year = {2024},
+	month = {mar 14},
+	title = {Rivaroxaban dosing in patients with atrial fibrillation},
+	url = {https://www.thieme-connect.de/products/ejournals/abstract/10.1055/a-2245-1234},
+	howpublished = {https://www.thieme-connect.de/products/ejournals/abstract/10.1055/a-2245-1234},
+}"
+`;
+
+exports[`formatCitation > bibtex > formats a year-only article without authors 1`] = `
+"@article{2024Rivaroxaban,
+	journal = {Thrombosis and Haemostasis},
+	doi = {10.1055/s-0044-1},
+	issn = {0340-6245},
+	year = {2024},
+	title = {Rivaroxaban dosing in patients with atrial fibrillation},
+	url = {https://www.thieme-connect.de/products/ejournals/abstract/10.1055/s-0044-1},
+	howpublished = {https://www.thieme-connect.de/products/ejournals/abstract/10.1055/s-0044-1},
+}"
+`;
+
+exports[`formatCitation > ris > formats a German article with a subtitle and seven authors 1`] = `
+"TY  - JOUR
+AU  - Müller, Jörg
+AU  - Schmidt, Anna
+AU  - Weber
+AU  - Fischer, Lena
+AU  - Wagner, Paul
+AU  - Becker, Eva
+AU  - Hoffmann, Tim
+DA  - 2025/1//
+PY  - 2025
+DO  - 10.1055/a-2300-0001
+ID  - 10.1055/a-2300-0001
+LA  - de
+SN  - 0012-0472
+T2  - DMW - Deutsche Medizinische Wochenschrift
+TI  - Vorhofflimmern im Alter: Eine Kohortenstudie
+UR  - https://www.thieme-connect.de/products/ejournals/abstract/10.1055/a-2300-0001
+ER  -"
+`;
+
+exports[`formatCitation > ris > formats a fully dated article 1`] = `
+"TY  - JOUR
+AU  - Lovelace, Ada
+DA  - 2024/3/14/
+PY  - 2024
+DO  - 10.1055/a-2245-1234
+ID  - 10.1055/a-2245-1234
+LA  - en
+SN  - 0340-6245
+T2  - Thrombosis and Haemostasis
+TI  - Rivaroxaban dosing in patients with atrial fibrillation
+UR  - https://www.thieme-connect.de/products/ejournals/abstract/10.1055/a-2245-1234
+ER  -"
+`;
+
+exports[`formatCitation > ris > formats a year-only article without authors 1`] = `
+"TY  - JOUR
+DA  - 2024///
+PY  - 2024
+DO  - 10.1055/s-0044-1
+ID  - 10.1055/s-0044-1
+LA  - en
+SN  - 0340-6245
+T2  - Thrombosis and Haemostasis
+TI  - Rivaroxaban dosing in patients with atrial fibrillation
+UR  - https://www.thieme-connect.de/products/ejournals/abstract/10.1055/s-0044-1
+ER  -"
+`;
+
+exports[`formatCitation > vancouver > formats a German article with a subtitle and seven authors 1`] = `"Müller J, Schmidt A, Weber, Fischer L, Wagner P, Becker E, et al. Vorhofflimmern im Alter: Eine Kohortenstudie. DMW - Deutsche Medizinische Wochenschrift. 2025 Jan. doi:10.1055/a-2300-0001"`;
+
+exports[`formatCitation > vancouver > formats a fully dated article 1`] = `"Lovelace A. Rivaroxaban dosing in patients with atrial fibrillation. Thrombosis and Haemostasis. 2024 Mar 14. doi:10.1055/a-2245-1234"`;
+
+exports[`formatCitation > vancouver > formats a year-only article without authors 1`] = `"Rivaroxaban dosing in patients with atrial fibrillation. Thrombosis and Haemostasis. 2024. doi:10.1055/s-0044-1"`;
