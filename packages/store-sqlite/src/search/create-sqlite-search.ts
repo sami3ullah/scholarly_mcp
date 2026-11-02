@@ -1,13 +1,18 @@
 import type { ArticleSearch, Doi, RankedChunk, SearchFilters } from '@scholarly-mcp/core';
 import { vectorBlob } from '../articles/rows.js';
 import type { Db } from '../database/open-database.js';
-import { mainMatch, trigramMatch } from '../text/fts-match.js';
+import { hasStemAtWordEdge, mainMatch, trigramMatch, trigramStems } from '../text/fts-match.js';
 import { withSignal } from '../with-signal.js';
 import { filterSql } from './filter-sql.js';
 
 interface HitRow {
   readonly id: string;
   readonly doi: string;
+}
+
+interface TrigramRow extends HitRow {
+  readonly title: string;
+  readonly text: string;
 }
 
 /*
@@ -22,7 +27,8 @@ const ranked = (rows: readonly HitRow[]): RankedChunk[] =>
 
 /**
  * Lexical search over the stemmed and folded FTS table, topped up from the trigram table
- * (substrings, for German compounds) when it finds fewer than the limit. Vector search is an
+ * (substrings, for German compounds) when it finds fewer than the limit; a trigram hit counts
+ * only where a word starts or ends with the stem, as a compound part does. Vector search is an
  * exact cosine scan over every chunk that passes the filters, so filters never cut results
  * short; about 60 ms for the 90k chunks of the Thieme 2024+ corpus (ADR 0022).
  */
@@ -45,23 +51,34 @@ export function createSqliteSearch(db: Db): ArticleSearch {
       .all(match, ...where.params, limit);
   };
 
+  const trigramRows = (match: string, filters: SearchFilters, limit: number) => {
+    const where = filterSql(filters);
+    return db
+      .prepare<unknown[], TrigramRow>(
+        `SELECT c.id, c.doi, c.text, json_extract(a.record, '$.title') AS title
+         FROM chunks_trigram f
+         JOIN vec_chunks s ON s.rowid = f.rowid JOIN chunks c ON c.rowid = f.rowid
+         JOIN articles a ON a.doi = c.doi
+         WHERE chunks_trigram MATCH ? AND ${where.sql}
+         ORDER BY bm25(chunks_trigram), c.id LIMIT ?`,
+      )
+      .all(match, ...where.params, limit);
+  };
+
   return {
     lexical: ({ terms, language, filters, limit }, signal) =>
       withSignal(signal, () => {
         const main = mainMatch(terms, language);
         if (main === undefined || limit <= 0) return [];
         const hits = lexicalRows('chunks_fts', BM25, main, filters, limit);
-        const trigram = trigramMatch(terms, language);
+        const stems = trigramStems(terms, language);
+        const trigram = trigramMatch(stems);
         if (hits.length < limit && trigram !== undefined) {
           const seen = new Set(hits.map((hit) => hit.id));
-          const extra = lexicalRows(
-            'chunks_trigram',
-            'bm25(chunks_trigram)',
-            trigram,
-            filters,
-            limit,
+          const extra = trigramRows(trigram, filters, limit).filter(
+            (hit) => !seen.has(hit.id) && hasStemAtWordEdge(`${hit.title} ${hit.text}`, stems),
           );
-          hits.push(...extra.filter((hit) => !seen.has(hit.id)).slice(0, limit - hits.length));
+          hits.push(...extra.slice(0, limit - hits.length));
         }
         return ranked(hits);
       }),

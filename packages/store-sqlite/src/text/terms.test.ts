@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mainMatch, trigramMatch } from './fts-match.js';
+import { mainMatch, trigramMatch, trigramStems } from './fts-match.js';
 import { foldedWords, stemWord, stemmedText } from './terms.js';
 
 describe('stemming', () => {
@@ -28,7 +28,7 @@ describe('stemming', () => {
 describe('FTS match expressions', () => {
   it('is undefined when no word is left', () => {
     expect(mainMatch(['', '--', '"'], undefined)).toBeUndefined();
-    expect(trigramMatch(['ab'], undefined)).toBeUndefined();
+    expect(trigramMatch(trigramStems(['ab'], undefined))).toBeUndefined();
   });
 
   it('quotes every word, so query syntax stays text', () => {
@@ -39,13 +39,15 @@ describe('FTS match expressions', () => {
   });
 
   it('looks for stems of long words as substrings', () => {
-    expect(trigramMatch(['Vorhofflimmern'], undefined)).toBe('"vorhofflimm" OR "vorhofflimmern"');
+    expect(trigramMatch(trigramStems(['Vorhofflimmern'], undefined))).toBe(
+      '"vorhofflimm" OR "vorhofflimmern"',
+    );
   });
 
   it('stems in the query language alone when it is known', () => {
     expect(mainMatch(['patients'], 'en')).toBe(
       '({text_stemmed title_stemmed} : ("patient") OR text_folded : "patients")',
     );
-    expect(trigramMatch(['Vorhofflimmern'], 'de')).toBe('"vorhofflimm"');
+    expect(trigramMatch(trigramStems(['Vorhofflimmern'], 'de'))).toBe('"vorhofflimm"');
   });
 });

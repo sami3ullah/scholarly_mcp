@@ -13,6 +13,8 @@ const articles: [string, string, string][] = [
   ['10.1055/a-2', 'Vorhofflimmertherapie im Alter', 'Antikoagulation bei älteren Menschen.'],
   ['10.1055/a-3', 'Stroke after surgery', 'Strokes were rare after hip replacement.'],
   ['10.1055/a-4', 'Wohnortnahe Versorgung', 'Die Straße zum Krankenhaus war weit.'],
+  ['10.1055/a-5', 'Defibrillation im Rettungsdienst', 'Die Schocks wurden früh abgegeben.'],
+  ['10.1055/a-6', 'Darmkrebs im Alter', 'Die Vorsorge wurde seltener genutzt.'],
 ];
 
 describe('SQLite lexical search with German text', () => {
@@ -58,6 +60,14 @@ describe('SQLite lexical search with German text', () => {
 
   it('finds compounds by a part of them through the trigram table', async () => {
     expect(await dois('Vorhofflimmern')).toEqual(['10.1055/a-2']);
+  });
+
+  it('finds a compound by its last part through the trigram table', async () => {
+    expect(await dois('Krebs')).toEqual(['10.1055/a-6']);
+  });
+
+  it('does not find a word only containing a stem in its middle', async () => {
+    expect(await dois('fibrillation')).toEqual([]);
   });
 
   it('ranks chunks matching more words first', async () => {
