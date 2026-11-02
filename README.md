@@ -205,7 +205,7 @@ Read more in the [engineering plan](docs/PLAN.md#high-level-architecture) and th
 | [SM-03](tickets/SM-03-crossref-source.md)         | Crossref source and normalisation                    |   ✅   |
 | [SM-04](tickets/SM-04-chunker-embedder.md)        | Chunker and ONNX embedder                            |   ✅   |
 | [SM-05](tickets/SM-05-sqlite-store-ingest.md)     | SQLite store and ingest CLI                          |   ✅   |
-| [SM-06](tickets/SM-06-europepmc-source.md)        | Europe PMC full-text source                          |   🚧   |
+| [SM-06](tickets/SM-06-europepmc-source.md)        | Europe PMC full-text source                          |   ✅   |
 | [SM-07](tickets/SM-07-search-service.md)          | Search service                                       |   ✅   |
 | [SM-08](tickets/SM-08-golden-set-eval.md)         | Golden set, eval and tuning                          |   ⬜   |
 | [SM-09](tickets/SM-09-mcp-server.md)              | MCP server: six tools and transports                 |   ✅   |

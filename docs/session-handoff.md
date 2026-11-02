@@ -99,3 +99,10 @@ Append-only. Newest entry at the bottom.
 - **Verified live (read-only on main's `data/index.sqlite`):** stdio and HTTP end to end with the real embedder; search 337 ms cold / 211 ms warm, `find_related` 101 ms; MCP Inspector CLI lists the six tools and runs a search. Still owed: Claude Desktop check by the user (config in the guide).
 - **Gotchas:** Inspector starts the server without the shell env: use `node --env-file=...`. SDK input/output schemas must have no zod transforms. Never run the server through `pnpm` on stdio (banner breaks the protocol). The other session's SM-06 build was still running during this work; nothing in `data/` was touched.
 - **Next:** finish SM-06 (other session), then SM-08 (follow-ups added from live observations) or SM-10 / SM-11.
+
+## 2026-11-02 - session 7, SM-06 done
+
+- **Done:** SM-06 exit check passed on the live corpus. The full rebuild with enrichment took 2 h 50 min and exited 0 with verify green: 70,911 articles, 176,433 chunks (87,045 full text), 6,861 articles with full text, 13,600 with subjects, 1,322 MB (was 551 MB). The next incremental wrote 0, and verify exited 0. Bench p50/p95: 204/287 ms (was 104/132). Full-text-only words find their article at rank 2, with a section-only `whyMatched` and no teaser. All numbers are in the SM-06 ticket and ADR 0024.
+- **Found:** two ranking issues, added to SM-08. A prefix or stem title match beats an exact full-text match, and its `whyMatched` claims a query term the title does not contain. A vector-only neighbour can beat an exact rare-term hit.
+- **Data:** `data/index.sqlite` is now the enriched index. `data/index-pre-epmc.sqlite` (the old one, 551 MB) can be deleted once SM-08 no longer needs a comparison. The `scholarly-mcp-sm-09` worktree is merged and can be removed with `git worktree remove ../scholarly-mcp-sm-09`.
+- **Next:** SM-08, golden set and eval on the enriched index (follow-ups are in its ticket). After that, SM-10 or SM-11.

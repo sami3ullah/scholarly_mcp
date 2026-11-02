@@ -53,7 +53,7 @@ ADR 0003 allows open access full text under CC BY 4.0 and CC BY-NC-ND 4.0 for ma
 ## Consequences
 
 - Open access articles without an abstract become findable by their full text; the reader still sees only the abstract teaser and a link (ADR 0016). `whyMatched` says "Matched in Methods (full text): <query terms>".
-- The index grows: full text adds roughly 10 to 15 chunks per article for about half of the open access articles, so the vector scan time (ADR 0022) grows with it. The live numbers are in the SM-06 ticket.
-- The first build with enrichment fetches every eligible text one at a time, a few hours at Europe PMC's latency. Later full runs fetch only new or revised texts. If that ever matters, a small fixed concurrency for full-text fetches is the next step.
+- The index grows. On the Thieme corpus (SM-06 exit check), 6,861 of 70,911 articles have full text, adding 87,045 chunks (about 13 per article). The chunk count goes from 89,388 to 176,433 and the file from 551 MB to 1,322 MB. The vector scan (ADR 0022) grows with it: bench p95 goes from 132 ms to 287 ms.
+- The first build with enrichment fetches every eligible text one at a time: 2 h 50 min on the Thieme corpus. Later full runs fetch only new or revised texts. If that ever matters, a small fixed concurrency for full-text fetches is the next step.
 - Heading patterns are English and German; other languages' sections are indexed unlabelled.
 - A text whose licence Europe PMC states differently from Crossref is not used, even if one of them is wrong; this errs on the side of not using text.

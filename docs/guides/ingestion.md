@@ -29,7 +29,7 @@ It fetches records Crossref updated since the last run, with a 1-day overlap to 
 With `EUROPEPMC_ENABLED=true` (set in the Thieme preset) every page is also looked up in Europe PMC by DOI, one request per 100 DOIs. Matched articles get MeSH and keyword subjects. Open access articles under an allowlisted licence also get their full text indexed, for matching only: it is never shown in results, teasers or `whyMatched`. The rules are in [ADR 0024](../adr/0024-europe-pmc-enrichment.md).
 
 - **Turning it on:** run `pnpm ingest full` once. An incremental run only sees records Crossref changed, so most articles would wait for the next scheduled full run.
-- **First build time:** Europe PMC serves one full text in 1 to 2.5 s, and texts are fetched one at a time, so the first build with enrichment takes a few hours. Later full runs fetch only new or revised texts and reuse the rest.
+- **First build time:** Europe PMC serves one full text in 1 to 2.5 s, and texts are fetched one at a time, so the first build with enrichment takes a few hours (2 h 50 min for the Thieme corpus). Later full runs fetch only new or revised texts and reuse the rest.
 - **Missing or unusable text:** the article is indexed from its metadata and the reason is logged (`Full text not used`, `Full text missing, skipped`). Five failures in a row stop the run with `SOURCE_UNAVAILABLE`; the next run resumes it.
 
 ### Removing full text under a licence
