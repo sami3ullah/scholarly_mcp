@@ -8,6 +8,7 @@
 - [ ] Build into new file, verify (counts + sample queries), atomic rename; server reopens on new `IndexMeta.version`
 - [ ] Store contract suite passes
 - [ ] `apps/ingest` CLI: `ingest full`, `ingest incremental`, `ingest verify`
+- [ ] Incremental runs take `updatedSince` from core `incrementalWindow` (1-day overlap, failed runs retry their window); checkpoint `SyncState` after every page; schedule a periodic full run so embargoed licences open (ADR 0020)
 
 ## Exit
 

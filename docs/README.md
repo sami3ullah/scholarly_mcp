@@ -21,6 +21,7 @@ Everything beyond the quick start lives here. New guides are added as the featur
 | [Search design](PLAN.md#data-model-and-search-design)    | Canonical records, chunking, query pipeline and RRF fusion                 |
 | [Tool contracts](PLAN.md#mcp-tool-contracts)             | The article card, the six tools and their error codes                      |
 | [Edge cases](PLAN.md#edge-cases-and-failure-handling)    | How ingestion, search, the server and landing pages handle failure         |
+| [Crossref source](../packages/source-crossref/README.md) | Configuration, usage and fixtures of the Crossref adapter                  |
 
 ## Guides
 

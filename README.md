@@ -124,7 +124,7 @@ pnpm check        # format, lint, typecheck, layering rules, tests with coverage
 | -------------------- | -------------------------------------------- |
 | `pnpm check`         | Everything CI runs, in order                 |
 | `pnpm test`          | Unit and contract tests (Vitest)             |
-| `pnpm test:coverage` | Tests with the 85% coverage gate on core     |
+| `pnpm test:coverage` | Tests with the 85% coverage gate             |
 | `pnpm lint`          | ESLint, strict and type-aware                |
 | `pnpm typecheck`     | `tsc` across all packages (Turborepo)        |
 | `pnpm depcruise`     | Enforces the layering rules between packages |
@@ -177,12 +177,13 @@ Read more in the [engineering plan](docs/PLAN.md#high-level-architecture) and th
 
 ## Limitations
 
-| Limitation                                                                                                                                                                                | Impact                                                                                                 | Fix                                                                    |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
-| **Crossref public pool.** No contact email is configured, so ingestion uses Crossref's slower public pool instead of the polite pool ([ADR 0005](docs/adr/0005-crossref-public-pool.md)). | The first full ingestion is slower and sees more rate limiting. Incremental syncs are barely affected. | Set `CROSSREF_MAILTO`.                                                 |
-| **Thin abstracts.** About half of recent Thieme articles have no abstract in Crossref.                                                                                                    | Those articles match on title, journal and subjects only.                                              | Open access full text helps; a publisher's own content API removes it. |
-| **Coarse subjects for some articles.** Crossref has no subjects; Europe PMC covers only part of the corpus ([ADR 0004](docs/adr/0004-subjects-from-europe-pmc.md)).                       | Articles outside Europe PMC get journal-level subjects.                                                | A publisher's own taxonomy via a source adapter.                       |
-| **Early development.** Most tools are not built yet.                                                                                                                                      | See the roadmap.                                                                                       | -                                                                      |
+| Limitation                                                                                                                                                                                                                                                 | Impact                                                                                                 | Fix                                                                    |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| **Crossref public pool.** No contact email is configured, so ingestion uses Crossref's slower public pool instead of the polite pool ([ADR 0005](docs/adr/0005-crossref-public-pool.md)).                                                                  | The first full ingestion is slower and sees more rate limiting. Incremental syncs are barely affected. | Set `CROSSREF_MAILTO`.                                                 |
+| **Thin abstracts.** About half of recent Thieme articles have no abstract in Crossref.                                                                                                                                                                     | Those articles match on title, journal and subjects only.                                              | Open access full text helps; a publisher's own content API removes it. |
+| **Coarse subjects for some articles.** Crossref has no subjects; Europe PMC covers only part of the corpus ([ADR 0004](docs/adr/0004-subjects-from-europe-pmc.md)).                                                                                        | Articles outside Europe PMC get journal-level subjects.                                                | A publisher's own taxonomy via a source adapter.                       |
+| **Embargoes open on a full run.** An article whose open licence starts in the future is indexed as closed; incremental runs skip unchanged records, so it opens at the next full ingestion ([ADR 0020](docs/adr/0020-crossref-source-ingestion-rules.md)). | Until then it shows as paywalled, with the abstract and a subscribe link.                              |
+| **Early development.** Most tools are not built yet.                                                                                                                                                                                                       | See the roadmap.                                                                                       | -                                                                      |
 
 ## Roadmap
 
@@ -191,7 +192,7 @@ Read more in the [engineering plan](docs/PLAN.md#high-level-architecture) and th
 | [SM-00](tickets/SM-00-feasibility-spike.md)       | Feasibility spike ([results](docs/spike-results.md)) |   ✅   |
 | [SM-01](tickets/SM-01-foundations.md)             | Monorepo foundations and CI                          |   ✅   |
 | [SM-02](tickets/SM-02-core-domain.md)             | Core domain, ports, config, errors, testkit          |   ✅   |
-| [SM-03](tickets/SM-03-crossref-source.md)         | Crossref source and normalisation                    |   ⏳   |
+| [SM-03](tickets/SM-03-crossref-source.md)         | Crossref source and normalisation                    |   ✅   |
 | [SM-04](tickets/SM-04-chunker-embedder.md)        | Chunker and ONNX embedder                            |   ⬜   |
 | [SM-05](tickets/SM-05-sqlite-store-ingest.md)     | SQLite store and ingest CLI                          |   ⬜   |
 | [SM-06](tickets/SM-06-europepmc-source.md)        | Europe PMC full-text source                          |   ⬜   |
