@@ -146,6 +146,7 @@ scholarly-mcp/
 │   ├── store-sqlite/      FTS5 + trigram + sqlite-vec, landing sessions
 │   ├── store-postgres/    tsvector + pgvector, migrations
 │   ├── embedder-onnx/     multilingual-e5-small via transformers.js
+│   ├── logger/            pino logger with query and secret redaction
 │   └── testkit/           contract suites, fixtures, golden set
 ├── apps/
 │   ├── ingest/            CLI: full, incremental, verify
@@ -189,8 +190,8 @@ Read more in the [engineering plan](docs/PLAN.md#high-level-architecture) and th
 | ------------------------------------------------- | ---------------------------------------------------- | :----: |
 | [SM-00](tickets/SM-00-feasibility-spike.md)       | Feasibility spike ([results](docs/spike-results.md)) |   ✅   |
 | [SM-01](tickets/SM-01-foundations.md)             | Monorepo foundations and CI                          |   ✅   |
-| [SM-02](tickets/SM-02-core-domain.md)             | Core domain, ports, config, errors, testkit          |   ⏳   |
-| [SM-03](tickets/SM-03-crossref-source.md)         | Crossref source and normalisation                    |   ⬜   |
+| [SM-02](tickets/SM-02-core-domain.md)             | Core domain, ports, config, errors, testkit          |   ✅   |
+| [SM-03](tickets/SM-03-crossref-source.md)         | Crossref source and normalisation                    |   ⏳   |
 | [SM-04](tickets/SM-04-chunker-embedder.md)        | Chunker and ONNX embedder                            |   ⬜   |
 | [SM-05](tickets/SM-05-sqlite-store-ingest.md)     | SQLite store and ingest CLI                          |   ⬜   |
 | [SM-06](tickets/SM-06-europepmc-source.md)        | Europe PMC full-text source                          |   ⬜   |
