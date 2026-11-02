@@ -1,0 +1,93 @@
+import { EMBEDDING_DIMENSIONS } from '@scholarly-mcp/core';
+import type { Db } from './open-database.js';
+
+/**
+ * Version of the index file layout, kept in `PRAGMA user_version`. Bump it whenever the
+ * schema or the way text is stemmed changes: an incremental run then refuses to build on
+ * the old file and a full run is needed.
+ */
+export const INDEX_SCHEMA_VERSION = 1;
+
+/*
+ * `chunks.rowid` links each chunk to its rows in the two FTS tables and the vector table.
+ * The FTS tables are contentless (the text lives in `chunks`), with deletes enabled.
+ * `sync_state` lives in the index file on purpose: a page's articles and the checkpoint
+ * after it are built into the same file, so they can never disagree after a crash.
+ */
+const SCHEMA = `
+CREATE TABLE articles (
+  doi TEXT PRIMARY KEY,
+  record TEXT NOT NULL,
+  content_hash TEXT NOT NULL,
+  language TEXT,
+  year INTEGER NOT NULL,
+  issn_print TEXT,
+  issn_electronic TEXT,
+  is_open_access INTEGER NOT NULL,
+  is_retracted INTEGER NOT NULL
+) STRICT;
+
+CREATE TABLE chunks (
+  rowid INTEGER PRIMARY KEY,
+  id TEXT NOT NULL UNIQUE,
+  doi TEXT NOT NULL REFERENCES articles (doi),
+  ordinal INTEGER NOT NULL,
+  section TEXT,
+  text TEXT NOT NULL,
+  language TEXT,
+  token_count INTEGER NOT NULL,
+  origin TEXT NOT NULL,
+  source TEXT NOT NULL,
+  license_url TEXT,
+  model_version TEXT NOT NULL
+) STRICT;
+
+CREATE INDEX chunks_by_doi ON chunks (doi, ordinal);
+
+CREATE VIRTUAL TABLE chunks_fts USING fts5 (
+  text_stemmed, text_folded, title_stemmed,
+  content = '', contentless_delete = 1,
+  tokenize = 'unicode61 remove_diacritics 2'
+);
+
+CREATE VIRTUAL TABLE chunks_trigram USING fts5 (
+  text,
+  content = '', contentless_delete = 1,
+  tokenize = 'trigram remove_diacritics 1'
+);
+
+CREATE VIRTUAL TABLE vec_chunks USING vec0 (embedding float[${String(EMBEDDING_DIMENSIONS)}]);
+
+CREATE TABLE index_meta (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  version TEXT NOT NULL,
+  model_version TEXT NOT NULL,
+  article_count INTEGER NOT NULL,
+  chunk_count INTEGER NOT NULL,
+  built_at TEXT NOT NULL
+) STRICT;
+
+CREATE TABLE sync_state (
+  source TEXT PRIMARY KEY,
+  record TEXT NOT NULL
+) STRICT;
+
+CREATE TABLE index_build (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  kind TEXT NOT NULL,
+  started_at TEXT NOT NULL
+) STRICT;
+`;
+
+/** Creates the index tables in an empty database. */
+export function createIndexSchema(db: Db): void {
+  db.transaction(() => {
+    db.exec(SCHEMA);
+    db.pragma(`user_version = ${String(INDEX_SCHEMA_VERSION)}`);
+  })();
+}
+
+/** The layout version of an index file, 0 for a file without one. */
+export function indexSchemaVersion(db: Db): number {
+  return Number(db.pragma('user_version', { simple: true }));
+}

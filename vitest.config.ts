@@ -10,6 +10,7 @@ export default defineConfig({
         'packages/logger/src/**',
         'packages/source-*/src/**',
         'packages/embedder-*/src/**',
+        'packages/store-*/src/**',
       ],
       exclude: ['**/index.ts', '**/*.test.ts', '**/testing/**'],
       thresholds: { lines: 85 },
