@@ -172,6 +172,9 @@ importers:
       '@scholarly-mcp/core':
         specifier: workspace:*
         version: link:../core
+      fast-check:
+        specifier: ^4.10.2
+        version: 4.10.2
     devDependencies:
       vitest:
         specifier: ^5.0.5

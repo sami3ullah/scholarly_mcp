@@ -14,7 +14,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@scholarly-mcp/core": "workspace:*"
+    "@scholarly-mcp/core": "workspace:*",
+    "fast-check": "^4.10.2"
   },
   "devDependencies": {
     "vitest": "^5.0.5"

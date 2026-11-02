@@ -6,6 +6,7 @@ import {
   type Doi,
   type SearchFilters,
 } from '@scholarly-mcp/core';
+import fc from 'fast-check';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { aChunk } from '../builders/a-chunk.js';
 import { anArticle } from '../builders/an-article.js';
@@ -195,6 +196,24 @@ export function runArticleStoreContract(
           ).resolves.toEqual(expect.any(Array));
         },
       );
+
+      it('never fails on any string as a term, in any query language', async () => {
+        await fc.assert(
+          fc.asyncProperty(
+            fc.array(fc.string({ unit: 'binary' }), { maxLength: 6 }),
+            fc.constantFrom(undefined, 'de', 'en'),
+            async (terms, language) => {
+              const query = { terms, filters: noFilters, limit: 10 };
+              const hits = await store.search.lexical(
+                language === undefined ? query : { ...query, language },
+                signal,
+              );
+              expect(hits.length).toBeLessThanOrEqual(10);
+            },
+          ),
+          { numRuns: 300 },
+        );
+      });
 
       it('returns nearest chunks first, within the limit', async () => {
         const embedding = new Float32Array(384);
