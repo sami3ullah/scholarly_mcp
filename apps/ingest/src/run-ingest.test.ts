@@ -4,11 +4,11 @@ import {
   createInMemoryArticleStore,
   createInMemorySource,
   createInMemorySyncStateStore,
+  createTestLogger,
 } from '@scholarly-mcp/testkit';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { runIngest, type IngestDeps } from './run-ingest.js';
 import { article, countingEmbedder, recordingSyncState } from './testing/ingest-fixtures.js';
-import { createTestLogger } from './testing/test-logger.js';
 
 const signal = new AbortController().signal;
 const source = (articles: readonly Article[]) =>

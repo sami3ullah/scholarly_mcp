@@ -22,3 +22,4 @@ export { createInMemorySessionStore } from './fakes/in-memory-session-store.js';
 export { createInMemorySource, type InMemorySourceOptions } from './fakes/in-memory-source.js';
 export { createInMemorySyncStateStore } from './fakes/in-memory-sync-state-store.js';
 export { createSequentialTokens } from './fakes/sequential-tokens.js';
+export { createTestLogger, type CapturedLine } from './fakes/test-logger.js';

@@ -3,11 +3,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { appError, type Article, type Source } from '@scholarly-mcp/core';
 import { buildPathOf, openDatabase, openIndexReader } from '@scholarly-mcp/store-sqlite';
-import { createFakeClock, createInMemorySource } from '@scholarly-mcp/testkit';
+import { createFakeClock, createInMemorySource, createTestLogger } from '@scholarly-mcp/testkit';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { ingestIndex, verifyLiveIndex, type IngestIndexDeps } from './ingest-index.js';
 import { article, countingEmbedder } from './testing/ingest-fixtures.js';
-import { createTestLogger } from './testing/test-logger.js';
 
 const signal = new AbortController().signal;
 const numbered = (count: number) => Array.from({ length: count }, (_, i) => article(i + 1));

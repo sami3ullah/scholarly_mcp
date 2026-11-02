@@ -1,12 +1,11 @@
 import type { Source } from '@scholarly-mcp/core';
-import { createFakeClock } from '@scholarly-mcp/testkit';
+import { createFakeClock, createTestLogger, type CapturedLine } from '@scholarly-mcp/testkit';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll } from 'vitest';
 import type { CrossrefConfig } from '../config/crossref-config.js';
 import { createCrossrefSource } from '../create-crossref-source.js';
 import { retracted, walk, type RecordedPage } from './crossref-fixtures.js';
-import { createTestLogger, type CapturedLine } from './test-logger.js';
 
 /** The works endpoint the tests intercept. */
 export const WORKS = 'https://api.crossref.org/prefixes/10.1055/works';
