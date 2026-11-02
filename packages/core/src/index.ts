@@ -15,14 +15,28 @@ export {
 } from './article/published-date.js';
 export { subjectSchema, type Subject } from './article/subject.js';
 export { TEASER_MAX_LENGTH, articleCardSchema, type ArticleCard } from './card/article-card.js';
+export { articleSections } from './chunk/article-sections.js';
+export {
+  DEFAULT_CHUNKING,
+  chunkDocument,
+  type ChunkDraft,
+  type ChunkSection,
+  type ChunkableDocument,
+  type ChunkingOptions,
+  type CountTokens,
+} from './chunk/chunk-document.js';
 export {
   EMBEDDING_DIMENSIONS,
   chunkOriginSchema,
   chunkSchema,
+  chunkSourceSchema,
   isDisplayable,
   type Chunk,
   type ChunkOrigin,
+  type ChunkSource,
 } from './chunk/chunk.js';
+export { parseAbstract, type AbstractSection } from './chunk/parse-abstract.js';
+export { splitSentences } from './chunk/split-sentences.js';
 export {
   DEFAULT_FULLTEXT_LICENSES,
   fulltextConfigSchema,
@@ -65,4 +79,5 @@ export {
   type SyncWindow,
 } from './sync/incremental-window.js';
 export { syncStateSchema, type SyncState } from './sync/sync-state.js';
+export { detectLanguage } from './text/detect-language.js';
 export { normalizeText } from './text/normalize-text.js';

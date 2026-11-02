@@ -13,6 +13,11 @@ export const chunkOriginSchema = z.enum(['metadata', 'abstract', 'fulltext']);
 
 export type ChunkOrigin = z.infer<typeof chunkOriginSchema>;
 
+/** The content source a chunk's text came from, so it can be purged by source. */
+export const chunkSourceSchema = z.enum(['crossref', 'europepmc']);
+
+export type ChunkSource = z.infer<typeof chunkSourceSchema>;
+
 /**
  * A passage of an article, the unit of retrieval. Each chunk records its source and licence
  * so it can be purged by either with one query.
@@ -27,7 +32,7 @@ export const chunkSchema = z
     language: languageSchema.optional(),
     tokenCount: z.int().positive(),
     origin: chunkOriginSchema,
-    source: z.enum(['crossref', 'europepmc']),
+    source: chunkSourceSchema,
     licenseUrl: z.url().optional(),
     embedding: z
       .instanceof(Float32Array)
