@@ -1,6 +1,7 @@
 pnpm-lock.yaml
 docs/PLAN.md
 packages/testkit/fixtures/
+packages/*/fixtures/
 spikes/
 coverage/
 dist/

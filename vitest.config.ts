@@ -5,8 +5,8 @@ export default defineConfig({
     projects: ['packages/*/vitest.config.ts', 'apps/*/vitest.config.ts'],
     coverage: {
       provider: 'v8',
-      include: ['packages/core/src/**', 'packages/logger/src/**'],
-      exclude: ['**/index.ts', '**/*.test.ts'],
+      include: ['packages/core/src/**', 'packages/logger/src/**', 'packages/source-*/src/**'],
+      exclude: ['**/index.ts', '**/*.test.ts', '**/testing/**'],
       thresholds: { lines: 85 },
     },
   },
