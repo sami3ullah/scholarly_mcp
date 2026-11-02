@@ -24,7 +24,7 @@ const ranked = (rows: readonly HitRow[]): RankedChunk[] =>
  * Lexical search over the stemmed and folded FTS table, topped up from the trigram table
  * (substrings, for German compounds) when it finds fewer than the limit. Vector search is an
  * exact cosine scan over every chunk that passes the filters, so filters never cut results
- * short; at the plan's corpus size (about 50k chunks) that is fast enough.
+ * short; about 60 ms for the 90k chunks of the Thieme 2024+ corpus (ADR 0022).
  */
 export function createSqliteSearch(db: Db): ArticleSearch {
   const lexicalRows = (
@@ -38,7 +38,7 @@ export function createSqliteSearch(db: Db): ArticleSearch {
     return db
       .prepare<unknown[], HitRow>(
         `SELECT c.id, c.doi FROM ${table} f
-         JOIN chunks c ON c.rowid = f.rowid JOIN articles a ON a.doi = c.doi
+         JOIN vec_chunks s ON s.rowid = f.rowid JOIN chunks c ON c.rowid = f.rowid
          WHERE ${table} MATCH ? AND ${where.sql}
          ORDER BY ${order}, c.id LIMIT ?`,
       )
@@ -71,11 +71,12 @@ export function createSqliteSearch(db: Db): ArticleSearch {
         const rows = db
           .prepare<unknown[], HitRow>(
             `SELECT c.id, c.doi FROM (
-               SELECT rowid, vec_distance_cosine(embedding, ?) AS distance FROM vec_chunks
+               SELECT rowid, vec_distance_cosine(embedding, ?) AS distance FROM vec_chunks s
+               WHERE ${where.sql} AND distance < 1
+               ORDER BY distance, rowid LIMIT ?
              ) v
-             JOIN chunks c ON c.rowid = v.rowid JOIN articles a ON a.doi = c.doi
-             WHERE v.distance < 1 AND ${where.sql}
-             ORDER BY v.distance, c.id LIMIT ?`,
+             JOIN chunks c ON c.rowid = v.rowid
+             ORDER BY v.distance, c.id`,
           )
           .all(vectorBlob(embedding), ...where.params, limit);
         return ranked(rows);

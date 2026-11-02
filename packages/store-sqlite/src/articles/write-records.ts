@@ -1,4 +1,10 @@
-import { appError, type ArticleRecord, type Chunk, type Doi } from '@scholarly-mcp/core';
+import {
+  appError,
+  type Article,
+  type ArticleRecord,
+  type Chunk,
+  type Doi,
+} from '@scholarly-mcp/core';
 import { toJsonWithDates } from '../database/json-with-dates.js';
 import type { Db } from '../database/open-database.js';
 import { foldText } from '../text/fold-text.js';
@@ -43,7 +49,12 @@ export function createRecordWriter(db: Db): RecordWriter {
      VALUES (?, ?, ?, ?)`,
   );
   const putTrigram = db.prepare('INSERT INTO chunks_trigram (rowid, text) VALUES (?, ?)');
-  const putVector = db.prepare('INSERT INTO vec_chunks (rowid, embedding) VALUES (?, ?)');
+  const putVector = db.prepare(
+    `INSERT INTO vec_chunks (rowid, embedding, language, year, issn_print, issn_electronic,
+       is_open_access, is_retracted)
+     VALUES (@rowid, @embedding, @language, @year, @issnPrint, @issnElectronic, @isOpenAccess,
+       @isRetracted)`,
+  );
   const storedModel = db.prepare<[], { model_version: string }>(
     'SELECT model_version FROM chunks LIMIT 1',
   );
@@ -52,12 +63,14 @@ export function createRecordWriter(db: Db): RecordWriter {
     for (const { rowid } of chunkRowids.all(doi)) {
       deleteFts.run(rowid);
       deleteTrigram.run(rowid);
-      deleteVector.run(BigInt(rowid));
+      deleteVector.run(rowid);
       deleteChunk.run(rowid);
     }
   }
 
-  function putChunkRows(chunk: Chunk, title: string, articleLanguage: string | undefined): void {
+  function putChunkRows(chunk: Chunk, article: Article, filters: ArticleFilterColumns): void {
+    const title = article.title;
+    const articleLanguage = article.language;
     const language = chunk.language ?? articleLanguage;
     const { rowid } = putChunk.get({
       id: chunk.id,
@@ -79,24 +92,26 @@ export function createRecordWriter(db: Db): RecordWriter {
       stemmedText(title, articleLanguage),
     );
     putTrigram.run(rowid, foldText(`${title} ${chunk.text}`));
-    putVector.run(BigInt(rowid), vectorBlob(chunk.embedding));
+    putVector.run({
+      ...filters,
+      rowid,
+      embedding: vectorBlob(chunk.embedding),
+      language: language ?? null,
+    });
   }
 
   return {
     put({ article, chunks }) {
       removeChunks(article.doi);
+      const filters = filterColumns(article);
       putArticle.run({
+        ...filters,
         doi: article.doi,
         record: toJsonWithDates(article),
         contentHash: article.contentHash,
         language: article.language ?? null,
-        year: article.published.year,
-        issnPrint: article.journal.issnPrint ?? null,
-        issnElectronic: article.journal.issnElectronic ?? null,
-        isOpenAccess: article.isOpenAccess ? 1 : 0,
-        isRetracted: article.isRetracted ? 1 : 0,
       });
-      for (const chunk of chunks) putChunkRows(chunk, article.title, article.language);
+      for (const chunk of chunks) putChunkRows(chunk, article, filters);
     },
     remove(doi) {
       removeChunks(doi);
@@ -117,5 +132,24 @@ export function createRecordWriter(db: Db): RecordWriter {
         }
       }
     },
+  };
+}
+
+/** The article columns search filters on, kept on `articles` and on every vector row. */
+interface ArticleFilterColumns {
+  readonly year: number;
+  readonly issnPrint: string | null;
+  readonly issnElectronic: string | null;
+  readonly isOpenAccess: 0 | 1;
+  readonly isRetracted: 0 | 1;
+}
+
+function filterColumns(article: Article): ArticleFilterColumns {
+  return {
+    year: article.published.year,
+    issnPrint: article.journal.issnPrint ?? null,
+    issnElectronic: article.journal.issnElectronic ?? null,
+    isOpenAccess: article.isOpenAccess ? 1 : 0,
+    isRetracted: article.isRetracted ? 1 : 0,
   };
 }

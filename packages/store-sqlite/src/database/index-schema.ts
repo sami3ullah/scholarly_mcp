@@ -6,11 +6,15 @@ import type { Db } from './open-database.js';
  * schema or the way text is stemmed changes: an incremental run then refuses to build on
  * the old file and a full run is needed.
  */
-export const INDEX_SCHEMA_VERSION = 1;
+export const INDEX_SCHEMA_VERSION = 2;
 
 /*
  * `chunks.rowid` links each chunk to its rows in the two FTS tables and the vector table.
  * The FTS tables are contentless (the text lives in `chunks`), with deletes enabled.
+ * `vec_chunks` is a plain table, not a vec0 one: it repeats the filter columns of the
+ * chunk's article, so an exact cosine scan with filters reads one narrow table (about 60 ms
+ * for 90k chunks, against 1.2 s for a vec0 scan joined to `articles`; ADR 0022). The
+ * language is the chunk's own, else the article's.
  * `sync_state` lives in the index file on purpose: a page's articles and the checkpoint
  * after it are built into the same file, so they can never disagree after a crash.
  */
@@ -56,7 +60,16 @@ CREATE VIRTUAL TABLE chunks_trigram USING fts5 (
   tokenize = 'trigram remove_diacritics 1'
 );
 
-CREATE VIRTUAL TABLE vec_chunks USING vec0 (embedding float[${String(EMBEDDING_DIMENSIONS)}]);
+CREATE TABLE vec_chunks (
+  rowid INTEGER PRIMARY KEY,
+  embedding BLOB NOT NULL CHECK (length(embedding) = ${String(EMBEDDING_DIMENSIONS * 4)}),
+  language TEXT,
+  year INTEGER NOT NULL,
+  issn_print TEXT,
+  issn_electronic TEXT,
+  is_open_access INTEGER NOT NULL,
+  is_retracted INTEGER NOT NULL
+) STRICT;
 
 CREATE TABLE index_meta (
   id INTEGER PRIMARY KEY CHECK (id = 1),
