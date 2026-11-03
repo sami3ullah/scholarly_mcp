@@ -23,3 +23,7 @@ The plan asks for a non-root distroless image with a read-only filesystem, its s
 - **Measured.** Read-only root filesystem confirmed (`EROFS` on a write to `/app`); uid 65532; ready 1.8 s after start on the eval index; about 560 MiB resident; SIGTERM as PID 1 drains and exits 0. `ingest verify` passes through the image after a baked index was chowned to the app user.
 - **Rebuilds.** Code changes rebuild the app layer; the model layer is cached. pnpm's store is a BuildKit cache mount, so dependency downloads are shared between builds.
 - **No shell.** Debugging needs `docker run --entrypoint /nodejs/bin/node …` or a debug variant of the base image.
+
+## Implementation note (2026-11-03, SM-14)
+
+So that `docker run ghcr.io/…/scholarly-mcp` works with no settings, the image now defaults to `AUTH_MODE=api-key`, `HTTP_ALLOWED_HOSTS=localhost,127.0.0.1` and `LANDING_API_PORT=8081` (on loopback until `LANDING_API_HOST` and the secret open it), and the entrypoint applies `presets/$SCHOLARLY_PRESET.env` (default `thieme`, the preset of the demo index the release image carries, [ADR 0039](0039-demo-index-from-a-cc-by-doi-list.md)) under any setting already made. Set `SCHOLARLY_PRESET=` to turn it off.

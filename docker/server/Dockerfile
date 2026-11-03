@@ -59,10 +59,14 @@ COPY --from=build --chown=nonroot:nonroot /out/state /var/lib/scholarly
 COPY --from=build --chown=nonroot:nonroot /out/data /data
 COPY --from=index --chown=nonroot:nonroot / /data/
 # API keys and a local Host allowlist by default, as the server listens beyond loopback;
-# set HTTP_ALLOWED_HOSTS to the hostname clients use in a deployment.
+# set HTTP_ALLOWED_HOSTS to the hostname clients use in a deployment. The landing API has
+# its own port, on loopback until LANDING_API_HOST and LANDING_API_SECRET open it (ADR 0038).
+# SCHOLARLY_PRESET applies presets/<name>.env under explicit settings; empty turns it off.
 ENV NODE_ENV=production \
+    SCHOLARLY_PRESET=thieme \
     AUTH_MODE=api-key \
     HTTP_ALLOWED_HOSTS=localhost,127.0.0.1 \
+    LANDING_API_PORT=8081 \
     MCP_TRANSPORT=http \
     HTTP_HOST=0.0.0.0 \
     HTTP_PORT=8080 \
