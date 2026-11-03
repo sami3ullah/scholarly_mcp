@@ -41,3 +41,4 @@ Each ADR records one decision: the context, what we chose and what follows from 
 | [0033](0033-referral-events-funnel-and-card-view.md)    | Referral events, funnel report and MCP Apps card view            | accepted           |
 | [0034](0034-postgres-store-adapter.md)                  | Postgres store adapter                                           | accepted           |
 | [0035](0035-live-funnel-over-stored-events.md)          | Live funnel over the stored events                               | accepted           |
+| [0036](0036-shared-rate-limit-buckets.md)               | Shared rate-limit buckets                                        | accepted           |

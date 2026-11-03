@@ -34,5 +34,5 @@ The plan asks for API keys stored hashed and identified by prefix, OAuth 2.1 res
 - `LOCAL_CALLER` lives in `auth/auth-info.ts` and is now only the caller of stdio and of `AUTH_MODE=none`.
 - `UsageEvent.status` gains `INTERNAL`; the runtime database gains migration 2 (`api_keys`, an index on exported events). Core gains the `ApiKeyStore` and `UsageOutbox` ports, with testkit fakes and contracts that the SQLite adapters pass.
 - Billing receives each event at least once and must dedupe on `id`; the JSON-lines file can repeat a batch when the webhook failed after it.
-- The rate limit is per process. Moving to several replicas needs a shared bucket store (a new port), noted for SM-13/SM-14.
+- The rate limit is per process. Moving to several replicas needs a shared bucket store (a new port), noted for SM-13/SM-14. Done in ADR 0036: with `STORE=postgres` the buckets are shared.
 - Exit check: every server and metering edge case named in the ticket has a test. A live smoke test on the real index served `401` without a key, searched with a key (5 cards, 349 ms), exported both events to JSON lines within a second and stopped cleanly on SIGTERM, with no query text in logs or events.

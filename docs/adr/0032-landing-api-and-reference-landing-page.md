@@ -40,7 +40,7 @@ SM-09 already stores each card-returning call's results under a random token and
 ## Consequences
 
 - **Measured locally.** Against the live index, a German search's link renders in about 0.2-0.27 s. Lighthouse on mobile settings measured LCP 620-628 ms, with performance and accessibility at 1.0 (stub: about 620 ms). An unknown DOI answers 307 to doi.org, and a dead link answers 404.
-- **Several replicas.** The per-visitor limit and sessions are per process. Sessions move to Postgres in SM-13, and shared limits are an SM-14 follow-up.
+- **Several replicas.** The per-visitor limit and sessions are per process. Sessions move to Postgres in SM-13, and shared limits are an SM-14 follow-up (done in ADR 0036).
 - **Funnel data.** `visitCount` lives on the session row and is deleted with it after 24 h. The SM-12 funnel needs visit events in the metering outbox (follow-up added there).
 - **Untranslated topic labels.** Topics are MeSH labels, which are English, so a German page reads "Ihre Ergebnisse zu Atrial Fibrillation". German MeSH labels would need a source (follow-up candidate).
 - **Image build.** `output: 'standalone'` is left for the SM-14 image, because `next start` refuses it.

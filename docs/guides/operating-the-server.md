@@ -55,7 +55,7 @@ The server publishes Protected Resource Metadata at `/.well-known/oauth-protecte
 
 ## Rate limits
 
-Each caller (key id or OAuth client) has a token bucket: `RATE_LIMIT_PER_MINUTE` tool calls a minute (default 60), in bursts of up to `RATE_LIMIT_BURST` (default 20). When it is empty, the tool answers `RATE_LIMITED` with `retryAfter` in seconds. The bucket is per process; with several replicas each allows the full rate.
+Each caller (key id or OAuth client) has a token bucket: `RATE_LIMIT_PER_MINUTE` tool calls a minute (default 60), in bursts of up to `RATE_LIMIT_BURST` (default 20). When it is empty, the tool answers `RATE_LIMITED` with `retryAfter` in seconds. With `STORE=postgres` the buckets live in Postgres, so every replica shares one limit per caller; with SQLite (one process) they stay in memory ([ADR 0036](../adr/0036-shared-rate-limit-buckets.md)). If the bucket store fails, calls are allowed and a warning is logged.
 
 ### Landing API
 
