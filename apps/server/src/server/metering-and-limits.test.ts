@@ -1,4 +1,5 @@
 import { InMemorySpanExporter, SimpleSpanProcessor } from '@opentelemetry/sdk-trace';
+import type { ToolCallEvent } from '@scholarly-mcp/core';
 import { createFakeClock } from '@scholarly-mcp/testkit';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createRateLimiter } from '../limits/create-rate-limiter.js';
@@ -7,6 +8,10 @@ import { startTracing } from '../telemetry/create-tracing.js';
 import { startHarness, structured, type Harness } from '../testing/server-harness.js';
 
 const QUERY = 'rivaroxaban dosing elderly';
+
+function toolCalls(harness: Harness): ToolCallEvent[] {
+  return harness.outbox.all().filter((event) => event.kind === 'tool_call');
+}
 
 describe('every tool call is metered, limited, counted and traced', () => {
   let harness: Harness | undefined;
@@ -21,7 +26,7 @@ describe('every tool call is metered, limited, counted and traced', () => {
     await harness.call('get_article', { doi: '10.1055/does-not-exist' });
     await harness.call('search_articles', { query: '' });
     await harness.flushMeter();
-    const events = harness.outbox.all();
+    const events = toolCalls(harness);
     expect(events.map(({ tool, status, billable }) => ({ tool, status, billable }))).toEqual([
       { tool: 'search_articles', status: 'ok', billable: true },
       { tool: 'get_article', status: 'NOT_FOUND', billable: false },
@@ -29,6 +34,9 @@ describe('every tool call is metered, limited, counted and traced', () => {
     ]);
     expect(events[0]).toMatchObject({ apiKeyId: 'local', id: 'event-1' });
     expect(events[0]?.resultCount).toBeGreaterThan(0);
+    const shown = events[0]?.cardsByJournal.reduce((sum, { cards }) => sum + cards, 0);
+    expect(shown).toBe(events[0]?.resultCount);
+    expect(events[1]?.cardsByJournal).toEqual([]);
     expect(JSON.stringify(events)).not.toContain('rivaroxaban');
   });
 
@@ -39,7 +47,7 @@ describe('every tool call is metered, limited, counted and traced', () => {
     const result = await harness.call('search_articles', { query: QUERY });
     expect(structured(result)['code']).toBe('INTERNAL');
     await harness.flushMeter();
-    expect(harness.outbox.all()[0]).toMatchObject({ status: 'INTERNAL', billable: false });
+    expect(toolCalls(harness)[0]).toMatchObject({ status: 'INTERNAL', billable: false });
   });
 
   it('answers RATE_LIMITED with retryAfter once the bucket is empty, metered as not billable', async () => {
@@ -54,7 +62,7 @@ describe('every tool call is metered, limited, counted and traced', () => {
     expect((await harness.call('cite', { doi: '10.1055/a-1001' })).isError).not.toBe(true);
     await harness.flushMeter();
     expect(
-      harness.outbox.all().map(({ status, billable }) => `${status}:${String(billable)}`),
+      toolCalls(harness).map(({ status, billable }) => `${status}:${String(billable)}`),
     ).toEqual(['ok:true', 'RATE_LIMITED:false', 'ok:true']);
   });
 

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { doiSchema } from '../article/doi.js';
+import { toolNameSchema } from '../metering/tool-name.js';
 import { tokenSchema } from './token.js';
 
 /** How long a landing link keeps working (key design decision 12). */
@@ -17,6 +18,8 @@ export const landingSessionSchema = z
       .min(1)
       .max(10),
     language: z.enum(['de', 'en', 'any']),
+    /** The tool that made the session; absent on sessions stored before ADR 0033. */
+    tool: toolNameSchema.optional(),
     apiKeyId: z.string().min(1),
     createdAt: z.date(),
     expiresAt: z.date(),

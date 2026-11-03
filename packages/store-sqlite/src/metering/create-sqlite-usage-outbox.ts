@@ -4,26 +4,23 @@ import { withSignal } from '../with-signal.js';
 
 interface UsageRow {
   readonly id: string;
+  readonly kind: string;
   readonly api_key_id: string;
-  readonly tool: string;
-  readonly result_count: number;
-  readonly latency_ms: number;
-  readonly status: string;
-  readonly billable: number;
   readonly occurred_at: string;
   readonly exported_at: string | null;
+  readonly payload: string;
 }
 
 /**
- * The metering outbox on the runtime database's `usage_events` table (ADR 0022). Rows hold
- * key id, tool, counts and latency, never query text. Several server processes may share
- * the file; each insert is one small WAL write.
+ * The metering outbox on the runtime database's `usage_events` table (ADR 0022, ADR 0033).
+ * A row is an envelope (id, kind, key id, times) plus the kind's fields as JSON; none of
+ * them holds query text or a landing token. Several server processes may share the file;
+ * each insert is one small WAL write.
  */
 export function createSqliteUsageOutbox(db: Db): UsageOutbox {
   const insert = db.prepare(
-    `INSERT OR IGNORE INTO usage_events
-       (id, api_key_id, tool, result_count, latency_ms, status, billable, occurred_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT OR IGNORE INTO usage_events (id, kind, api_key_id, occurred_at, payload)
+     VALUES (?, ?, ?, ?, ?)`,
   );
   const pending = db.prepare<[number], UsageRow>(
     `SELECT * FROM usage_events WHERE exported_at IS NULL ORDER BY occurred_at, id LIMIT ?`,
@@ -42,16 +39,9 @@ export function createSqliteUsageOutbox(db: Db): UsageOutbox {
   return {
     append: (event, signal) =>
       withSignal(signal, () => {
-        insert.run(
-          event.id,
-          event.apiKeyId,
-          event.tool,
-          event.resultCount,
-          event.latencyMs,
-          event.status,
-          event.billable ? 1 : 0,
-          event.occurredAt.toISOString(),
-        );
+        const { id, kind, apiKeyId, occurredAt, ...payload } = usageEventSchema.parse(event);
+        delete payload.exportedAt;
+        insert.run(id, kind, apiKeyId, occurredAt.toISOString(), JSON.stringify(payload));
       }),
     pending: (limit, signal) => withSignal(signal, () => pending.all(limit).map(eventFromRow)),
     markExported: (ids, at, signal) =>
@@ -66,13 +56,10 @@ export function createSqliteUsageOutbox(db: Db): UsageOutbox {
 
 function eventFromRow(row: UsageRow): UsageEvent {
   return usageEventSchema.parse({
+    ...(JSON.parse(row.payload) as object),
     id: row.id,
+    kind: row.kind,
     apiKeyId: row.api_key_id,
-    tool: row.tool,
-    resultCount: row.result_count,
-    latencyMs: row.latency_ms,
-    status: row.status,
-    billable: row.billable === 1,
     occurredAt: new Date(row.occurred_at),
     ...(row.exported_at !== null && { exportedAt: new Date(row.exported_at) }),
   });

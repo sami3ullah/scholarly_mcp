@@ -1,6 +1,7 @@
 import { appendFile, mkdir } from 'node:fs/promises';
 import { dirname } from 'node:path';
-import { toWireEvent, type UsageSink } from './usage-sink.js';
+import { toWireEvent } from '@scholarly-mcp/core';
+import type { UsageSink } from './usage-sink.js';
 
 /**
  * Appends one JSON object per line. A batch retried after a later sink failed is written

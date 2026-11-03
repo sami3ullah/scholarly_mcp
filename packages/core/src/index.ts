@@ -98,11 +98,33 @@ export {
 export { mergeJournalTallies, type JournalTally } from './journal/merge-journal-tallies.js';
 export { toolNameSchema, type ToolName } from './metering/tool-name.js';
 export {
+  computeFunnel,
+  type Funnel,
+  type FunnelClientRow,
+  type FunnelDayRow,
+  type FunnelJournalRow,
+  type FunnelOptions,
+  type FunnelSteps,
+  type FunnelToolRow,
+} from './metering/funnel.js';
+export {
+  journalCardCountSchema,
+  landingActionEventSchema,
+  landingActionSchema,
+  landingVisitEventSchema,
+  toolCallEventSchema,
   usageEventSchema,
   usageStatusSchema,
+  type JournalCardCount,
+  type LandingAction,
+  type LandingActionEvent,
+  type LandingVisitEvent,
+  type ToolCallEvent,
   type UsageEvent,
+  type UsageEventKind,
   type UsageStatus,
 } from './metering/usage-event.js';
+export { parseWireEvent, toWireEvent, type WireEvent } from './metering/wire-event.js';
 export type { ArticleEnricher, Enrichment } from './ports/article-enricher.js';
 export type { ArticleReader } from './ports/article-reader.js';
 export type {

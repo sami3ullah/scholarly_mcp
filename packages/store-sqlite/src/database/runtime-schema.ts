@@ -40,6 +40,28 @@ const MIGRATIONS: readonly string[] = [
      revoked_at TEXT
    ) STRICT;
    CREATE INDEX usage_events_exported ON usage_events (exported_at) WHERE exported_at IS NOT NULL;`,
+  // SM-12 (ADR 0033): sessions know their tool; events become an envelope plus a JSON
+  // payload, so referral events fit without a migration per kind. Old rows are tool calls.
+  `ALTER TABLE landing_sessions ADD COLUMN tool TEXT;
+
+   CREATE TABLE usage_events_v3 (
+     id TEXT PRIMARY KEY,
+     kind TEXT NOT NULL,
+     api_key_id TEXT NOT NULL,
+     occurred_at TEXT NOT NULL,
+     exported_at TEXT,
+     payload TEXT NOT NULL
+   ) STRICT;
+   INSERT INTO usage_events_v3 (id, kind, api_key_id, occurred_at, exported_at, payload)
+     SELECT id, 'tool_call', api_key_id, occurred_at, exported_at,
+            json_object('tool', tool, 'resultCount', result_count, 'latencyMs', latency_ms,
+                        'status', status, 'billable', json(iif(billable, 'true', 'false')),
+                        'cardsByJournal', json('[]'))
+       FROM usage_events;
+   DROP TABLE usage_events;
+   ALTER TABLE usage_events_v3 RENAME TO usage_events;
+   CREATE INDEX usage_events_pending ON usage_events (occurred_at) WHERE exported_at IS NULL;
+   CREATE INDEX usage_events_exported ON usage_events (exported_at) WHERE exported_at IS NOT NULL;`,
 ];
 
 /** Brings a runtime database up to the latest schema; safe to call on every start. */

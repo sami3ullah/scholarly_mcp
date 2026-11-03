@@ -20,6 +20,7 @@ const signal = new AbortController().signal;
 
 function anEvent(id: string, minute = 0): UsageEvent {
   return {
+    kind: 'tool_call',
     id,
     apiKeyId: 'key_aaaaaaaaaaaa',
     tool: 'search_articles',
@@ -27,6 +28,7 @@ function anEvent(id: string, minute = 0): UsageEvent {
     latencyMs: 40,
     status: 'ok',
     billable: true,
+    cardsByJournal: [{ journal: 'Pneumologie', cards: 3 }],
     occurredAt: new Date(Date.UTC(2026, 10, 3, 10, minute)),
   };
 }

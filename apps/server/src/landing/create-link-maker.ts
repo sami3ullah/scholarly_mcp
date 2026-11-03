@@ -77,6 +77,7 @@ export function createLinkMaker(deps: LinkMakerDeps): LinkMaker {
             ...(matchedChunkId !== undefined && { matchedChunkId }),
           })),
           language: request.language,
+          tool: request.tool,
           apiKeyId: request.caller.apiKeyId,
           createdAt,
           expiresAt: new Date(createdAt.getTime() + LANDING_SESSION_TTL_MS),

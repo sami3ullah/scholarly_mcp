@@ -1,10 +1,16 @@
-import type { UsageEvent, UsageOutbox } from '@scholarly-mcp/core';
+import {
+  doiSchema,
+  type ToolCallEvent,
+  type UsageEvent,
+  type UsageOutbox,
+} from '@scholarly-mcp/core';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 const signal = new AbortController().signal;
 
-function anEvent(id: string, minute: number, extra: Partial<UsageEvent> = {}): UsageEvent {
+function anEvent(id: string, minute: number, extra: Partial<ToolCallEvent> = {}): UsageEvent {
   return {
+    kind: 'tool_call',
     id,
     apiKeyId: 'key_aaaaaaaaaaaa',
     tool: 'search_articles',
@@ -12,6 +18,7 @@ function anEvent(id: string, minute: number, extra: Partial<UsageEvent> = {}): U
     latencyMs: 12.5,
     status: 'ok',
     billable: true,
+    cardsByJournal: [{ journal: 'Pneumologie', cards: 5 }],
     occurredAt: new Date(Date.UTC(2026, 10, 3, 10, minute)),
     ...extra,
   };
@@ -35,6 +42,32 @@ export function runUsageOutboxContract(
       await outbox.append(anEvent('e1', 0), signal);
       expect(await outbox.pending(2, signal)).toEqual([anEvent('e1', 0), failed]);
       expect(await outbox.countPending(signal)).toBe(3);
+    });
+
+    it('returns landing visits and actions unchanged', async () => {
+      const visit: UsageEvent = {
+        kind: 'landing_visit',
+        id: 'v1',
+        apiKeyId: 'key_aaaaaaaaaaaa',
+        tool: 'find_related',
+        doi: doiSchema.parse('10.1055/a-1'),
+        journal: 'Pneumologie',
+        billable: false,
+        occurredAt: new Date(Date.UTC(2026, 10, 3, 10, 1)),
+      };
+      const action: UsageEvent = { ...visit, kind: 'landing_action', id: 'a1', action: 'buy' };
+      delete action.tool;
+      await outbox.append(anEvent('e1', 0, { cardsByJournal: [] }), signal);
+      await outbox.append(visit, signal);
+      await outbox.append(
+        { ...action, occurredAt: new Date(Date.UTC(2026, 10, 3, 10, 2)) },
+        signal,
+      );
+      expect(await outbox.pending(10, signal)).toEqual([
+        anEvent('e1', 0, { cardsByJournal: [] }),
+        visit,
+        { ...action, occurredAt: new Date(Date.UTC(2026, 10, 3, 10, 2)) },
+      ]);
     });
 
     it('ignores an event whose id is already stored', async () => {

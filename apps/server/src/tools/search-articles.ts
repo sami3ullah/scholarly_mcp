@@ -107,7 +107,7 @@ export function createSearchArticlesTool(deps: ToolDeps) {
         ],
         notice: deps.notice,
       });
-      return { structured, text, resultCount: cards.length };
+      return { structured, text, resultCount: cards.length, cards };
     },
   });
 }

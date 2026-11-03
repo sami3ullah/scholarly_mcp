@@ -2,11 +2,12 @@ import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { createSqliteUsageOutbox } from '../metering/create-sqlite-usage-outbox.js';
 import { openRuntimeDatabase } from '../open-runtime-database.js';
 import { openDatabase } from './open-database.js';
 
 describe('runtime database migrations', () => {
-  it('upgrades a file from the first schema and keeps its rows', () => {
+  it('upgrades a file from the first schema and keeps its rows', async () => {
     const path = join(mkdtempSync(join(tmpdir(), 'runtime-')), 'runtime.sqlite');
     const first = openDatabase(path, { wal: true });
     first.exec(`CREATE TABLE landing_sessions (token TEXT PRIMARY KEY, results TEXT NOT NULL,
@@ -20,10 +21,24 @@ describe('runtime database migrations', () => {
     first.close();
 
     const db = openRuntimeDatabase(path);
-    expect(db.pragma('user_version', { simple: true })).toBe(2);
-    expect(db.prepare('SELECT count(*) AS n FROM usage_events').get()).toEqual({ n: 1 });
+    expect(db.pragma('user_version', { simple: true })).toBe(3);
     expect(db.prepare('SELECT count(*) AS n FROM api_keys').get()).toEqual({ n: 0 });
+    const signal = new AbortController().signal;
+    expect(await createSqliteUsageOutbox(db).pending(10, signal)).toEqual([
+      {
+        kind: 'tool_call',
+        id: 'e1',
+        apiKeyId: 'local',
+        tool: 'cite',
+        resultCount: 1,
+        latencyMs: 3,
+        status: 'ok',
+        billable: true,
+        cardsByJournal: [],
+        occurredAt: new Date('2026-11-01'),
+      },
+    ]);
     db.close();
-    expect(openRuntimeDatabase(path).pragma('user_version', { simple: true })).toBe(2);
+    expect(openRuntimeDatabase(path).pragma('user_version', { simple: true })).toBe(3);
   });
 });

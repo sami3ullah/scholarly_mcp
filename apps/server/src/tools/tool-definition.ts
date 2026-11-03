@@ -14,6 +14,8 @@ export interface ToolReply<Output> {
   readonly text: string;
   /** How many articles or journals the answer holds, for the log line. */
   readonly resultCount: number;
+  /** The article cards the answer shows, for the funnel's cards per journal (ADR 0033). */
+  readonly cards?: readonly { readonly journal: string }[];
 }
 
 /**

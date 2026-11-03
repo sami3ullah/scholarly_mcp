@@ -1,6 +1,6 @@
 import { createHash, createHmac } from 'node:crypto';
-import type { Clock } from '@scholarly-mcp/core';
-import { toWireEvent, type UsageSink } from './usage-sink.js';
+import { toWireEvent, type Clock } from '@scholarly-mcp/core';
+import type { UsageSink } from './usage-sink.js';
 
 export interface WebhookSinkOptions {
   readonly url: string;

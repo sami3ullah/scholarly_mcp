@@ -26,6 +26,12 @@ export function runSessionStoreContract(
       expect(await store.find(session.token, signal)).toEqual(session);
     });
 
+    it('keeps a session without a tool without one', async () => {
+      const session = aLandingSession().withTool(undefined).build();
+      await store.save(session, signal);
+      expect(await store.find(session.token, signal)).toEqual(session);
+    });
+
     it('counts visits, and ignores visits to unknown tokens', async () => {
       const session = aLandingSession().build();
       await store.save(session, signal);

@@ -64,7 +64,7 @@ export function createFindRelatedTool(deps: ToolDeps) {
         ...(hint !== undefined && { footer: [hint] }),
         notice: deps.notice,
       });
-      return { structured, text, resultCount: cards.length };
+      return { structured, text, resultCount: cards.length, cards };
     },
   });
 }

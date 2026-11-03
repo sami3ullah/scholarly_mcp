@@ -4,7 +4,7 @@ import {
   type CallToolResult,
   type McpRequestContext,
 } from '@modelcontextprotocol/server';
-import type { Caller, Logger, Meter, UsageStatus } from '@scholarly-mcp/core';
+import type { Caller, JournalCardCount, Logger, Meter, UsageStatus } from '@scholarly-mcp/core';
 import { z } from 'zod';
 import { callerOf } from '../auth/auth-info.js';
 import type { RateLimiter } from '../limits/create-rate-limiter.js';
@@ -96,12 +96,14 @@ async function runTool(
   });
   let status: UsageStatus = 'ok';
   let resultCount = 0;
+  let cardsByJournal: JournalCardCount[] = [];
   let result: CallToolResult;
   try {
     deps.limiter.take(call.caller.apiKeyId);
     const input: unknown = tool.input.parse(args ?? {});
     const reply = await tool.run(input, { signal: call.signal, caller: call.caller, logger });
     resultCount = reply.resultCount;
+    cardsByJournal = countByJournal(reply.cards ?? []);
     result = {
       content: [{ type: 'text', text: reply.text }],
       structuredContent: { ...reply.structured, notice: deps.notice },
@@ -118,6 +120,7 @@ async function runTool(
     status === 'ok' ? 'Tool call completed' : 'Tool call failed',
   );
   deps.meter.record({
+    kind: 'tool_call',
     id: deps.eventId(),
     apiKeyId: call.caller.apiKeyId,
     tool: tool.name,
@@ -125,6 +128,7 @@ async function runTool(
     latencyMs,
     status,
     billable: status === 'ok',
+    cardsByJournal,
     occurredAt,
   });
   deps.metrics?.toolCalls.inc({ tool: tool.name, status });
@@ -133,6 +137,13 @@ async function runTool(
   if (status !== 'ok') span.setStatus({ code: SpanStatusCode.ERROR, message: status });
   span.end();
   return result;
+}
+
+/** Cards per journal, in order of first appearance. */
+function countByJournal(cards: readonly { readonly journal: string }[]): JournalCardCount[] {
+  const counts = new Map<string, number>();
+  for (const { journal } of cards) counts.set(journal, (counts.get(journal) ?? 0) + 1);
+  return [...counts].map(([journal, count]) => ({ journal, cards: count }));
 }
 
 /** Server-level guidance every client receives on connect (PLAN.md security: branding). */

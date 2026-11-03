@@ -77,7 +77,7 @@ export function createGetArticleTool(deps: ToolDeps) {
         '',
         deps.notice,
       ].join('\n');
-      return { structured, text, resultCount: 1 };
+      return { structured, text, resultCount: 1, cards: [card] };
     },
   });
 }
