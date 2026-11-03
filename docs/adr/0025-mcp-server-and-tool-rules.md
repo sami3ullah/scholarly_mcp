@@ -43,3 +43,4 @@ The plan names the six tools, their inputs and outputs, the error codes and the 
 - SM-11 builds the landing page against the link format above. It must not show the passage of a full-text `matchedChunkId`, which a session may hold.
 - Most subscription cards show `access unknown` until the records carry their licences or the entitlement adapter is asked per card.
 - Teaser quality and cross-language ranking seen on the live index ("Was ist neu?" as a DMW teaser, a defibrillation article first for an atrial fibrillation query filtered to DMW) are search-tuning work for SM-08.
+- SM-14: the ISSN path `https://www.thieme-connect.de/products/ejournals/issn/{issn}` was checked in a browser on 2026-11-03 and answers "No articles available", so the Thieme preset leaves `JOURNAL_URL_TEMPLATE` unset.

@@ -8,8 +8,8 @@
 - [ ] E2E smoke script: compose up, call every tool over HTTP
 - [ ] README (order per plan), `ADAPTERS.md`, `LANDING.md`, `OPERATIONS.md`, `SECURITY.md`; `presets/thieme.env`, `presets/thieme.subjects.json` (journal-level subjects by ISSN)
 - [ ] Release workflow: tag -> GHCR image + SBOM
-- [ ] Add volume, issue and pages to `Article` (Crossref mapping) at a planned full rebuild, so citations carry them (ADR 0025)
-- [ ] Verify an ISSN-based journal page URL for the Thieme preset and set `JOURNAL_URL_TEMPLATE` (ADR 0025)
+- [x] Add volume, issue and pages to `Article` (Crossref mapping) at a planned full rebuild, so citations carry them (ADR 0025). Full rebuild done 2026-11-03: 70,989 articles, `verify` ok; volume on 67,529, issue on 67,377, pages on 66,102; every article has subjects (57,379 from the journal preset).
+- [x] Verify an ISSN-based journal page URL for the Thieme preset and set `JOURNAL_URL_TEMPLATE` (ADR 0025). Checked by the owner on 2026-11-03: `https://www.thieme-connect.de/products/ejournals/issn/0936-5214` answers "No articles available", so no ISSN-based URL exists and `JOURNAL_URL_TEMPLATE` stays unset in the preset; journal links are omitted as documented.
 - [ ] Image: run `keys` through the same entrypoint, keep `/metrics` internal, grace period above `SHUTDOWN_TIMEOUT_MS` + 5 s; shared rate-limit store if more than one replica (ADR 0031)
 - [ ] Landing app image: `output: 'standalone'` (left out in SM-11 because `next start` refuses it), `LANDING_API_SECRET` from the secret store, a proxy that sets `x-forwarded-for`, landing API reachable only from the app; shared landing rate limit for replicas (ADR 0032)
 
@@ -25,7 +25,7 @@ Worked in this order. The order puts the slow full rebuild first, so it runs in 
 6. **E2E smoke.** A script that runs compose up, creates a key, and calls every tool over HTTP; run in CI.
 7. **Load test and fuzzing.** autocannon at 20 rps (p50/p95, memory, cold start) written down; fast-check fuzzing of the HTTP edge and tool inputs.
 8. **CI security.** osv-scanner, Trivy (image), Semgrep, gitleaks; Dependabot; SBOM.
-9. **Release workflow.** Tag -> GHCR image + SBOM.
+9. **Release workflow.** Tag -> GHCR image + SBOM. Index decision (2026-11-03, delegated to us by the owner): the public image carries only a small demo index of CC BY 4.0 articles, so a fresh pull answers queries in minutes without redistributing abstracts or CC BY-NC-ND chunk text; the full index is never published and is built with `ingest full` or baked into a local or private image via `--build-context index=<dir>`. Record as an ADR with step 9.
 10. **Docs.** README in plan order, `ADAPTERS.md`, `LANDING.md`, `OPERATIONS.md`, `SECURITY.md`; docs index, roadmap.
 11. **Exit check.** Fresh clone to working server in under 5 minutes, timed.
 
