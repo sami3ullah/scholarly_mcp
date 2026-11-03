@@ -73,6 +73,21 @@ export {
   landingSessionSchema,
   type LandingSession,
 } from './landing/landing-session.js';
+export {
+  LANDING_AUTHOR_LIMIT,
+  LANDING_RELATED_LIMIT,
+  LANDING_TOPIC_LIMIT,
+  landingAccessSchema,
+  landingArticleSchema,
+  landingArticleSummarySchema,
+  landingPageSchema,
+  matchedPassageSchema,
+  type LandingAccess,
+  type LandingArticle,
+  type LandingArticleSummary,
+  type LandingPage,
+  type MatchedPassage,
+} from './landing/landing-page.js';
 export { LANDING_PATH, buildLandingUrl, type LandingLink } from './landing/landing-url.js';
 export { tokenSchema, type Token } from './landing/token.js';
 export {
