@@ -36,6 +36,7 @@ import {
 } from '@scholarly-mcp/store-sqlite';
 import { ingestConfigSchema } from './config/ingest-config.js';
 import {
+  copyIndex,
   extractSubset,
   ingestIndex,
   purgeLicense,
@@ -49,6 +50,7 @@ const MIGRATE_TIMEOUT_MS = 120_000;
 const USAGE = `Usage:
   ingest full | incremental | verify | migrate
   ingest purge-license <licence-url>
+  ingest copy --from <index>
   ingest subset --from <index> --dois <file> --out <index>
   ingest reembed --from <index> --out <index>`;
 
@@ -59,6 +61,8 @@ const USAGE = `Usage:
  * embeds a copy of an index with `EMBEDDER_MODEL` (ADR 0028); both read and write SQLite
  * files whatever `STORE` says. `STORE` picks where the other commands keep the index: the
  * file at `INDEX_PATH`, or Postgres at `DATABASE_URL` as the writer role (ADR 0034).
+ * `copy` replaces that live index with a verified copy of a SQLite index file, such as the
+ * eval index, so a new store starts without fetching or embedding anything.
  * `migrate` brings the runtime tables up to date and grants `PG_SERVER_ROLE` its access;
  * on Postgres it must run before the server starts. Exit codes: 0 done, 1 failed or not
  * verified, 2 bad usage. SIGINT and SIGTERM abort the run; its build is kept and the next
@@ -128,6 +132,38 @@ async function main(argv: readonly string[]): Promise<number> {
           : 'Purge failed verification; the live index is unchanged',
       );
       return outcome.committed ? 0 : 1;
+    });
+  }
+  if (command === 'copy') {
+    const { values } = parseArgs({ args: argv.slice(1), options: { from: { type: 'string' } } });
+    const { from } = values;
+    if (
+      from === undefined ||
+      (config.STORE === 'sqlite' && resolve(from) === resolve(config.INDEX_PATH))
+    ) {
+      process.stderr.write(`${USAGE}\n`);
+      return 2;
+    }
+    return withStorage(config, controller.signal, async (target) => {
+      const outcome = await copyIndex(
+        {
+          source: createSqliteIndexStorage(from),
+          target,
+          model,
+          sources: [createCrossrefSource({ config, clock, logger }).name],
+          clock,
+          logger,
+        },
+        controller.signal,
+      );
+      const { written, verify, committed } = outcome;
+      logger.info(
+        { store: config.STORE, written, verify },
+        committed
+          ? 'Index copied and swapped in'
+          : 'Copy failed verification; the live index is unchanged',
+      );
+      return committed ? 0 : 1;
     });
   }
   if (command === 'subset') {

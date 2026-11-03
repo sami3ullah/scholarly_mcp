@@ -242,8 +242,8 @@ export interface SubsetOutcome {
   readonly committed: boolean;
 }
 
-/** Articles copied per transaction. */
-const SUBSET_BATCH = 100;
+/** Articles copied or re-embedded per transaction. */
+const COPY_BATCH = 100;
 
 /**
  * `ingest subset`: builds a small index from chosen articles of a bigger one, such as the
@@ -255,35 +255,16 @@ export async function extractSubset(
   deps: SubsetDeps,
   signal: AbortSignal,
 ): Promise<SubsetOutcome> {
+  const { model, clock } = deps;
   const source = await openSource(deps.source, signal);
   try {
-    const meta = await source.store.reader.indexMeta(signal);
-    const { model, clock } = deps;
-    if (meta?.modelVersion !== model.version) {
-      throw appError(
-        'INVALID_INPUT',
-        `The source index was built with ${meta?.modelVersion ?? 'no model'}, not ${model.version}`,
-        { field: 'from' },
-      );
-    }
+    await assertSourceModel(source, model, signal);
     const build = await deps.target.beginBuild(
       { kind: 'full', now: clock.now(), dimensions: model.dimensions },
       signal,
     );
     return await inBuild(build, async () => {
-      const missing: string[] = [];
-      let written = 0;
-      const wanted = [...new Set(dois)];
-      for (let start = 0; start < wanted.length; start += SUBSET_BATCH) {
-        const records: ArticleRecord[] = [];
-        for (const doi of wanted.slice(start, start + SUBSET_BATCH)) {
-          const record = await source.store.findRecord(doi as Doi, signal);
-          if (record === undefined) missing.push(doi);
-          else records.push(record);
-        }
-        await build.store.writer.upsert(records, signal);
-        written += records.length;
-      }
+      const { written, missing } = await copyArticles(source, build, dois, signal);
       const outcome = await verifyAndCommit(
         build,
         { modelVersion: model.version },
@@ -295,6 +276,105 @@ export async function extractSubset(
   } finally {
     await source.close();
   }
+}
+
+export interface CopyDeps {
+  /** The index to copy, such as a SQLite file; it is only read. */
+  readonly source: IndexStorage;
+  /** The store whose live index the copy replaces, such as Postgres (ADR 0034). */
+  readonly target: IndexStorage;
+  readonly model: IndexModel;
+  /** Sources whose sync state moves with the articles, so the next incremental run goes on. */
+  readonly sources: readonly string[];
+  readonly clock: Clock;
+  readonly logger: Logger;
+}
+
+export interface CopyOutcome {
+  readonly written: number;
+  readonly verify: VerifyReport;
+  readonly committed: boolean;
+}
+
+/**
+ * `ingest copy`: moves a whole index into another store, such as the SQLite eval index or a
+ * production file into Postgres, with its chunks, embeddings and sync state, so nothing is
+ * fetched or embedded. It runs as a full build of the target and replaces its live index
+ * only once the copy verifies with every article of the source. A leftover build in the
+ * target is dropped first: it may come from a Crossref run, and must not mix into the copy.
+ */
+export async function copyIndex(deps: CopyDeps, signal: AbortSignal): Promise<CopyOutcome> {
+  const { model, clock, logger } = deps;
+  const source = await openSource(deps.source, signal);
+  try {
+    await assertSourceModel(source, model, signal);
+    const begin = () =>
+      deps.target.beginBuild(
+        { kind: 'full', now: clock.now(), dimensions: model.dimensions },
+        signal,
+      );
+    let build = await begin();
+    if (build.resumed) {
+      logger.warn({ kind: build.kind }, 'Dropping a leftover build in the target before copying');
+      await build.discard(signal);
+      build = await begin();
+    }
+    return await inBuild(build, async () => {
+      const { written } = await copyArticles(source, build, await source.dois(signal), signal);
+      for (const name of deps.sources) {
+        const state = await source.store.syncState.load(name, signal);
+        if (state !== undefined) await build.store.syncState.save(state, signal);
+      }
+      const outcome = await verifyAndCommit(
+        build,
+        { modelVersion: model.version, minArticleCount: source.articleCount },
+        { clock },
+        signal,
+      );
+      return { written, ...outcome };
+    });
+  } finally {
+    await source.close();
+  }
+}
+
+/** `INVALID_INPUT` unless the source was embedded with the model this run is set up for. */
+async function assertSourceModel(
+  source: SourceIndex,
+  model: IndexModel,
+  signal: AbortSignal,
+): Promise<void> {
+  const meta = await source.store.reader.indexMeta(signal);
+  if (meta?.modelVersion !== model.version) {
+    throw appError(
+      'INVALID_INPUT',
+      `The source index was built with ${meta?.modelVersion ?? 'no model'}, not ${model.version}`,
+      { field: 'from' },
+    );
+  }
+}
+
+/** Copies articles with their chunks and embeddings, in batches, into a build. */
+async function copyArticles(
+  source: SourceIndex,
+  build: IndexBuild,
+  dois: readonly string[],
+  signal: AbortSignal,
+): Promise<{ readonly written: number; readonly missing: readonly string[] }> {
+  const missing: string[] = [];
+  let written = 0;
+  const wanted = [...new Set(dois)];
+  for (let start = 0; start < wanted.length; start += COPY_BATCH) {
+    const records: ArticleRecord[] = [];
+    for (const doi of wanted.slice(start, start + COPY_BATCH)) {
+      const record = await source.store.findRecord(doi as Doi, signal);
+      if (record === undefined) missing.push(doi);
+      else records.push(record);
+    }
+    await build.store.writer.upsert(records, signal);
+    written += records.length;
+  }
+  return { written, missing };
 }
 
 export interface ReembedDeps {
@@ -337,9 +417,9 @@ export async function reembedIndex(
     );
     return await inBuild(build, async () => {
       const counts = { written: 0, kept: 0, chunks: 0 };
-      for (let start = 0; start < dois.length; start += SUBSET_BATCH) {
+      for (let start = 0; start < dois.length; start += COPY_BATCH) {
         const records: ArticleRecord[] = [];
-        for (const doi of dois.slice(start, start + SUBSET_BATCH)) {
+        for (const doi of dois.slice(start, start + COPY_BATCH)) {
           const record = await source.store.findRecord(doi, signal);
           if (record === undefined) continue;
           const held = await build.store.writer.contentHashOf(doi, signal);
@@ -367,11 +447,10 @@ export async function reembedIndex(
   }
 }
 
+type SourceIndex = LiveIndexView & { readonly store: IndexStore };
+
 /** The live index of a copy's source; `INVALID_INPUT` when there is none to read. */
-async function openSource(
-  storage: IndexStorage,
-  signal: AbortSignal,
-): Promise<LiveIndexView & { readonly store: IndexStore }> {
+async function openSource(storage: IndexStorage, signal: AbortSignal): Promise<SourceIndex> {
   const live = await storage.openLive(signal);
   const store = live?.store;
   if (live === undefined || store === undefined) {

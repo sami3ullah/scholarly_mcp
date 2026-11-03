@@ -16,6 +16,7 @@ import {
 } from '@scholarly-mcp/testkit';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
+  copyIndex,
   extractSubset,
   ingestIndex,
   purgeLicense,
@@ -247,6 +248,66 @@ describe('ingestIndex on SQLite files', () => {
         ),
       ).rejects.toMatchObject({ code: 'INVALID_INPUT' });
       expect(existsSync(subsetPath())).toBe(false);
+    });
+  });
+
+  describe('copyIndex', () => {
+    const copyPath = () => join(dir, 'copy.sqlite');
+    const copyDeps = () => ({
+      source: createSqliteIndexStorage(indexPath),
+      target: createSqliteIndexStorage(copyPath()),
+      model: { version: embedder.modelVersion, dimensions: embedder.dimensions },
+      sources: ['crossref'],
+      clock: createFakeClock(),
+      logger: createTestLogger(),
+    });
+
+    it('copies every article and the sync state, so the target goes on incrementally', async () => {
+      await ingestIndex('full', deps(numbered(5)), signal);
+      const before = embedder.calls();
+
+      const outcome = await copyIndex(copyDeps(), signal);
+      expect(outcome).toMatchObject({ written: 5, committed: true });
+      expect(outcome.verify).toMatchObject({ ok: true, articleCount: 5 });
+      expect(embedder.calls()).toBe(before);
+
+      const next = await ingestIndex(
+        'incremental',
+        { ...deps(numbered(5)), storage: createSqliteIndexStorage(copyPath()) },
+        signal,
+      );
+      expect(next).toMatchObject({ plan: { kind: 'incremental' }, committed: true });
+      expect(next.verify.articleCount).toBe(5);
+    });
+
+    it('drops a leftover build in the target instead of mixing it into the copy', async () => {
+      const other = createSqliteIndexStorage(join(dir, 'other.sqlite'));
+      await ingestIndex('full', { ...deps(numbered(4)), storage: other }, signal);
+      const otherLive = await other.openLive(signal);
+      const stray = await otherLive?.store?.findRecord(article(4).doi, signal);
+      await otherLive?.close();
+      expect(stray).toBeDefined();
+      await ingestIndex('full', deps(numbered(3)), signal);
+
+      const target = createSqliteIndexStorage(copyPath());
+      const leftover = await target.beginBuild(
+        { kind: 'full', now: new Date(), dimensions: embedder.dimensions },
+        signal,
+      );
+      await leftover.store.writer.upsert(stray === undefined ? [] : [stray], signal);
+      await leftover.close();
+
+      const outcome = await copyIndex(copyDeps(), signal);
+      expect(outcome).toMatchObject({ written: 3, committed: true });
+      const copy = await openIndexReader(copyPath(), embedder.modelVersion, signal);
+      expect(copy.meta().articleCount).toBe(3);
+      expect(await copy.reader.findByDoi(article(4).doi, signal)).toBeUndefined();
+      await copy.close();
+    });
+
+    it('refuses a source with no index', async () => {
+      await expect(copyIndex(copyDeps(), signal)).rejects.toMatchObject({ code: 'INVALID_INPUT' });
+      expect(existsSync(copyPath())).toBe(false);
     });
   });
 
