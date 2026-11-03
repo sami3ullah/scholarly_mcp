@@ -15,13 +15,18 @@ import {
   createFakeEmbedder,
   createInMemoryArticleStore,
   createInMemorySessionStore,
+  createInMemoryUsageOutbox,
   createSequentialTokens,
   createTestLogger,
   type CapturedLine,
   type InMemoryArticleStore,
+  type InMemoryUsageOutbox,
 } from '@scholarly-mcp/testkit';
-import { createMcpHandler } from '@modelcontextprotocol/server';
+import { createMcpHandler, type AuthInfo, type McpHttpHandler } from '@modelcontextprotocol/server';
 import { createApp, type AppDeps } from '../create-app.js';
+import type { HttpHandler } from '../http/create-http-handler.js';
+import { createRateLimiter } from '../limits/create-rate-limiter.js';
+import { createOutboxMeter } from '../metering/create-outbox-meter.js';
 
 export const LANDING = 'https://landing.example.org';
 export const CC_BY = 'https://creativecommons.org/licenses/by/4.0/';
@@ -140,6 +145,10 @@ export interface Harness {
   readonly store: InMemoryArticleStore;
   readonly sessions: SessionStore;
   readonly logs: CapturedLine[];
+  /** Every usage event the tool calls recorded. */
+  readonly outbox: InMemoryUsageOutbox;
+  /** Waits until recorded usage events are in the outbox. */
+  flushMeter(): Promise<void>;
   /** Calls a tool and returns its result. */
   call(name: string, args?: Record<string, unknown>): Promise<CallToolResult>;
   close(): Promise<void>;
@@ -149,6 +158,13 @@ export interface HarnessOptions {
   readonly transport?: 'http' | 'stdio';
   readonly records?: readonly ArticleRecord[];
   readonly overrides?: Partial<AppDeps>;
+  /** Passed with every HTTP request, as the auth layer would after verifying a token. */
+  readonly authInfo?: AuthInfo;
+  /** Puts the full HTTP layer (auth, guards, routes) in front of the MCP handler. */
+  readonly http?: {
+    readonly wrap: (mcp: McpHttpHandler) => HttpHandler;
+    readonly headers?: Record<string, string>;
+  };
 }
 
 /** Starts the real app wiring on in-memory adapters and connects the SDK client to it. */
@@ -168,17 +184,28 @@ export async function startHarness(options: HarnessOptions = {}): Promise<Harnes
   );
   const sessions = createInMemorySessionStore();
   const logs: CapturedLine[] = [];
+  const clock = createFakeClock(new Date('2026-11-02T10:00:00Z'));
+  const outbox = createInMemoryUsageOutbox();
+  const meter = createOutboxMeter({
+    outbox,
+    exporter: { exportPending: () => Promise.resolve(0) },
+    logger: createTestLogger(logs),
+  });
+  let events = 0;
   const factory = createApp({
     index: { reader: store, search: store, journals: store, version: () => 'v1' },
     embedder,
     sessions,
     tokens: createSequentialTokens(),
-    clock: createFakeClock(new Date('2026-11-02T10:00:00Z')),
+    clock,
     logger: createTestLogger(logs),
     landingBaseUrl: LANDING,
     publisher: 'Thieme',
     journalUrlTemplate: 'https://journals.example.org/issn/{issn}',
     version: '0.0.0-test',
+    limiter: createRateLimiter({ perMinute: 60_000, burst: 1000, clock }),
+    meter,
+    eventId: () => `event-${String((events += 1))}`,
     ...options.overrides,
   });
 
@@ -192,9 +219,19 @@ export async function startHarness(options: HarnessOptions = {}): Promise<Harnes
   } else {
     const handler = createMcpHandler(factory);
     closeServer = () => handler.close();
+    const front = options.http?.wrap(handler);
     await client.connect(
       new StreamableHTTPClientTransport(new URL('http://localhost/mcp'), {
-        fetch: (url, init) => handler.fetch(new Request(url, init)),
+        ...(options.http?.headers !== undefined && {
+          requestInit: { headers: options.http.headers },
+        }),
+        fetch: (url, init) =>
+          front === undefined
+            ? handler.fetch(
+                new Request(url, init),
+                options.authInfo === undefined ? {} : { authInfo: options.authInfo },
+              )
+            : front.fetch(new Request(url, init)),
       }),
     );
   }
@@ -204,6 +241,8 @@ export async function startHarness(options: HarnessOptions = {}): Promise<Harnes
     store,
     sessions,
     logs,
+    outbox,
+    flushMeter: () => meter.flush(signal),
     call: async (name, args = {}) => await client.callTool({ name, arguments: args }),
     close: async () => {
       await client.close();

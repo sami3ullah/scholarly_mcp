@@ -1,6 +1,14 @@
-import { McpServer, type CallToolResult } from '@modelcontextprotocol/server';
-import type { Caller, Logger } from '@scholarly-mcp/core';
+import { SpanStatusCode, trace } from '@opentelemetry/api';
+import {
+  McpServer,
+  type CallToolResult,
+  type McpRequestContext,
+} from '@modelcontextprotocol/server';
+import type { Caller, Logger, Meter, UsageStatus } from '@scholarly-mcp/core';
 import { z } from 'zod';
+import { callerOf } from '../auth/auth-info.js';
+import type { RateLimiter } from '../limits/create-rate-limiter.js';
+import type { ServerMetrics } from '../telemetry/create-metrics.js';
 import { toolErrorResult } from '../tools/tool-error.js';
 import type { ToolDefinition } from '../tools/tool-definition.js';
 import { documentedOnly } from './documented-only.js';
@@ -13,17 +21,27 @@ export interface ServerFactoryDeps {
   readonly publisher: string;
   readonly logger: Logger;
   readonly clock: { now(): Date };
-  /** Who is calling; a fixed local caller until API keys exist (SM-10). */
-  readonly caller: () => Caller;
+  readonly limiter: RateLimiter;
+  readonly meter: Meter;
+  readonly metrics?: ServerMetrics;
+  /** A fresh usage event id: the idempotency key exporters dedupe on. */
+  readonly eventId: () => string;
 }
+
+const tracer = trace.getTracer('scholarly-mcp');
 
 /**
  * Returns the factory the transports call for each HTTP request or stdio connection: a
  * fresh `McpServer` with the six read-only tools. Handlers are stateless; everything they
- * share (index, sessions, caches) lives in the deps (PLAN.md: concurrent requests).
+ * share (index, sessions, caches) lives in the deps (PLAN.md: concurrent requests). The
+ * caller comes from the request's verified `AuthInfo`; stdio and unauthenticated loopback
+ * HTTP have the local caller.
  */
-export function createServerFactory(deps: ServerFactoryDeps): () => McpServer {
-  return () => {
+export function createServerFactory(
+  deps: ServerFactoryDeps,
+): (ctx?: McpRequestContext) => McpServer {
+  return (ctx) => {
+    const caller = callerOf(ctx?.authInfo);
     const server = new McpServer(
       { name: 'scholarly-mcp', version: deps.version },
       { instructions: instructions(deps) },
@@ -38,40 +56,83 @@ export function createServerFactory(deps: ServerFactoryDeps): () => McpServer {
           outputSchema: tool.output.extend({ notice: z.string() }),
           annotations: { title: tool.title, readOnlyHint: true, openWorldHint: false },
         },
-        (args: unknown, ctx) => runTool(deps, tool, args, ctx.mcpReq.signal, String(ctx.mcpReq.id)),
+        (args: unknown, extra) =>
+          runTool(deps, tool, args, {
+            signal: extra.mcpReq.signal,
+            requestId: String(extra.mcpReq.id),
+            caller,
+          }),
       );
     }
     return server;
   };
 }
 
+interface CallContext {
+  readonly signal: AbortSignal;
+  readonly requestId: string;
+  readonly caller: Caller;
+}
+
+/**
+ * Runs one tool call: rate limit, parse, run, and one error path. Every call, failed or
+ * not, is metered (failed calls are not billable), counted and traced; none of that can
+ * fail the call. Logs, metrics and spans name the tool and outcome, never the query.
+ */
 async function runTool(
   deps: ServerFactoryDeps,
   tool: ToolDefinition,
   args: unknown,
-  signal: AbortSignal,
-  requestId: string,
+  call: CallContext,
 ): Promise<CallToolResult> {
-  const logger = deps.logger.child({ tool: tool.name, requestId });
-  const started = deps.clock.now().getTime();
-  const durationMs = () => deps.clock.now().getTime() - started;
+  const logger = deps.logger.child({
+    tool: tool.name,
+    requestId: call.requestId,
+    apiKeyId: call.caller.apiKeyId,
+  });
+  const occurredAt = deps.clock.now();
+  const span = tracer.startSpan(`tool ${tool.name}`, {
+    attributes: { 'mcp.tool.name': tool.name },
+  });
+  let status: UsageStatus = 'ok';
+  let resultCount = 0;
+  let result: CallToolResult;
   try {
+    deps.limiter.take(call.caller.apiKeyId);
     const input: unknown = tool.input.parse(args ?? {});
-    const reply = await tool.run(input, { signal, caller: deps.caller(), logger });
-    logger.info(
-      { status: 'ok', results: reply.resultCount, durationMs: durationMs() },
-      'Tool call completed',
-    );
-    return {
+    const reply = await tool.run(input, { signal: call.signal, caller: call.caller, logger });
+    resultCount = reply.resultCount;
+    result = {
       content: [{ type: 'text', text: reply.text }],
       structuredContent: { ...reply.structured, notice: deps.notice },
     };
   } catch (error) {
-    const result = toolErrorResult(error, deps.notice, logger);
-    const code = (result.structuredContent as { code: string } | undefined)?.code;
-    logger.info({ status: 'error', code, durationMs: durationMs() }, 'Tool call failed');
-    return result;
+    result = toolErrorResult(error, deps.notice, logger);
+    status = (result.structuredContent as { code: UsageStatus }).code;
   }
+  const latencyMs = deps.clock.now().getTime() - occurredAt.getTime();
+  logger.info(
+    status === 'ok'
+      ? { status: 'ok', results: resultCount, durationMs: latencyMs }
+      : { status: 'error', code: status, durationMs: latencyMs },
+    status === 'ok' ? 'Tool call completed' : 'Tool call failed',
+  );
+  deps.meter.record({
+    id: deps.eventId(),
+    apiKeyId: call.caller.apiKeyId,
+    tool: tool.name,
+    resultCount,
+    latencyMs,
+    status,
+    billable: status === 'ok',
+    occurredAt,
+  });
+  deps.metrics?.toolCalls.inc({ tool: tool.name, status });
+  deps.metrics?.toolDuration.observe({ tool: tool.name }, latencyMs / 1000);
+  span.setAttributes({ 'mcp.tool.status': status, 'mcp.tool.result_count': resultCount });
+  if (status !== 'ok') span.setStatus({ code: SpanStatusCode.ERROR, message: status });
+  span.end();
+  return result;
 }
 
 /** Server-level guidance every client receives on connect (PLAN.md security: branding). */

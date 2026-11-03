@@ -1,8 +1,9 @@
 import type {
-  Caller,
   Clock,
   Embedder,
+  Entitlements,
   Logger,
+  Meter,
   RandomToken,
   SessionStore,
 } from '@scholarly-mcp/core';
@@ -10,13 +11,12 @@ import { createSearchService, type SearchOptions } from '@scholarly-mcp/search';
 import { createMockEntitlements } from './access/create-mock-entitlements.js';
 import { createJournalCatalog } from './journals/journal-catalog.js';
 import { createLinkMaker } from './landing/create-link-maker.js';
+import type { RateLimiter } from './limits/create-rate-limiter.js';
 import type { LiveIndex } from './runtime/live-index.js';
 import { createServerFactory } from './server/create-server-factory.js';
+import type { ServerMetrics } from './telemetry/create-metrics.js';
 import { createTools } from './tools/create-tools.js';
 import { noticeFor } from './tools/notice.js';
-
-/** The caller until API keys exist (SM-10); landing sessions record it as the key id. */
-export const LOCAL_CALLER: Caller = { apiKeyId: 'local' };
 
 /** The adapters and settings the app is wired from; `main.ts` builds the real ones. */
 export interface AppDeps {
@@ -31,7 +31,12 @@ export interface AppDeps {
   readonly journalUrlTemplate?: string;
   readonly searchOptions?: Partial<SearchOptions>;
   readonly version: string;
-  readonly caller?: () => Caller;
+  readonly limiter: RateLimiter;
+  readonly meter: Meter;
+  readonly eventId: () => string;
+  readonly metrics?: ServerMetrics;
+  /** Defaults to the mock adapter (ADR 0025); a publisher plugs in its own. */
+  readonly entitlements?: Entitlements;
 }
 
 /**
@@ -61,7 +66,7 @@ export function createApp(deps: AppDeps) {
       clock,
       logger: logger.child({ component: 'landing' }),
     }),
-    entitlements: createMockEntitlements(),
+    entitlements: deps.entitlements ?? createMockEntitlements(),
     clock,
     publisher,
     notice,
@@ -76,6 +81,9 @@ export function createApp(deps: AppDeps) {
     publisher,
     logger,
     clock,
-    caller: deps.caller ?? (() => LOCAL_CALLER),
+    limiter: deps.limiter,
+    meter: deps.meter,
+    eventId: deps.eventId,
+    ...(deps.metrics !== undefined && { metrics: deps.metrics }),
   });
 }
