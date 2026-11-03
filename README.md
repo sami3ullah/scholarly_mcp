@@ -122,18 +122,20 @@ pnpm check        # format, lint, typecheck, layering rules, tests with coverage
 <details>
 <summary><b>All scripts</b></summary>
 
-| Script                                    | What it does                                                                    |
-| ----------------------------------------- | ------------------------------------------------------------------------------- |
-| `pnpm check`                              | Everything CI runs, in order                                                    |
-| `pnpm test`                               | Unit and contract tests (Vitest)                                                |
-| `pnpm test:coverage`                      | Tests with the 85% coverage gate                                                |
-| `pnpm lint`                               | ESLint, strict and type-aware                                                   |
-| `pnpm typecheck`                          | `tsc` across all packages (Turborepo)                                           |
-| `pnpm depcruise`                          | Enforces the layering rules between packages                                    |
-| `pnpm format`                             | Prettier                                                                        |
-| `pnpm ingest <full\|incremental\|verify>` | Build, refresh or check the index ([guide](docs/guides/ingestion.md))           |
-| `pnpm eval bench`                         | Times every search end to end on the live index                                 |
-| `node apps/server/dist/main.js`           | The MCP server, after `pnpm build` ([guide](docs/guides/connecting-clients.md)) |
+| Script                                      | What it does                                                                            |
+| ------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `pnpm check`                                | Everything CI runs, in order                                                            |
+| `pnpm test`                                 | Unit and contract tests (Vitest)                                                        |
+| `pnpm test:coverage`                        | Tests with the 85% coverage gate                                                        |
+| `pnpm lint`                                 | ESLint, strict and type-aware                                                           |
+| `pnpm typecheck`                            | `tsc` across all packages (Turborepo)                                                   |
+| `pnpm depcruise`                            | Enforces the layering rules between packages                                            |
+| `pnpm format`                               | Prettier                                                                                |
+| `pnpm ingest <full\|incremental\|verify>`   | Build, refresh or check the index ([guide](docs/guides/ingestion.md))                   |
+| `pnpm ingest <migrate\|copy --from <file>>` | Prepare Postgres, load an existing index into it ([guide](docs/guides/postgres.md))     |
+| `docker compose --profile postgres up -d`   | A local Postgres with pgvector, roles and extensions ([guide](docs/guides/postgres.md)) |
+| `pnpm eval bench`                           | Times every search end to end on the live index                                         |
+| `node apps/server/dist/main.js`             | The MCP server, after `pnpm build` ([guide](docs/guides/connecting-clients.md))         |
 
 </details>
 
@@ -163,14 +165,14 @@ scholarly-mcp/
 └── docs/                  plan, ADRs, guides
 ```
 
-| Layer            | Swappable via  | Default                           | Production                     |
-| ---------------- | -------------- | --------------------------------- | ------------------------------ |
-| Content source   | `Source`       | Crossref + Europe PMC             | Your content API               |
-| Search index     | `Store`        | SQLite (FTS5 + sqlite-vec)        | Postgres (tsvector + pgvector) |
-| Embeddings       | `Embedder`     | multilingual-e5-small, in-process | Any 384-dim model              |
-| Landing sessions | `SessionStore` | SQLite                            | Postgres                       |
-| Access status    | `Entitlements` | Mock                              | Your entitlement service       |
-| Usage events     | `Meter`        | JSON lines + webhook              | Your billing pipeline          |
+| Layer            | Swappable via  | Default                           | Production                                                                          |
+| ---------------- | -------------- | --------------------------------- | ----------------------------------------------------------------------------------- |
+| Content source   | `Source`       | Crossref + Europe PMC             | Your content API                                                                    |
+| Search index     | `Store`        | SQLite (FTS5 + sqlite-vec)        | Postgres (tsvector + pgvector), `STORE=postgres` ([guide](docs/guides/postgres.md)) |
+| Embeddings       | `Embedder`     | multilingual-e5-small, in-process | Any 384-dim model                                                                   |
+| Landing sessions | `SessionStore` | SQLite                            | Postgres                                                                            |
+| Access status    | `Entitlements` | Mock                              | Your entitlement service                                                            |
+| Usage events     | `Meter`        | JSON lines + webhook              | Your billing pipeline                                                               |
 
 Read more in the [engineering plan](docs/PLAN.md#high-level-architecture) and the [ADRs](docs/adr/README.md).
 
@@ -213,7 +215,7 @@ Read more in the [engineering plan](docs/PLAN.md#high-level-architecture) and th
 | [SM-10](tickets/SM-10-auth-telemetry-metering.md) | Auth, rate limits, telemetry, metering               |   ✅   |
 | [SM-11](tickets/SM-11-landing.md)                 | Landing sessions and Next.js landing page            |   ✅   |
 | [SM-12](tickets/SM-12-mcp-apps-funnel.md)         | MCP Apps cards and funnel dashboard                  |   ✅   |
-| [SM-13](tickets/SM-13-postgres-adapter.md)        | Postgres adapter                                     |   ⬜   |
+| [SM-13](tickets/SM-13-postgres-adapter.md)        | Postgres adapter                                     |   🚧   |
 | [SM-14](tickets/SM-14-hardening-docs.md)          | Hardening, image and docs                            |   ⬜   |
 | [SM-15](tickets/SM-15-demo-outreach.md)           | Demo deployment                                      |   ⬜   |
 | [SM-16](tickets/SM-16-embedding-model-eval.md)    | Embedding model evaluation (bge-m3)                  |   ✅   |

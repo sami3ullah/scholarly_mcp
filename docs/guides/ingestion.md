@@ -14,6 +14,8 @@ pnpm ingest full
 
 The first run downloads the embedding model (about 135 MB) unless `EMBEDDER_CACHE_DIR` points at a copy, and builds `data/index.sqlite`. `CROSSREF_ROWS=1000` cuts the number of requests tenfold for a first build.
 
+With `STORE=postgres` the index is built in Postgres instead; run `pnpm ingest migrate` once first, or load an index you already have with `pnpm ingest copy --from data/index.sqlite` ([Postgres guide](postgres.md)).
+
 ## Keeping it fresh
 
 Schedule one command, for example hourly or daily:

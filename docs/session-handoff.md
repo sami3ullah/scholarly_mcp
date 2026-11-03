@@ -236,3 +236,19 @@ Append-only. Newest entry at the bottom.
   - Step 3: `docker compose --profile postgres` (roles `scholarly_ingest` owner, `scholarly_server`; extensions created up front), Postgres guide, README roadmap and docs index, `migrate` in the ingestion guide.
   - Step 4: wire a copy command (`ingest copy --from <sqlite>` or `subset`/`reembed` with a Postgres target; the port already supports it, see the smoke script shape above), run `eval golden` on both, record the gap in ADR 0034, tune.
   - Step 5: funnel view.
+
+## 2026-11-03 - session 17, SM-13 steps 3 and 4 done (compose, copy, exit eval)
+
+- **Objective:** SM-13 "Next, in order" steps 3 and 4 from session 16.
+- **Done (committed on `main`):**
+  - `fix(server)`: the API key HTTP test used a fixed 10:00 UTC clock; the SDK checks token expiry against the wall clock, so it failed every run after 11:00 UTC. Now uses the current time.
+  - `feat(store-postgres)`: lexical rank = sum of each word's `ts_rank` (weights 1/0.5/0.25, normalisation 0) times its BM25 IDF; per-build `term_stats` (lexeme, chunks) filled by `ts_stat` at commit (`INDEX_LAYOUT_VERSION` 2, so older schemas need `full` or `copy`); only words in at most 5 % of chunks (`COMMON_WORD_SHARE`) pick candidates; `ef_search` 400. Pure `queryWords`/`weighWords` in `text/ts-query.ts`.
+  - `feat(ingest)`: `ingest copy --from <sqlite index>` into the store `STORE` picks, with embeddings and sync state; drops a leftover target build first; needs every article to arrive (`minArticleCount`).
+  - `feat(docker)`: root `compose.yaml`, profile `postgres` (pgvector 0.8.7-pg18, `127.0.0.1:${PG_PORT:-5432}`, `maintenance_work_mem` 512MB); `docker/postgres/init/01-roles-and-extensions.sh` creates db `scholarly` owned by `scholarly_ingest`, `scholarly_server` with CONNECT only, both extensions. Passwords default to `ingest-local`/`server-local`.
+  - Docs: new `docs/guides/postgres.md`, docs index, README scripts, roadmap SM-13 🚧, app READMEs (`STORE`, `migrate`, `copy`), ingestion guide, ADR 0034 decisions 3 and 4 plus an "Exit eval" section, ticket ticks and exit result.
+- **Exit eval:** golden overall Postgres 0.684/0.881/0.633 vs SQLite 0.680/0.888/0.627 (recall/MRR/nDCG); first cut was 0.665/0.869/0.618. Full corpus (176k chunks) bench p50/p95 Postgres 68/259 ms vs SQLite 221/312 ms (first cut 226/748). Copying the full corpus takes about 8 min, the eval index 35 s.
+- **How the gap was found:** a scratch script mixing one store's lexical with the other's vector search (deleted; easy to redo against `createSearchService` with a hand-built `ArticleSearch`).
+- **Local state:** the compose Postgres (`PG_PORT=55432`, volume `scholarly-mcp_postgres-data`) holds the full corpus as live and the eval index as previous. `docker compose --profile postgres down -v` removes it.
+- **Gotchas:** zsh does not word-split `$VAR` env prefixes; use a bash script. Turbo's lint output shows only `build:packages`; eslint runs after it.
+- **Next, in order:**
+  - Step 5: live funnel view over Postgres events (SM-12 follow-up), then close SM-13 (board, README roadmap ✅).

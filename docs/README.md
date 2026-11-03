@@ -26,6 +26,7 @@ Everything beyond the quick start lives here. New guides are added as the featur
 | [HTTP client](../packages/http/README.md)                     | The shared retrying client for the Crossref and Europe PMC APIs            |
 | [ONNX embedder](../packages/embedder-onnx/README.md)          | Configuration and usage of the embedding model adapter                     |
 | [SQLite store](../packages/store-sqlite/README.md)            | Index and runtime files, text matching, build and swap                     |
+| [Postgres store](../packages/store-postgres/README.md)        | Schemas, schema-per-build swaps, lexical and vector search, migrations     |
 | [Ingest CLI](../apps/ingest/README.md)                        | Commands and configuration of the ingestion CLI                            |
 | [Search service](../packages/search/README.md)                | Query pipeline, fusion, teasers, cursors and search settings               |
 | [Eval CLI](../apps/eval/README.md)                            | Search latency bench and golden-set relevance eval                         |
@@ -45,6 +46,7 @@ Everything beyond the quick start lives here. New guides are added as the featur
 | [Evaluating search](guides/evaluating-search.md)               | The golden set, its metrics, the eval index and the regression gate for ranking changes          |
 | [The landing page](guides/landing-page.md)                     | Running the landing app, the landing API contract, rebuilding the page in your own stack, tests  |
 | [The funnel and the card view](guides/funnel-and-card-view.md) | What the funnel counts, writing the report, the beacons, the MCP Apps card view                  |
+| [Running on Postgres](guides/postgres.md)                      | The compose profile, roles, migrating, copying an index in, running the server, search parity    |
 
 Planned:
 

@@ -22,4 +22,4 @@ See [Evaluating search](../../docs/guides/evaluating-search.md) for the regressi
 
 ## Configuration
 
-Everything from the [embedder](../../packages/embedder-onnx/README.md), the [SQLite store](../../packages/store-sqlite/README.md) (`INDEX_PATH`) and the [search service](../../packages/search/README.md), plus `LOG_LEVEL`.
+Everything from the [embedder](../../packages/embedder-onnx/README.md), the [SQLite store](../../packages/store-sqlite/README.md) (`INDEX_PATH`) and the [search service](../../packages/search/README.md), plus `LOG_LEVEL`. With `STORE=postgres` it reads the live build at `DATABASE_URL` instead, as the server's role is enough ([Postgres guide](../../docs/guides/postgres.md)).

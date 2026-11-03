@@ -7,6 +7,8 @@ The ingestion CLI: the only writer of the index (key design decision 3). It page
 | `ingest full`                                              | Re-fetches everything into a new file, reusing embeddings of unchanged articles                                                                                                                                                               |
 | `ingest incremental`                                       | Fetches records updated since the last run (1-day overlap); becomes `full` when one is due or `EMBEDDER_MODEL` changed                                                                                                                        |
 | `ingest verify`                                            | Checks the live index (integrity, counts, model version, sample queries) without changing it                                                                                                                                                  |
+| `ingest migrate`                                           | Brings the runtime tables up to date; on Postgres also grants `PG_SERVER_ROLE` its access. Run it before the server starts, and after each upgrade ([Postgres guide](../../docs/guides/postgres.md))                                          |
+| `ingest copy --from <index>`                               | Replaces the live index with a verified copy of a SQLite index file, with its embeddings and sync state, such as `data/index.sqlite` into Postgres; nothing is fetched or embedded                                                            |
 | `ingest purge-license <url>`                               | Removes all full text indexed under a licence through a verified build; take it off `FULLTEXT_LICENSE_ALLOWLIST` first                                                                                                                        |
 | `ingest subset --from <index> --dois <file> --out <index>` | Builds a verified index of chosen articles from a bigger one, reusing their chunks and embeddings, such as the eval index ([ADR 0026](../../docs/adr/0026-golden-set-eval-and-tuning.md)); writes only to `--out`                             |
 | `ingest reembed --from <index> --out <index>`              | Copies an index with every chunk embedded again by `EMBEDDER_MODEL`, chunking unchanged, to compare models on the same text ([ADR 0028](../../docs/adr/0028-selectable-embedding-model.md)); resumes when interrupted; writes only to `--out` |
@@ -15,7 +17,9 @@ Exit codes: `0` done, `1` failed or not verified (the live index is unchanged), 
 
 ## Configuration
 
-Everything from the [Crossref source](../../packages/source-crossref/README.md), the [Europe PMC enricher](../../packages/source-europepmc/README.md), the [embedder](../../packages/embedder-onnx/README.md) and the [SQLite store](../../packages/store-sqlite/README.md), plus:
+`STORE` (`sqlite` or `postgres`, default `sqlite`) picks where the index lives: the file at `INDEX_PATH`, or Postgres at `DATABASE_URL` as the writer role ([ADR 0034](../../docs/adr/0034-postgres-store-adapter.md)). `subset` and `reembed` always read and write SQLite files. `migrate` needs only the store settings.
+
+Everything from the [Crossref source](../../packages/source-crossref/README.md), the [Europe PMC enricher](../../packages/source-europepmc/README.md), the [embedder](../../packages/embedder-onnx/README.md), the [SQLite store](../../packages/store-sqlite/README.md) and the [Postgres store](../../packages/store-postgres/README.md), plus:
 
 | Variable               | Default | Meaning                                                                                                                                 |
 | ---------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------- |
