@@ -11,7 +11,8 @@ export {
   type VerifyOptions,
   type VerifyReport,
 } from './build/verify-index.js';
-export type { PurgeCounts } from './articles/write-records.js';
+export type { PurgeCounts } from '@scholarly-mcp/core';
+export { createSqliteIndexStorage } from './build/create-sqlite-index-storage.js';
 export { createSqliteIndexStore, type SqliteIndexStore } from './create-sqlite-index-store.js';
 export {
   INDEX_SCHEMA_VERSION,

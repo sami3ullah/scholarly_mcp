@@ -44,10 +44,10 @@ describe('index builds', () => {
     expect(existsSync(indexPath)).toBe(false);
     build.commit(metaFor('v1', 1));
     expect(existsSync(buildPathOf(indexPath))).toBe(false);
-    const reader = openIndexReader(indexPath, MODEL);
+    const reader = await openIndexReader(indexPath, MODEL, signal);
     expect(reader.meta().version).toBe('v1');
     expect(await reader.reader.findByDoi(recordNumber(1).article.doi, signal)).toBeDefined();
-    reader.close();
+    await reader.close();
   });
 
   it('commits a single file with no write-ahead log beside it', async () => {
@@ -123,9 +123,9 @@ describe('index builds', () => {
     ).toBeDefined();
     await build.store.writer.upsert([recordNumber(2)], signal);
     build.commit(metaFor('v2', 2));
-    const reader = openIndexReader(indexPath, MODEL);
+    const reader = await openIndexReader(indexPath, MODEL, signal);
     expect(reader.meta()).toMatchObject({ version: 'v2', articleCount: 2 });
-    reader.close();
+    await reader.close();
   });
 
   it('starts a purge build from a copy of the live index too', async () => {

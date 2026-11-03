@@ -14,6 +14,10 @@ export {
   runEmbedderContract,
   type EmbedderContractOptions,
 } from './contracts/embedder-contract.js';
+export {
+  runIndexStorageContract,
+  type IndexStorageUnderTest,
+} from './contracts/index-storage-contract.js';
 export { runUsageOutboxContract } from './contracts/usage-outbox-contract.js';
 export { runSessionStoreContract } from './contracts/session-store-contract.js';
 export { runSourceContract, type SourceContractOptions } from './contracts/source-contract.js';

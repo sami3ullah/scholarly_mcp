@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { appError, type IndexMeta } from '@scholarly-mcp/core';
+import { appError, type BuildKind, type IndexMeta } from '@scholarly-mcp/core';
 import {
   createPostgresIndexStore,
   type PostgresIndexStore,
@@ -13,11 +13,7 @@ import { writeIndexMeta } from '../database/index-meta-row.js';
 import { identifier, inTransaction, type Pool, type PoolClient } from '../database/pool.js';
 import { readLiveIndex } from './live-index.js';
 
-/**
- * A full run starts from an empty schema; an incremental run and a purge (removing full
- * text by licence) from a copy of the live one.
- */
-export type BuildKind = 'full' | 'incremental' | 'purge';
+export type { BuildKind };
 
 /** An index being built in its own schema, made live only after it is verified. */
 export interface PostgresIndexBuild {

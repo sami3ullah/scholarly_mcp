@@ -2,10 +2,13 @@ import {
   appError,
   type ArticleReader,
   type ArticleSearch,
+  type IndexReader,
   type JournalDirectory,
   type Logger,
 } from '@scholarly-mcp/core';
-import type { IndexReader } from '@scholarly-mcp/store-sqlite';
+
+/** How long one open or refresh may take before it is given up until the next tick. */
+const DEFAULT_TIMEOUT_MS = 20_000;
 
 /** The index as the tools see it: always callable, open or not. */
 export interface LiveIndex {
@@ -14,24 +17,33 @@ export interface LiveIndex {
   readonly journals: JournalDirectory;
   /**
    * Opens the index when none is open yet, else picks up a newly swapped-in build. Never
-   * throws: a missing or refused file is logged and the current index, if any, stays open.
+   * rejects: a missing or refused index is logged and the current one, if any, stays open.
+   * A call while one is still running waits for that one instead of starting another.
    */
-  refresh(): void;
+  refresh(): Promise<void>;
   /** True once an index is open; readiness checks report it (SM-10). */
   isReady(): boolean;
   /** The open index's version, for caches keyed on it. */
   version(): string | undefined;
-  close(): void;
+  close(): Promise<void>;
 }
 
 /**
  * Keeps the server up while the index is missing or being replaced: calls fail with
  * `INDEX_UNAVAILABLE` until `refresh` manages to open it, instead of the process crashing
- * in a loop (PLAN.md edge cases). The model's message never names the file path.
+ * in a loop (PLAN.md edge cases). The model's message never names the file path or schema.
+ * Each open or refresh is given `timeoutMs`, so a hung database cannot stall the ticks.
  */
-export function createLiveIndex(open: () => IndexReader, logger: Logger): LiveIndex {
+export function createLiveIndex(
+  open: (signal: AbortSignal) => Promise<IndexReader>,
+  logger: Logger,
+  options: { readonly timeoutMs?: number } = {},
+): LiveIndex {
+  const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   let current: IndexReader | undefined;
   let lastProblem: string | undefined;
+  let running: Promise<void> | undefined;
+  let closed = false;
 
   const openIndex = (): IndexReader => {
     if (current !== undefined) return current;
@@ -49,6 +61,24 @@ export function createLiveIndex(open: () => IndexReader, logger: Logger): LiveIn
     lastProblem = reason;
   };
 
+  const step = async () => {
+    if (closed) return;
+    const signal = AbortSignal.timeout(timeoutMs);
+    try {
+      if (current === undefined) {
+        // `close` waits for this step, so an index opened meanwhile is closed there.
+        current = await open(signal);
+        const { version, articleCount, chunkCount } = current.meta();
+        logger.info({ version, articleCount, chunkCount }, 'Index opened');
+      } else if (await current.refresh(signal)) {
+        logger.info({ version: current.meta().version }, 'Index swapped in');
+      }
+      lastProblem = undefined;
+    } catch (error) {
+      report(error);
+    }
+  };
+
   return {
     reader: {
       findByDoi: (doi, signal) => call((index) => index.reader.findByDoi(doi, signal)),
@@ -64,24 +94,19 @@ export function createLiveIndex(open: () => IndexReader, logger: Logger): LiveIn
     },
     journals: { journals: (signal) => call((index) => index.journals.journals(signal)) },
     refresh() {
-      try {
-        if (current === undefined) {
-          current = open();
-          const { version, articleCount, chunkCount } = current.meta();
-          logger.info({ version, articleCount, chunkCount }, 'Index opened');
-        } else if (current.refresh()) {
-          logger.info({ version: current.meta().version }, 'Index swapped in');
-        }
-        lastProblem = undefined;
-      } catch (error) {
-        report(error);
-      }
+      running ??= step().finally(() => {
+        running = undefined;
+      });
+      return running;
     },
     isReady: () => current !== undefined,
     version: () => current?.meta().version,
-    close() {
-      current?.close();
+    async close() {
+      closed = true;
+      await running;
+      const open = current;
       current = undefined;
+      await open?.close();
     },
   };
 }

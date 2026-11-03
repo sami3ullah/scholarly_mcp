@@ -64,6 +64,7 @@ export {
   type ApiKeyId,
 } from './auth/api-key.js';
 export { landingConfigSchema, type LandingConfig } from './config/landing-config.js';
+export { storeConfigSchema, type StoreConfig } from './config/store-config.js';
 export { parseConfig, type Env } from './config/parse-config.js';
 export { appError, isAppError, type AppError, type AppErrorDetails } from './errors/app-error.js';
 export { errorCodeSchema, type ErrorCode } from './errors/error-code.js';
@@ -146,6 +147,15 @@ export type { ApiKeyStore } from './ports/api-key-store.js';
 export type { Clock } from './ports/clock.js';
 export type { Embedder } from './ports/embedder.js';
 export type { AccessDecision, Caller, Entitlements } from './ports/entitlements.js';
+export type { IndexReader } from './ports/index-reader.js';
+export type {
+  BuildKind,
+  IndexBuild,
+  IndexStorage,
+  LiveIndexView,
+  VerifyOptions,
+} from './ports/index-storage.js';
+export type { IndexStore, PurgeCounts } from './ports/index-store.js';
 export type { JournalDirectory } from './ports/journal-directory.js';
 export type { LogFields, Logger } from './ports/logger.js';
 export type { Meter } from './ports/meter.js';

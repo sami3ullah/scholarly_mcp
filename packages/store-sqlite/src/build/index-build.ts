@@ -1,5 +1,5 @@
 import { existsSync, renameSync, rmSync } from 'node:fs';
-import { appError, type IndexMeta } from '@scholarly-mcp/core';
+import { appError, type BuildKind, type IndexMeta } from '@scholarly-mcp/core';
 import { createSqliteIndexStore, type SqliteIndexStore } from '../create-sqlite-index-store.js';
 import {
   INDEX_SCHEMA_VERSION,
@@ -10,11 +10,7 @@ import {
 import { writeIndexMeta } from '../database/index-meta-row.js';
 import { openDatabase, type Db } from '../database/open-database.js';
 
-/**
- * A full run starts from an empty file; an incremental run and a purge (removing full text
- * by licence) from a copy of the live index.
- */
-export type BuildKind = 'full' | 'incremental' | 'purge';
+export type { BuildKind };
 
 /** An index being built next to the live one, swapped in only after it is verified. */
 export interface IndexBuild {

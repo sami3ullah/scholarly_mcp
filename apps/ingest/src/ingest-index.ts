@@ -1,4 +1,3 @@
-import { existsSync } from 'node:fs';
 import {
   appError,
   chunkSchema,
@@ -8,20 +7,16 @@ import {
   type Clock,
   type Doi,
   type Embedder,
+  type IndexBuild,
+  type IndexStorage,
+  type IndexStore,
+  type LiveIndexView,
   type Logger,
-  type Source,
-} from '@scholarly-mcp/core';
-import {
-  INDEX_SCHEMA_VERSION,
-  beginIndexBuild,
-  createSqliteIndexStore,
-  indexSchemaVersion,
-  openDatabase,
-  verifyIndex,
-  type Db,
   type PurgeCounts,
+  type Source,
+  type VerifyOptions,
   type VerifyReport,
-} from '@scholarly-mcp/store-sqlite';
+} from '@scholarly-mcp/core';
 import { planRun, type IngestCommand, type RunPlan } from './plan-run.js';
 import { runIngest, type IngestReport } from './run-ingest.js';
 
@@ -32,7 +27,8 @@ import { runIngest, type IngestReport } from './run-ingest.js';
 export const MAX_SHRINK = 0.1;
 
 export interface IngestIndexDeps {
-  readonly indexPath: string;
+  /** Where the live index is and the build goes: a SQLite file or Postgres (ADR 0034). */
+  readonly storage: IndexStorage;
   readonly fullRunDays: number;
   readonly source: Source;
   /** Europe PMC subjects and matching-only full text, when `EUROPEPMC_ENABLED` (ADR 0024). */
@@ -54,21 +50,20 @@ export interface IngestOutcome {
 
 /**
  * Builds an index next to the live one, verifies it and swaps it in (PLAN.md "SQLite
- * store"). A full run reuses the live index's embeddings for unchanged articles. When the run
- * fails, the build file is kept so the next run of the same kind resumes it.
+ * store", ADR 0034). A full run reuses the live index's embeddings for unchanged articles.
+ * When the run fails, the build is kept so the next run of the same kind resumes it.
  */
 export async function ingestIndex(
   command: IngestCommand,
   deps: IngestIndexDeps,
   signal: AbortSignal,
 ): Promise<IngestOutcome> {
-  const { indexPath, clock, logger } = deps;
-  const live = existsSync(indexPath) ? openDatabase(indexPath, { readonly: true }) : undefined;
+  const { storage, clock, logger } = deps;
+  const live = await storage.openLive(signal);
   try {
     // An index with an older layout is neither updated nor read for reuse; it is rebuilt.
-    const currentLayout = live !== undefined && indexSchemaVersion(live) === INDEX_SCHEMA_VERSION;
-    const liveStore = currentLayout ? createSqliteIndexStore(live) : undefined;
-    const liveArticles = live === undefined ? 0 : articleCountOf(live);
+    const liveStore = live?.store;
+    const liveArticles = live?.articleCount ?? 0;
     const liveState = await liveStore?.syncState.load(deps.source.name, signal);
     const liveModel = (await liveStore?.reader.indexMeta(signal))?.modelVersion;
     const embedder = await deps.loadEmbedder();
@@ -76,7 +71,7 @@ export async function ingestIndex(
       command,
       live && {
         syncState: liveState,
-        currentLayout,
+        currentLayout: liveStore !== undefined,
         sameModel: liveModel === undefined || liveModel === embedder.modelVersion,
       },
       clock.now(),
@@ -87,13 +82,11 @@ export async function ingestIndex(
       'Ingest planned',
     );
 
-    const build = beginIndexBuild({
-      indexPath,
-      kind: plan.kind,
-      now: clock.now(),
-      dimensions: embedder.dimensions,
-    });
-    try {
+    const build = await storage.beginBuild(
+      { kind: plan.kind, now: clock.now(), dimensions: embedder.dimensions },
+      signal,
+    );
+    return await inBuild(build, async () => {
       const report = await runIngest(
         {
           ...deps,
@@ -105,53 +98,81 @@ export async function ingestIndex(
         plan.kind,
         signal,
       );
-      const verify = await verifyIndex(
-        build.db,
+      const { verify, committed } = await verifyAndCommit(
+        build,
         {
           modelVersion: embedder.modelVersion,
           minArticleCount: Math.ceil(liveArticles * (1 - MAX_SHRINK)),
         },
+        {
+          clock,
+          // The SQLite build renames over the live file; nothing may hold it open then.
+          beforeCommit: () => live?.close(),
+        },
         signal,
       );
-      const outcome = (committed: boolean): IngestOutcome => ({
+      return {
         plan,
         report: { ...report, resumed: report.resumed || build.resumed },
         verify,
         committed,
-      });
-      if (!verify.ok) {
-        // A build that fails verification would fail again when resumed; start over next time.
-        build.discard();
-        return outcome(false);
-      }
-      closeLive(live);
-      const builtAt = clock.now();
-      build.commit({
-        version: builtAt.toISOString(),
-        modelVersion: embedder.modelVersion,
-        articleCount: verify.articleCount,
-        chunkCount: verify.chunkCount,
-        builtAt,
-      });
-      return outcome(true);
-    } catch (error) {
-      if (build.db.open) build.close();
-      throw error;
-    }
+      };
+    });
   } finally {
-    closeLive(live);
+    await live?.close();
   }
 }
 
-/** What `ingest purge-license` needs. */
+/** Runs `work` in a build; when it throws, the build is kept for the next run to resume. */
+async function inBuild<T>(build: IndexBuild, work: () => Promise<T>): Promise<T> {
+  try {
+    return await work();
+  } catch (error) {
+    await build.close();
+    throw error;
+  }
+}
+
+/**
+ * Verifies a build and makes it live, versioned by the time it was built. A build that
+ * fails verification is discarded: it would fail again when resumed, so the next run starts
+ * over.
+ */
+async function verifyAndCommit(
+  build: IndexBuild,
+  options: VerifyOptions,
+  commit: { readonly clock: Clock; readonly beforeCommit?: () => Promise<void> | undefined },
+  signal: AbortSignal,
+): Promise<{ readonly verify: VerifyReport; readonly committed: boolean }> {
+  const verify = await build.verify(options, signal);
+  if (!verify.ok) {
+    await build.discard(signal);
+    return { verify, committed: false };
+  }
+  await commit.beforeCommit?.();
+  const builtAt = commit.clock.now();
+  await build.commit(
+    {
+      version: builtAt.toISOString(),
+      modelVersion: options.modelVersion,
+      articleCount: verify.articleCount,
+      chunkCount: verify.chunkCount,
+      builtAt,
+    },
+    signal,
+  );
+  return { verify, committed: true };
+}
+
 /** The embedding model an index command works with, known before the model is loaded. */
 export interface IndexModel {
   readonly version: string;
   readonly dimensions: number;
 }
 
+/** What `ingest purge-license` needs. */
 export interface PurgeDeps {
-  readonly indexPath: string;
+  readonly storage: IndexStorage;
   /** `FULLTEXT_LICENSE_ALLOWLIST`; the licence to purge must no longer be on it. */
   readonly allowlist: readonly string[];
   readonly model: IndexModel;
@@ -185,41 +206,29 @@ export async function purgeLicense(
       { field: 'FULLTEXT_LICENSE_ALLOWLIST' },
     );
   }
-  const { indexPath, clock, model } = deps;
-  const build = beginIndexBuild({
-    indexPath,
-    kind: 'purge',
-    now: clock.now(),
-    dimensions: model.dimensions,
-  });
-  try {
+  const { storage, clock, model } = deps;
+  const build = await storage.beginBuild(
+    { kind: 'purge', now: clock.now(), dimensions: model.dimensions },
+    signal,
+  );
+  return inBuild(build, async () => {
     const purged = await build.store.purgeFullText(licenseUrl, signal);
     deps.logger.info({ ...purged }, 'Full text purged from the build');
-    const verify = await verifyIndex(build.db, { modelVersion: model.version }, signal);
-    if (!verify.ok) {
-      build.discard();
-      return { purged, verify, committed: false };
-    }
-    const builtAt = clock.now();
-    build.commit({
-      version: builtAt.toISOString(),
-      modelVersion: model.version,
-      articleCount: verify.articleCount,
-      chunkCount: verify.chunkCount,
-      builtAt,
-    });
-    return { purged, verify, committed: true };
-  } catch (error) {
-    if (build.db.open) build.close();
-    throw error;
-  }
+    const outcome = await verifyAndCommit(
+      build,
+      { modelVersion: model.version },
+      { clock },
+      signal,
+    );
+    return { purged, ...outcome };
+  });
 }
 
 export interface SubsetDeps {
   /** The index to copy from; it is only read. */
-  readonly sourcePath: string;
+  readonly source: IndexStorage;
   /** Where the subset index is built and swapped in. */
-  readonly indexPath: string;
+  readonly target: IndexStorage;
   readonly model: IndexModel;
   readonly clock: Clock;
   readonly logger: Logger;
@@ -246,11 +255,10 @@ export async function extractSubset(
   deps: SubsetDeps,
   signal: AbortSignal,
 ): Promise<SubsetOutcome> {
-  const source = openDatabase(deps.sourcePath, { readonly: true, mustExist: true });
+  const source = await openSource(deps.source, signal);
   try {
-    const store = createSqliteIndexStore(source);
-    const meta = await store.reader.indexMeta(signal);
-    const { model } = deps;
+    const meta = await source.store.reader.indexMeta(signal);
+    const { model, clock } = deps;
     if (meta?.modelVersion !== model.version) {
       throw appError(
         'INVALID_INPUT',
@@ -258,54 +266,42 @@ export async function extractSubset(
         { field: 'from' },
       );
     }
-    const build = beginIndexBuild({
-      indexPath: deps.indexPath,
-      kind: 'full',
-      now: deps.clock.now(),
-      dimensions: model.dimensions,
-    });
-    try {
+    const build = await deps.target.beginBuild(
+      { kind: 'full', now: clock.now(), dimensions: model.dimensions },
+      signal,
+    );
+    return await inBuild(build, async () => {
       const missing: string[] = [];
       let written = 0;
       const wanted = [...new Set(dois)];
       for (let start = 0; start < wanted.length; start += SUBSET_BATCH) {
         const records: ArticleRecord[] = [];
         for (const doi of wanted.slice(start, start + SUBSET_BATCH)) {
-          const record = await store.findRecord(doi as Doi, signal);
+          const record = await source.store.findRecord(doi as Doi, signal);
           if (record === undefined) missing.push(doi);
           else records.push(record);
         }
         await build.store.writer.upsert(records, signal);
         written += records.length;
       }
-      const verify = await verifyIndex(build.db, { modelVersion: model.version }, signal);
-      if (!verify.ok) {
-        build.discard();
-        return { written, missing, verify, committed: false };
-      }
-      const builtAt = deps.clock.now();
-      build.commit({
-        version: builtAt.toISOString(),
-        modelVersion: model.version,
-        articleCount: verify.articleCount,
-        chunkCount: verify.chunkCount,
-        builtAt,
-      });
-      return { written, missing, verify, committed: true };
-    } catch (error) {
-      if (build.db.open) build.close();
-      throw error;
-    }
+      const outcome = await verifyAndCommit(
+        build,
+        { modelVersion: model.version },
+        { clock },
+        signal,
+      );
+      return { written, missing, ...outcome };
+    });
   } finally {
-    source.close();
+    await source.close();
   }
 }
 
 export interface ReembedDeps {
   /** The index whose chunks are re-embedded; it is only read. */
-  readonly sourcePath: string;
+  readonly source: IndexStorage;
   /** Where the re-embedded index is built and swapped in. */
-  readonly indexPath: string;
+  readonly target: IndexStorage;
   readonly embedder: Embedder;
   readonly clock: Clock;
   readonly logger: Logger;
@@ -332,22 +328,19 @@ export async function reembedIndex(
   signal: AbortSignal,
 ): Promise<ReembedOutcome> {
   const { embedder, clock, logger } = deps;
-  const source = openDatabase(deps.sourcePath, { readonly: true, mustExist: true });
+  const source = await openSource(deps.source, signal);
   try {
-    const store = createSqliteIndexStore(source);
-    const dois = source.prepare('SELECT doi FROM articles ORDER BY doi').pluck().all() as Doi[];
-    const build = beginIndexBuild({
-      indexPath: deps.indexPath,
-      kind: 'full',
-      now: clock.now(),
-      dimensions: embedder.dimensions,
-    });
-    try {
+    const dois = await source.dois(signal);
+    const build = await deps.target.beginBuild(
+      { kind: 'full', now: clock.now(), dimensions: embedder.dimensions },
+      signal,
+    );
+    return await inBuild(build, async () => {
       const counts = { written: 0, kept: 0, chunks: 0 };
       for (let start = 0; start < dois.length; start += SUBSET_BATCH) {
         const records: ArticleRecord[] = [];
         for (const doi of dois.slice(start, start + SUBSET_BATCH)) {
-          const record = await store.findRecord(doi, signal);
+          const record = await source.store.findRecord(doi, signal);
           if (record === undefined) continue;
           const held = await build.store.writer.contentHashOf(doi, signal);
           if (held === record.article.contentHash) {
@@ -361,27 +354,33 @@ export async function reembedIndex(
         counts.written += records.length;
         logger.info({ ...counts, of: dois.length }, 'Re-embedded batch written');
       }
-      const verify = await verifyIndex(build.db, { modelVersion: embedder.modelVersion }, signal);
-      if (!verify.ok) {
-        build.discard();
-        return { ...counts, verify, committed: false };
-      }
-      const builtAt = clock.now();
-      build.commit({
-        version: builtAt.toISOString(),
-        modelVersion: embedder.modelVersion,
-        articleCount: verify.articleCount,
-        chunkCount: verify.chunkCount,
-        builtAt,
-      });
-      return { ...counts, verify, committed: true };
-    } catch (error) {
-      if (build.db.open) build.close();
-      throw error;
-    }
+      const outcome = await verifyAndCommit(
+        build,
+        { modelVersion: embedder.modelVersion },
+        { clock },
+        signal,
+      );
+      return { ...counts, ...outcome };
+    });
   } finally {
-    source.close();
+    await source.close();
   }
+}
+
+/** The live index of a copy's source; `INVALID_INPUT` when there is none to read. */
+async function openSource(
+  storage: IndexStorage,
+  signal: AbortSignal,
+): Promise<LiveIndexView & { readonly store: IndexStore }> {
+  const live = await storage.openLive(signal);
+  const store = live?.store;
+  if (live === undefined || store === undefined) {
+    await live?.close();
+    throw appError('INVALID_INPUT', 'The source holds no index of the current layout', {
+      field: 'from',
+    });
+  }
+  return { ...live, store };
 }
 
 async function reembedRecord(
@@ -406,23 +405,12 @@ async function reembedRecord(
 }
 
 /** `ingest verify`: checks the live index as it is, without changing it. */
-export async function verifyLiveIndex(
-  indexPath: string,
+export function verifyLiveIndex(
+  storage: IndexStorage,
   modelVersion: string,
   signal: AbortSignal,
 ): Promise<VerifyReport> {
-  // Not read-only: FTS5 runs its integrity check as an INSERT, which writes nothing.
-  const db = openDatabase(indexPath, { mustExist: true });
-  try {
-    return await verifyIndex(db, { modelVersion }, signal);
-  } finally {
-    db.close();
-  }
-}
-
-/** Counted directly, as this works on any layout, old ones included. */
-function articleCountOf(db: Db): number {
-  return Number(db.prepare('SELECT count(*) FROM articles').pluck().get());
+  return storage.verifyLive({ modelVersion }, signal);
 }
 
 /** Licence URLs compared ignoring scheme, case and a trailing slash. */
@@ -434,8 +422,4 @@ function sameUrl(a: string, b: string): boolean {
       .replace(/^https?:\/\//, '')
       .replace(/\/+$/, '');
   return canonical(a) === canonical(b);
-}
-
-function closeLive(live: Db | undefined): void {
-  if (live?.open === true) live.close();
 }

@@ -4,16 +4,11 @@ import {
   toJsonWithDates,
   type ArticleRecord,
   type Doi,
+  type PurgeCounts,
 } from '@scholarly-mcp/core';
 import { stemmedText } from '@scholarly-mcp/lexical';
 import type { PoolClient } from '../database/pool.js';
 import { vectorText } from './rows.js';
-
-/** What a purge removed. */
-export interface PurgeCounts {
-  readonly articles: number;
-  readonly chunks: number;
-}
 
 /**
  * Replaces articles and all their chunks, inside the caller's transaction. Each batch is two

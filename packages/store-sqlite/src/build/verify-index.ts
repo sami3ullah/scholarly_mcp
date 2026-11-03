@@ -3,21 +3,13 @@ import {
   verifyResult as result,
   type Doi,
   type VerifyCheck,
+  type VerifyOptions,
   type VerifyReport,
 } from '@scholarly-mcp/core';
 import { createSqliteIndexStore } from '../create-sqlite-index-store.js';
 import type { Db } from '../database/open-database.js';
 
-export type { VerifyCheck, VerifyReport };
-
-export interface VerifyOptions {
-  /** The embedder's model version; every chunk must have it. */
-  readonly modelVersion: string;
-  /** Fails the check when fewer articles are indexed, e.g. 90% of the live index. */
-  readonly minArticleCount?: number;
-  /** How many articles the sample queries look for. */
-  readonly samples?: number;
-}
+export type { VerifyCheck, VerifyOptions, VerifyReport };
 
 const DEFAULT_SAMPLES = 5;
 

@@ -1,21 +1,14 @@
 #!/usr/bin/env node
 import { randomUUID } from 'node:crypto';
-import { mkdirSync, readFileSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { readFileSync } from 'node:fs';
 import { createMcpHandler } from '@modelcontextprotocol/server';
 import { serveStdio } from '@modelcontextprotocol/server/stdio';
-import { parseConfig, type Clock } from '@scholarly-mcp/core';
+import { parseConfig, storeConfigSchema, type Clock, type Env } from '@scholarly-mcp/core';
 import { loadOnnxEmbedder } from '@scholarly-mcp/embedder-onnx';
 import { createLogger } from '@scholarly-mcp/logger';
 import { searchOptionsFrom } from '@scholarly-mcp/search';
-import {
-  createSqliteApiKeyStore,
-  createSqliteSessionStore,
-  createSqliteUsageOutbox,
-  openIndexReader,
-  openRuntimeDatabase,
-  sqliteConfigSchema,
-} from '@scholarly-mcp/store-sqlite';
+import { postgresConfigSchema } from '@scholarly-mcp/store-postgres';
+import { sqliteConfigSchema, type SqliteConfig } from '@scholarly-mcp/store-sqlite';
 import { httpAuthFromConfig } from './auth/http-auth-from-config.js';
 import {
   serverConfigSchema,
@@ -35,6 +28,12 @@ import { createWebhookSink } from './metering/create-webhook-sink.js';
 import type { UsageSink } from './metering/usage-sink.js';
 import { createLiveIndex } from './runtime/live-index.js';
 import { createNodeRandomToken } from './runtime/node-random-token.js';
+import {
+  openKeyStore,
+  openServerStores,
+  storeSelectionFrom,
+  type StoreSelection,
+} from './runtime/open-server-stores.js';
 import { createMetrics } from './telemetry/create-metrics.js';
 import { startTracing } from './telemetry/create-tracing.js';
 import { MAX_BODY_BYTES, serveHttp, type HttpServer } from './transports/serve-http.js';
@@ -45,22 +44,25 @@ const clock: Clock = { now: () => new Date() };
 /**
  * The composition root (PLAN.md "Backend conventions"): reads config, creates the real
  * adapters, wires the app and serves it over stdio or Streamable HTTP. `keys …` manages
- * API keys and `funnel …` writes the funnel report from the metering export instead. The model and the index are opened at boot; a missing index is retried
- * on every refresh tick, and tools answer `INDEX_UNAVAILABLE` meanwhile.
+ * API keys and `funnel …` writes the funnel report from the metering export instead.
+ * `STORE` picks SQLite files or Postgres (ADR 0034). The model and the index are opened at
+ * boot; a missing index is retried on every refresh tick, and tools answer
+ * `INDEX_UNAVAILABLE` meanwhile.
  */
 async function main(): Promise<void> {
   if (process.argv[2] === 'keys') {
-    const { RUNTIME_DB_PATH } = parseConfig(sqliteConfigSchema, process.env);
-    mkdirSync(dirname(RUNTIME_DB_PATH), { recursive: true });
-    const db = openRuntimeDatabase(RUNTIME_DB_PATH);
+    const store = await openKeyStore(
+      storeSelectionOf(process.env, parseConfig(sqliteConfigSchema, process.env)),
+      AbortSignal.timeout(30_000),
+    );
     try {
       process.exitCode = await runKeysCommand(process.argv.slice(3), {
-        keys: createSqliteApiKeyStore(db),
+        keys: store.keys,
         clock,
         out: (line) => process.stdout.write(`${line}\n`),
       });
     } finally {
-      db.close();
+      await store.close();
     }
     return;
   }
@@ -76,10 +78,17 @@ async function main(): Promise<void> {
     });
     return;
   }
-  await serve(parseConfig(serverConfigSchema, process.env));
+  const config = parseConfig(serverConfigSchema, process.env);
+  await serve(config, storeSelectionOf(process.env, config));
 }
 
-async function serve(config: ServerConfig): Promise<void> {
+function storeSelectionOf(env: Env, sqlite: SqliteConfig): StoreSelection {
+  return storeSelectionFrom(parseConfig(storeConfigSchema, env), sqlite, () =>
+    parseConfig(postgresConfigSchema, env),
+  );
+}
+
+async function serve(config: ServerConfig, selection: StoreSelection): Promise<void> {
   // On stdio, stdout carries the protocol, so logs go to stderr.
   const logger = createLogger({
     name: 'server',
@@ -98,15 +107,14 @@ async function serve(config: ServerConfig): Promise<void> {
   const metrics = createMetrics();
 
   const embedder = await loadOnnxEmbedder(config);
-  const index = createLiveIndex(
-    () => openIndexReader(config.INDEX_PATH, embedder.modelVersion),
-    logger,
+  const stores = await openServerStores(
+    selection,
+    embedder.modelVersion,
+    AbortSignal.timeout(30_000),
   );
-  index.refresh();
-  mkdirSync(dirname(config.RUNTIME_DB_PATH), { recursive: true });
-  const runtimeDb = openRuntimeDatabase(config.RUNTIME_DB_PATH);
-  const sessions = createSqliteSessionStore(runtimeDb);
-  const outbox = createSqliteUsageOutbox(runtimeDb);
+  const { sessions, outbox } = stores;
+  const index = createLiveIndex((signal) => stores.openIndex(signal), logger);
+  await index.refresh();
 
   const sinks: UsageSink[] = [createJsonlSink(config.METER_JSONL_PATH)];
   if (config.METER_WEBHOOK_URL !== undefined) {
@@ -169,8 +177,9 @@ async function serve(config: ServerConfig): Promise<void> {
 
   const timers = [
     setInterval(() => {
-      index.refresh();
-      metrics.indexReady.set(index.isReady() ? 1 : 0);
+      void index.refresh().then(() => {
+        metrics.indexReady.set(index.isReady() ? 1 : 0);
+      });
     }, config.INDEX_REFRESH_MS),
     setInterval(() => {
       sessions.deleteExpired(clock.now(), AbortSignal.timeout(10_000)).then(
@@ -207,7 +216,7 @@ async function serve(config: ServerConfig): Promise<void> {
         ...(mcp !== undefined && { mcp }),
         landing,
         auth: httpAuthFromConfig(config, {
-          keys: createSqliteApiKeyStore(runtimeDb),
+          keys: stores.keys,
           clock,
           logger: logger.child({ component: 'auth' }),
         }),
@@ -261,6 +270,7 @@ async function serve(config: ServerConfig): Promise<void> {
   logger.info(
     {
       transport: config.MCP_TRANSPORT,
+      store: selection.store,
       auth: config.AUTH_MODE,
       version,
       ready: index.isReady(),
@@ -289,8 +299,8 @@ async function serve(config: ServerConfig): Promise<void> {
           logger.error({ err: error }, 'Shutdown failed');
           process.exitCode = 1;
         } finally {
-          index.close();
-          runtimeDb.close();
+          await index.close();
+          await stores.close();
           logger.info({ signal }, 'Stopped');
         }
       })();

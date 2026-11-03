@@ -5,6 +5,7 @@ import {
   type Chunk,
   type Doi,
   foldText,
+  type PurgeCounts,
   toJsonWithDates,
 } from '@scholarly-mcp/core';
 import type { Db } from '../database/open-database.js';
@@ -25,12 +26,6 @@ export interface RecordWriter {
    * they were, so the next ingest run re-indexes those articles from what it fetches.
    */
   purgeFullText(licenseUrl: string): PurgeCounts;
-}
-
-/** What a purge removed. */
-export interface PurgeCounts {
-  readonly articles: number;
-  readonly chunks: number;
 }
 
 /** Prepares the statements that keep `chunks`, both FTS tables and `vec_chunks` in step. */

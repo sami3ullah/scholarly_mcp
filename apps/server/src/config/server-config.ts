@@ -1,4 +1,4 @@
-import { landingConfigSchema } from '@scholarly-mcp/core';
+import { landingConfigSchema, storeConfigSchema } from '@scholarly-mcp/core';
 import { embedderConfigSchema } from '@scholarly-mcp/embedder-onnx';
 import { loggingConfigSchema } from '@scholarly-mcp/logger';
 import { searchConfigSchema } from '@scholarly-mcp/search';
@@ -57,6 +57,7 @@ export const serverConfigSchema = serverOwnConfigSchema
   .extend(telemetryConfigSchema.shape)
   .extend(landingConfigSchema.shape)
   .extend(searchConfigSchema.shape)
+  .extend(storeConfigSchema.shape)
   .extend(sqliteConfigSchema.shape)
   .extend(embedderConfigSchema.shape)
   .extend(loggingConfigSchema.shape)

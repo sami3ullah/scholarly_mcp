@@ -19,22 +19,23 @@ The default store (key design decision 4): one SQLite file per index with FTS5, 
 ## Usage
 
 ```ts
-// Ingest: build, verify, swap.
-const build = beginIndexBuild({
-  indexPath,
-  kind: 'incremental',
-  now: clock.now(),
-  dimensions: embedder.dimensions,
-});
+// Ingest: build, verify, swap, through core's IndexStorage port (ADR 0034).
+const storage = createSqliteIndexStorage(indexPath);
+const build = await storage.beginBuild(
+  { kind: 'incremental', now: clock.now(), dimensions: embedder.dimensions },
+  signal,
+);
 await build.store.writer.upsert(records, signal);
-const report = await verifyIndex(build.db, { modelVersion: embedder.modelVersion }, signal);
-if (report.ok) build.commit(meta);
+const report = await build.verify({ modelVersion: embedder.modelVersion }, signal);
+if (report.ok) await build.commit(meta, signal);
 
 // Server: read-only, follows swaps.
-const index = openIndexReader(indexPath, embedder.modelVersion);
-setInterval(() => index.refresh(), 30_000);
+const index = await openIndexReader(indexPath, embedder.modelVersion, signal);
+setInterval(() => void index.refresh(AbortSignal.timeout(20_000)), 30_000);
 await index.journals.journals(signal); // every journal, built from its articles
 ```
+
+`beginIndexBuild` and `verifyIndex` remain for code that needs the build's database handle; the storage port wraps them.
 
 `journals` tallies articles per journal name and ISSN pair with two aggregate queries (about 0.4 s on the 70k-article index; callers cache it per index version), and core's `mergeJournalTallies` joins tallies sharing an ISSN ([ADR 0025](../../docs/adr/0025-mcp-server-and-tool-rules.md)).
 

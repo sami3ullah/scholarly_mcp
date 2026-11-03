@@ -30,44 +30,41 @@ describe('openIndexReader', () => {
     next.commit({ ...metaFor(version, numbers.length), modelVersion });
   }
 
-  const codeOf = (work: () => unknown) => {
-    try {
-      work();
-    } catch (error) {
-      return isAppError(error) ? error.code : 'not an AppError';
-    }
-    return undefined;
-  };
+  const codeOf = (work: () => Promise<unknown>) =>
+    work().then(
+      () => undefined,
+      (error: unknown) => (isAppError(error) ? error.code : 'not an AppError'),
+    );
 
-  it('reports a missing index file as unavailable', () => {
-    expect(codeOf(() => openIndexReader(indexPath, MODEL))).toBe('INDEX_UNAVAILABLE');
+  it('reports a missing index file as unavailable', async () => {
+    expect(await codeOf(() => openIndexReader(indexPath, MODEL, signal))).toBe('INDEX_UNAVAILABLE');
   });
 
   it('refuses an index built with another embedding model', async () => {
     await build('v1', 'bge-m3@1', 1);
-    expect(codeOf(() => openIndexReader(indexPath, MODEL))).toBe('INDEX_UNAVAILABLE');
+    expect(await codeOf(() => openIndexReader(indexPath, MODEL, signal))).toBe('INDEX_UNAVAILABLE');
   });
 
   it('follows a swapped-in index on refresh, and only when the version changed', async () => {
     await build('v1', MODEL, 1);
-    const reader = openIndexReader(indexPath, MODEL);
-    expect(reader.refresh()).toBe(false);
+    const reader = await openIndexReader(indexPath, MODEL, signal);
+    expect(await reader.refresh(signal)).toBe(false);
 
     await build('v2', MODEL, 1, 2);
     expect(await reader.reader.findByDoi(recordNumber(2).article.doi, signal)).toBeUndefined();
-    expect(reader.refresh()).toBe(true);
+    expect(await reader.refresh(signal)).toBe(true);
     expect(reader.meta().version).toBe('v2');
     expect(await reader.reader.findByDoi(recordNumber(2).article.doi, signal)).toBeDefined();
-    reader.close();
+    await reader.close();
   });
 
   it('keeps serving the current index when the new one is unusable', async () => {
     await build('v1', MODEL, 1);
-    const reader = openIndexReader(indexPath, MODEL);
+    const reader = await openIndexReader(indexPath, MODEL, signal);
     await build('v2', 'bge-m3@1', 1);
-    expect(codeOf(() => reader.refresh())).toBe('INDEX_UNAVAILABLE');
+    expect(await codeOf(() => reader.refresh(signal))).toBe('INDEX_UNAVAILABLE');
     expect(reader.meta().version).toBe('v1');
     expect(await reader.reader.findByDoi(recordNumber(1).article.doi, signal)).toBeDefined();
-    reader.close();
+    await reader.close();
   });
 });

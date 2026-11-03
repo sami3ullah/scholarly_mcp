@@ -2,37 +2,20 @@ import {
   fromJsonWithDates,
   syncStateSchema,
   toJsonWithDates,
-  type ArticleReader,
   type ArticleRecord,
-  type ArticleSearch,
-  type ArticleWriter,
   type Doi,
-  type JournalDirectory,
-  type SyncStateStore,
+  type IndexStore,
 } from '@scholarly-mcp/core';
 import { CHUNK_COLUMNS, articleFromRecord, chunkFromRow, type ChunkRow } from './articles/rows.js';
-import { createRecordWriter, type PurgeCounts } from './articles/write-records.js';
+import { createRecordWriter } from './articles/write-records.js';
 import { readIndexMeta, writeIndexMeta } from './database/index-meta-row.js';
 import type { Db } from './database/open-database.js';
 import { createJournalDirectory } from './journals/create-journal-directory.js';
 import { createSqliteSearch } from './search/create-sqlite-search.js';
 import { withSignal } from './with-signal.js';
 
-/** Every face of an index file. The server uses only `reader`, `search` and `journals`. */
-export interface SqliteIndexStore {
-  readonly reader: ArticleReader;
-  readonly writer: ArticleWriter;
-  readonly search: ArticleSearch;
-  readonly journals: JournalDirectory;
-  readonly syncState: SyncStateStore;
-  /** An article with all its chunks, so a rebuild can reuse embeddings of unchanged articles. */
-  findRecord(doi: Doi, signal: AbortSignal): Promise<ArticleRecord | undefined>;
-  /**
-   * Removes all full text indexed under a licence, in one transaction, e.g. when a rights
-   * holder asks (ADR 0003). Only a purge build calls it; the live index is never written.
-   */
-  purgeFullText(licenseUrl: string, signal: AbortSignal): Promise<PurgeCounts>;
-}
+/** Every face of an index file (the store port shared with Postgres). */
+export type SqliteIndexStore = IndexStore;
 
 /** Wraps an open index database, with the schema already created, in the store ports. */
 export function createSqliteIndexStore(db: Db): SqliteIndexStore {

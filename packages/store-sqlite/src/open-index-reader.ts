@@ -1,30 +1,11 @@
 import { existsSync } from 'node:fs';
-import {
-  appError,
-  type ArticleReader,
-  type ArticleSearch,
-  type IndexMeta,
-  type JournalDirectory,
-} from '@scholarly-mcp/core';
+import { appError, type IndexMeta, type IndexReader } from '@scholarly-mcp/core';
 import { createSqliteIndexStore, type SqliteIndexStore } from './create-sqlite-index-store.js';
 import { readIndexMeta } from './database/index-meta-row.js';
 import { openDatabase, type Db } from './database/open-database.js';
+import { withSignal } from './with-signal.js';
 
-/** The server's read-only view of the index, which follows atomic swaps. */
-export interface IndexReader {
-  readonly reader: ArticleReader;
-  readonly search: ArticleSearch;
-  readonly journals: JournalDirectory;
-  /** The description of the index currently open. */
-  meta(): IndexMeta;
-  /**
-   * Reopens the index file when a new version has been swapped in, and returns true when it
-   * did. A new file with another model version, or a broken one, is refused with
-   * `INDEX_UNAVAILABLE` and the current index stays open.
-   */
-  refresh(): boolean;
-  close(): void;
-}
+export type { IndexReader };
 
 interface Opened {
   readonly db: Db;
@@ -38,7 +19,15 @@ interface Opened {
  * Throws `INDEX_UNAVAILABLE` with a clear message when the file is missing or not usable,
  * for the server's readiness check to report.
  */
-export function openIndexReader(path: string, modelVersion: string): IndexReader {
+export function openIndexReader(
+  path: string,
+  modelVersion: string,
+  signal: AbortSignal,
+): Promise<IndexReader> {
+  return withSignal(signal, () => readerOf(path, modelVersion));
+}
+
+function readerOf(path: string, modelVersion: string): IndexReader {
   let current = open(path, modelVersion);
   const store = () => current.store;
 
@@ -56,20 +45,22 @@ export function openIndexReader(path: string, modelVersion: string): IndexReader
     },
     journals: { journals: (signal) => store().journals.journals(signal) },
     meta: () => current.meta,
-    refresh() {
-      const next = open(path, modelVersion);
-      if (next.meta.version === current.meta.version) {
-        next.db.close();
-        return false;
-      }
-      // Queries run synchronously inside each call, so none is using the old handle now.
-      const previous = current;
-      current = next;
-      previous.db.close();
-      return true;
-    },
+    refresh: (signal) =>
+      withSignal(signal, () => {
+        const next = open(path, modelVersion);
+        if (next.meta.version === current.meta.version) {
+          next.db.close();
+          return false;
+        }
+        // Queries run synchronously inside each call, so none is using the old handle now.
+        const previous = current;
+        current = next;
+        previous.db.close();
+        return true;
+      }),
     close() {
       current.db.close();
+      return Promise.resolve();
     },
   };
 }

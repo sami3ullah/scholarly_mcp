@@ -11,7 +11,9 @@ export {
   createPostgresIndexStore,
   type PostgresIndexStore,
 } from './create-postgres-index-store.js';
-export type { PurgeCounts } from './articles/write-records.js';
+export type { PurgeCounts } from '@scholarly-mcp/core';
+export { createPostgresIndexStorage } from './build/create-postgres-index-storage.js';
+export { openPostgresIndexReader } from './open-postgres-index-reader.js';
 export {
   beginPostgresIndexBuild,
   type BuildKind,

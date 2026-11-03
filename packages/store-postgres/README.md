@@ -24,6 +24,8 @@ Runtime migrations are versioned and append-only, and run under an advisory lock
 
 Each build is its own schema (ADR 0034). `beginPostgresIndexBuild` starts a full build in an empty schema, or an incremental or purge build from a copy of the live one, and resumes a leftover build of the same kind, layout and vector size. `verifyPostgresIndex` runs the same checks as the SQLite verify, plus the layout and the four search indexes. `commit` writes the `IndexMeta`, grants `PG_SERVER_ROLE` `SELECT` on the build, points `scholarly.live_index` at it and drops the schema before the previous one, in one transaction. Index schemas are never migrated: a new `INDEX_LAYOUT_VERSION` needs a full build.
 
+`createPostgresIndexStorage({ pool, serverRole })` wraps these builds in core's `IndexStorage` port, the one the ingest uses for both stores, and `openPostgresIndexReader(pool, modelVersion, signal)` is the server's reader: it follows `live_index` on each `refresh` and refuses a build of another model or layout. Both pass testkit's `runIndexStorageContract`, as the SQLite ones do.
+
 Each chunk row carries its article's filter columns and the text forms written by `packages/lexical`, so both searches read one table:
 
 | Search  | Column and index                                                                                                                                                |

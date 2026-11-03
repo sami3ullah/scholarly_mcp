@@ -77,6 +77,9 @@ importers:
       '@scholarly-mcp/search':
         specifier: workspace:*
         version: link:../../packages/search
+      '@scholarly-mcp/store-postgres':
+        specifier: workspace:*
+        version: link:../../packages/store-postgres
       '@scholarly-mcp/store-sqlite':
         specifier: workspace:*
         version: link:../../packages/store-sqlite
@@ -108,6 +111,9 @@ importers:
       '@scholarly-mcp/source-europepmc':
         specifier: workspace:*
         version: link:../../packages/source-europepmc
+      '@scholarly-mcp/store-postgres':
+        specifier: workspace:*
+        version: link:../../packages/store-postgres
       '@scholarly-mcp/store-sqlite':
         specifier: workspace:*
         version: link:../../packages/store-sqlite
@@ -230,6 +236,9 @@ importers:
       '@scholarly-mcp/search':
         specifier: workspace:*
         version: link:../../packages/search
+      '@scholarly-mcp/store-postgres':
+        specifier: workspace:*
+        version: link:../../packages/store-postgres
       '@scholarly-mcp/store-sqlite':
         specifier: workspace:*
         version: link:../../packages/store-sqlite

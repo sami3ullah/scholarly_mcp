@@ -2,7 +2,12 @@ import { existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { appError, type Article, type Source } from '@scholarly-mcp/core';
-import { buildPathOf, openDatabase, openIndexReader } from '@scholarly-mcp/store-sqlite';
+import {
+  buildPathOf,
+  createSqliteIndexStorage,
+  openDatabase,
+  openIndexReader,
+} from '@scholarly-mcp/store-sqlite';
 import {
   createFakeClock,
   createInMemoryEnricher,
@@ -38,7 +43,7 @@ describe('ingestIndex on SQLite files', () => {
   });
 
   const deps = (articles: readonly Article[] | Source): IngestIndexDeps => ({
-    indexPath,
+    storage: createSqliteIndexStorage(indexPath),
     fullRunDays: 7,
     source: Array.isArray(articles)
       ? createInMemorySource({ articles, name: 'crossref', pageSize: 3 })
@@ -57,10 +62,13 @@ describe('ingestIndex on SQLite files', () => {
     expect(second).toMatchObject({ plan: { kind: 'incremental' }, committed: true });
     expect(second.report).toMatchObject({ fetched: 7, unchanged: 7, written: 0 });
 
-    expect((await verifyLiveIndex(indexPath, embedder.modelVersion, signal)).ok).toBe(true);
-    const reader = openIndexReader(indexPath, embedder.modelVersion);
+    expect(
+      (await verifyLiveIndex(createSqliteIndexStorage(indexPath), embedder.modelVersion, signal))
+        .ok,
+    ).toBe(true);
+    const reader = await openIndexReader(indexPath, embedder.modelVersion, signal);
     expect(reader.meta()).toMatchObject({ articleCount: 7, chunkCount: 7 });
-    reader.close();
+    await reader.close();
   });
 
   it('rebuilds in full with the new vector size when the embedding model changed', async () => {
@@ -76,10 +84,10 @@ describe('ingestIndex on SQLite files', () => {
       report: { embedded: 3, reused: 0 },
       committed: true,
     });
-    const reader = openIndexReader(indexPath, other.modelVersion);
+    const reader = await openIndexReader(indexPath, other.modelVersion, signal);
     const [chunk] = await reader.reader.findArticleChunks(article(1).doi, signal);
     expect(chunk?.embedding).toHaveLength(other.dimensions);
-    reader.close();
+    await reader.close();
   });
 
   it('reuses the live embeddings on a full rebuild of unchanged articles', async () => {
@@ -109,9 +117,9 @@ describe('ingestIndex on SQLite files', () => {
     const shrunk = await ingestIndex('full', deps(numbered(5)), signal);
     expect(shrunk.committed).toBe(false);
     expect(existsSync(buildPathOf(indexPath))).toBe(false);
-    const reader = openIndexReader(indexPath, embedder.modelVersion);
+    const reader = await openIndexReader(indexPath, embedder.modelVersion, signal);
     expect(reader.meta().articleCount).toBe(10);
-    reader.close();
+    await reader.close();
   });
 
   it('keeps a failed build and resumes it on the next run', async () => {
@@ -140,7 +148,9 @@ describe('ingestIndex on SQLite files', () => {
   });
 
   it('fails verify on a missing index without creating one', async () => {
-    await expect(verifyLiveIndex(indexPath, embedder.modelVersion, signal)).rejects.toThrow();
+    await expect(
+      verifyLiveIndex(createSqliteIndexStorage(indexPath), embedder.modelVersion, signal),
+    ).rejects.toThrow();
     expect(existsSync(indexPath)).toBe(false);
   });
 
@@ -149,7 +159,7 @@ describe('ingestIndex on SQLite files', () => {
     const purgeDeps = (
       allowlist: readonly string[] = ['https://creativecommons.org/licenses/by/4.0/'],
     ) => ({
-      indexPath,
+      storage: createSqliteIndexStorage(indexPath),
       allowlist,
       model: { version: embedder.modelVersion, dimensions: embedder.dimensions },
       clock: createFakeClock(),
@@ -201,9 +211,10 @@ describe('ingestIndex on SQLite files', () => {
   });
 
   describe('extractSubset', () => {
+    const subsetPath = () => join(dir, 'subset.sqlite');
     const subsetDeps = () => ({
-      sourcePath: indexPath,
-      indexPath: join(dir, 'subset.sqlite'),
+      source: createSqliteIndexStorage(indexPath),
+      target: createSqliteIndexStorage(subsetPath()),
       model: { version: embedder.modelVersion, dimensions: embedder.dimensions },
       clock: createFakeClock(),
       logger: createTestLogger(),
@@ -219,11 +230,11 @@ describe('ingestIndex on SQLite files', () => {
       expect(outcome.verify).toMatchObject({ ok: true, articleCount: 2 });
       expect(embedder.calls()).toBe(before);
 
-      const subset = openIndexReader(subsetDeps().indexPath, embedder.modelVersion);
+      const subset = await openIndexReader(subsetPath(), embedder.modelVersion, signal);
       expect(subset.meta()).toMatchObject({ articleCount: 2 });
       const found = await subset.reader.findManyByDoi([one, three], signal);
       expect(found.map(({ doi }) => doi).sort()).toEqual([one, three].sort());
-      subset.close();
+      await subset.close();
     });
 
     it('refuses a source index built with another model', async () => {
@@ -235,14 +246,15 @@ describe('ingestIndex on SQLite files', () => {
           signal,
         ),
       ).rejects.toMatchObject({ code: 'INVALID_INPUT' });
-      expect(existsSync(subsetDeps().indexPath)).toBe(false);
+      expect(existsSync(subsetPath())).toBe(false);
     });
   });
 
   describe('reembedIndex', () => {
+    const reembeddedPath = () => join(dir, 'reembedded.sqlite');
     const reembedDeps = (model = otherModelEmbedder()) => ({
-      sourcePath: indexPath,
-      indexPath: join(dir, 'reembedded.sqlite'),
+      source: createSqliteIndexStorage(indexPath),
+      target: createSqliteIndexStorage(reembeddedPath()),
       embedder: model,
       clock: createFakeClock(),
       logger: createTestLogger(),
@@ -255,8 +267,8 @@ describe('ingestIndex on SQLite files', () => {
       expect(outcome).toMatchObject({ written: 4, kept: 0, chunks: 4, committed: true });
       expect(outcome.verify.ok).toBe(true);
 
-      const source = openIndexReader(indexPath, embedder.modelVersion);
-      const copy = openIndexReader(deps2.indexPath, deps2.embedder.modelVersion);
+      const source = await openIndexReader(indexPath, embedder.modelVersion, signal);
+      const copy = await openIndexReader(reembeddedPath(), deps2.embedder.modelVersion, signal);
       const [before] = await source.reader.findArticleChunks(article(2).doi, signal);
       const [after] = await copy.reader.findArticleChunks(article(2).doi, signal);
       expect(after).toMatchObject({
@@ -266,8 +278,8 @@ describe('ingestIndex on SQLite files', () => {
       });
       expect(after?.embedding).toHaveLength(deps2.embedder.dimensions);
       expect(deps2.embedder.texts()).toContain(`${article(2).title}\n\n${before?.text ?? ''}`);
-      source.close();
-      copy.close();
+      await source.close();
+      await copy.close();
     });
 
     it('keeps the articles an interrupted run already re-embedded', async () => {

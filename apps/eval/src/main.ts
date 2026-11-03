@@ -2,7 +2,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
-import { parseConfig, type Clock } from '@scholarly-mcp/core';
+import { parseConfig, storeConfigSchema, type Clock, type IndexReader } from '@scholarly-mcp/core';
 import {
   embedderConfigSchema,
   embeddingModelOf,
@@ -15,6 +15,11 @@ import {
   searchOptionsFrom,
   type SearchService,
 } from '@scholarly-mcp/search';
+import {
+  createPool,
+  openPostgresIndexReader,
+  postgresConfigSchema,
+} from '@scholarly-mcp/store-postgres';
 import { openIndexReader, sqliteConfigSchema } from '@scholarly-mcp/store-sqlite';
 import { benchCases } from './bench/bench-cases.js';
 import { formatOutcomes } from './bench/format-outcomes.js';
@@ -42,7 +47,8 @@ const DOI_CASES = 3;
 /**
  * The composition root of the evaluation tools (PLAN.md "Backend conventions"): opens the
  * live index read-only with the real embedder and search service, as the server will, with
- * the embedding cache off so each search pays for its embedding.
+ * the embedding cache off so each search pays for its embedding. `STORE` picks the SQLite
+ * file or the live Postgres build (ADR 0034), so both stores are scored the same way.
  * `bench` times every search end to end; exit 1 when p95 is over budget or a search failed.
  * `golden` scores the golden set (recall@10, MRR, nDCG@10). With `--baseline` it exits 1
  * when any score dropped below the committed baseline (run it on the eval index, ADR 0026),
@@ -83,6 +89,7 @@ async function main(argv: readonly string[]): Promise<number> {
   const config = parseConfig(
     embedderConfigSchema
       .extend(loggingConfigSchema.shape)
+      .extend(storeConfigSchema.shape)
       .extend(sqliteConfigSchema.shape)
       .extend(searchConfigSchema.shape),
     process.env,
@@ -94,7 +101,7 @@ async function main(argv: readonly string[]): Promise<number> {
   });
   const clock: Clock = { now: () => new Date() };
   const signal = new AbortController().signal;
-  const index = openIndexReader(config.INDEX_PATH, embeddingModelOf(config).version);
+  const { index, close } = await openIndex(config, embeddingModelOf(config).version, signal);
   try {
     const embedder = await loadOnnxEmbedder(config);
     const service = createSearchService({
@@ -149,7 +156,39 @@ async function main(argv: readonly string[]): Promise<number> {
     }
     return await bench(service, { rounds, maxP95, show: values.show }, index.meta(), signal);
   } finally {
-    index.close();
+    await close();
+  }
+}
+
+/** The live index of the store `STORE` picks, and how to let go of it. */
+async function openIndex(
+  config: { readonly STORE: 'sqlite' | 'postgres'; readonly INDEX_PATH: string },
+  modelVersion: string,
+  signal: AbortSignal,
+): Promise<{ readonly index: IndexReader; readonly close: () => Promise<void> }> {
+  if (config.STORE === 'sqlite') {
+    const index = await openIndexReader(config.INDEX_PATH, modelVersion, signal);
+    return { index, close: () => index.close() };
+  }
+  const postgres = parseConfig(postgresConfigSchema, process.env);
+  const pool = createPool({
+    url: postgres.DATABASE_URL,
+    max: 2,
+    statementTimeoutMs: postgres.PG_STATEMENT_TIMEOUT_MS,
+    applicationName: 'scholarly-mcp-eval',
+  });
+  try {
+    const index = await openPostgresIndexReader(pool, modelVersion, signal);
+    return {
+      index,
+      close: async () => {
+        await index.close();
+        await pool.end();
+      },
+    };
+  } catch (error) {
+    await pool.end();
+    throw error;
   }
 }
 
