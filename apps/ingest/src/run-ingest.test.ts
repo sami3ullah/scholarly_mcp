@@ -125,6 +125,42 @@ describe('runIngest', () => {
     expect(embedder.calls()).toBe(before);
   });
 
+  describe('when only what chunks do not hold changed', () => {
+    const previousWith = async (indexed: Article): Promise<RecordLookup> => {
+      const old = createInMemoryArticleStore();
+      await runIngest({ ...deps(source([indexed])), writer: old }, 'full', signal);
+      return {
+        findRecord: async (doi, s) => {
+          const found = await old.findByDoi(doi, s);
+          return found && { article: found, chunks: await old.findChunks([`${doi}#0`], s) };
+        },
+      };
+    };
+    const rehashed = (changes: Partial<Article>) =>
+      ({ ...article(1), ...changes, contentHash: 'f'.repeat(64) }) satisfies Article;
+
+    it('reuses the chunks when citation fields or subjects changed', async () => {
+      const previous = await previousWith(article(1));
+      const before = embedder.calls();
+      const changed = rehashed({
+        volume: '35',
+        pages: 'e1-e9',
+        subjects: [{ label: 'Hematology', origin: 'journal' }],
+      });
+      const report = await runIngest(deps(source([changed]), { previous }), 'full', signal);
+      expect(report).toMatchObject({ reused: 1, embedded: 0, written: 1 });
+      expect(embedder.calls()).toBe(before);
+      expect((await store.findByDoi(changed.doi, signal))?.volume).toBe('35');
+    });
+
+    it('embeds again when the text the chunks are made of changed', async () => {
+      const previous = await previousWith(article(1));
+      const changed = rehashed({ abstract: 'A different abstract about anticoagulation.' });
+      const report = await runIngest(deps(source([changed]), { previous }), 'full', signal);
+      expect(report).toMatchObject({ reused: 0, embedded: 1 });
+    });
+  });
+
   it('marks the run failed and keeps its cursor when a page fails, then resumes there', async () => {
     const articles = [1, 2, 3, 4].map((n) => article(n));
     let failOnce = true;

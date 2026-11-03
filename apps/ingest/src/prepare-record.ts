@@ -42,9 +42,10 @@ export type Prepared = (
 
 /**
  * Turns an article into a record ready to upsert (PLAN.md "Phase 2"). It is skipped when the
- * index already holds the same content, and reuses the chunks of `previous` when they hold
- * the same content embedded by the same model, so a full rebuild neither re-embeds the
- * corpus nor fetches full text again. Otherwise the referenced full text is fetched; when it
+ * index already holds the same content, and reuses the chunks of `previous` when they were
+ * made from the same text and embedded by the same model, so a full rebuild neither
+ * re-embeds the corpus nor fetches full text again, even when only metadata the chunks do
+ * not hold changed, such as citation fields or subjects. Otherwise the referenced full text is fetched; when it
  * is missing or unusable the reference is dropped and both checks run again, so an article
  * whose text never arrives is not re-indexed on every run. Then it is chunked and embedded,
  * full-text sections as matching-only chunks under the reference's licence (ADR 0003).
@@ -84,13 +85,32 @@ async function settledAs(
   const known = await deps.previous?.findRecord(article.doi, signal);
   if (
     known !== undefined &&
-    known.article.contentHash === article.contentHash &&
+    sameChunkInputs(known.article, article) &&
     known.chunks.length > 0 &&
     known.chunks.every((chunk) => chunk.modelVersion === deps.embedder.modelVersion)
   ) {
     return { kind: 'reused', record: { article, chunks: known.chunks } };
   }
   return undefined;
+}
+
+/**
+ * Whether two versions of an article make the same chunks: what {@link embedRecord} chunks is
+ * the title, subtitle and abstract (`articleSections`), the language, and the text the
+ * full-text reference names, which its revision pins.
+ */
+function sameChunkInputs(known: Article, next: Article): boolean {
+  if (known.contentHash === next.contentHash) return true;
+  return (
+    known.title === next.title &&
+    known.subtitle === next.subtitle &&
+    known.abstract === next.abstract &&
+    known.language === next.language &&
+    known.fullText?.source === next.fullText?.source &&
+    known.fullText?.id === next.fullText?.id &&
+    known.fullText?.licenseUrl === next.fullText?.licenseUrl &&
+    known.fullText?.revision === next.fullText?.revision
+  );
 }
 
 async function embedRecord(
