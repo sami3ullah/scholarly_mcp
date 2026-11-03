@@ -62,6 +62,8 @@ COPY --from=index --chown=nonroot:nonroot / /data/
 # set HTTP_ALLOWED_HOSTS to the hostname clients use in a deployment. The landing API has
 # its own port, on loopback until LANDING_API_HOST and LANDING_API_SECRET open it (ADR 0038).
 # SCHOLARLY_PRESET applies presets/<name>.env under explicit settings; empty turns it off.
+# AUTH_MODE names an auth mode, not a secret (Trivy matches "AUTH" in the name).
+# trivy:ignore:DS-0031
 ENV NODE_ENV=production \
     SCHOLARLY_PRESET=thieme \
     AUTH_MODE=api-key \
