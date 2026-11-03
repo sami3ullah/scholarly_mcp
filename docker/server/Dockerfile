@@ -7,6 +7,31 @@
 
 ARG NODE_IMAGE=node:24.22.2-trixie-slim
 ARG RUNTIME_IMAGE=gcr.io/distroless/nodejs24-debian13:nonroot
+ARG SQLITE_VEC_VERSION=0.1.9
+
+# sqlite-vec with its SIMD kernels (ADR 0042): upstream turns NEON and AVX on only for its
+# macOS builds, so the npm package's Linux vec0.so scans vectors with scalar code. This is
+# the same release, from its checksummed amalgamation, compiled with them on. NEON is part
+# of every arm64 CPU; AVX is in every x86-64 server CPU since 2011. The NEON int8 kernels
+# pass signed vectors to unsigned intrinsics, which clang allows and GCC only with
+# -flax-vector-conversions (the bits are the same: absolute differences).
+FROM ${NODE_IMAGE} AS sqlite-vec
+ARG TARGETARCH
+ARG SQLITE_VEC_VERSION
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends gcc libc6-dev libsqlite3-dev \
+ && rm -rf /var/lib/apt/lists/*
+ADD --checksum=sha256:3acd67cb4aff080c7050926fd3cf8227905fe5b7ee3829d8ee5024ab1283cf61 \
+    https://github.com/asg017/sqlite-vec/releases/download/v${SQLITE_VEC_VERSION}/sqlite-vec-${SQLITE_VEC_VERSION}-amalgamation.tar.gz \
+    /src/amalgamation.tar.gz
+WORKDIR /src
+RUN tar xzf amalgamation.tar.gz \
+ && case "$TARGETARCH" in \
+      amd64) simd="-mavx -DSQLITE_VEC_ENABLE_AVX" ;; \
+      arm64) simd="-DSQLITE_VEC_ENABLE_NEON -flax-vector-conversions" ;; \
+      *) echo "Unsupported architecture: $TARGETARCH" >&2; exit 1 ;; \
+    esac \
+ && gcc -fPIC -shared -O3 -Wall -Wextra $simd sqlite-vec.c -o vec0.so -lm
 
 FROM ${NODE_IMAGE} AS build
 ARG TARGETARCH
@@ -28,6 +53,9 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
  && pnpm install --offline --frozen-lockfile --prod \
       --filter "@scholarly-mcp/server..." --filter "@scholarly-mcp/ingest..."
 RUN sh docker/server/prune.sh "$TARGETARCH"
+ARG SQLITE_VEC_VERSION
+RUN --mount=type=bind,from=sqlite-vec,source=/src/vec0.so,target=/tmp/vec0.so \
+    sh docker/server/sqlite-vec.sh "$TARGETARCH" "$SQLITE_VEC_VERSION" /tmp/vec0.so
 ENV EMBEDDER_CACHE_DIR=/out/models
 RUN cp docker/server/fetch-model.mjs apps/server/ && node apps/server/fetch-model.mjs
 RUN mkdir -p /out/app \
