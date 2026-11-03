@@ -1,5 +1,6 @@
 import {
   LANDING_AUTHOR_LIMIT,
+  doiUrl,
   type Article,
   type LandingArticle,
   type LandingArticleSummary,
@@ -39,9 +40,4 @@ export function landingArticle(article: Article, now: Date): LandingArticle {
     articleUrl: article.landingUrl,
     doiUrl: doiUrl(article.doi),
   };
-}
-
-/** The doi.org link, with `#` and `?` escaped so they stay part of the DOI. */
-export function doiUrl(doi: string): string {
-  return `https://doi.org/${encodeURI(doi).replace(/[#?]/g, encodeURIComponent)}`;
 }

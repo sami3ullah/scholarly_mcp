@@ -1,7 +1,7 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { canonicalDoiSchema, doiSchema, normalizeDoi } from './doi.js';
+import { canonicalDoiSchema, doiSchema, doiUrl, normalizeDoi } from './doi.js';
 
 const doiArb = fc
   .tuple(
@@ -89,5 +89,14 @@ describe('canonicalDoiSchema', () => {
 
   it('can be written as JSON Schema for tool outputs', () => {
     expect(() => z.toJSONSchema(canonicalDoiSchema, { io: 'output' })).not.toThrow();
+  });
+});
+
+describe('doiUrl', () => {
+  it('links to doi.org and keeps # and ? inside the DOI', () => {
+    expect(doiUrl(doiSchema.parse('10.1055/a-1234'))).toBe('https://doi.org/10.1055/a-1234');
+    expect(doiUrl(doiSchema.parse('10.1002/(sici)1#2?x'))).toBe(
+      'https://doi.org/10.1002/(sici)1%232%3Fx',
+    );
   });
 });

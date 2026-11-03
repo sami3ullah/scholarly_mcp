@@ -2,7 +2,7 @@ export { accessStatusSchema, type AccessStatus } from './access/access-status.js
 export { activeLicense } from './article/active-license.js';
 export { articleSchema, type Article } from './article/article.js';
 export { authorSchema, type Author } from './article/author.js';
-export { canonicalDoiSchema, doiSchema, normalizeDoi, type Doi } from './article/doi.js';
+export { canonicalDoiSchema, doiSchema, doiUrl, normalizeDoi, type Doi } from './article/doi.js';
 export { enrichArticle, withoutFullText } from './article/enrich-article.js';
 export { fullTextRefSchema, type FullTextRef } from './article/full-text-ref.js';
 export { hashArticleContent, type ArticleContent } from './article/hash-article-content.js';

@@ -32,3 +32,11 @@ export const doiSchema = z.string().transform((value, ctx): Doi => {
 export const canonicalDoiSchema = z.string().refine((value) => normalizeDoi(value) === value, {
   message: 'Expected a lowercase DOI without prefix, such as 10.1055/a-1234-5678',
 });
+
+/**
+ * The doi.org link for a DOI, the fallback that keeps resolving when a publisher page moves
+ * (PLAN.md links and landing pages). `#` and `?` are escaped so they stay part of the DOI.
+ */
+export function doiUrl(doi: Doi): string {
+  return `https://doi.org/${encodeURI(doi).replace(/[#?]/g, encodeURIComponent)}`;
+}
