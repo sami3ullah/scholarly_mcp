@@ -30,6 +30,16 @@ const MIGRATIONS: readonly string[] = [
      exported_at TEXT
    ) STRICT;
    CREATE INDEX usage_events_pending ON usage_events (occurred_at) WHERE exported_at IS NULL;`,
+  // SM-10: API keys, stored as SHA-256 hashes of their secrets; exported events age out.
+  `CREATE TABLE api_keys (
+     id TEXT PRIMARY KEY,
+     label TEXT NOT NULL,
+     secret_hash TEXT NOT NULL,
+     institution_id TEXT,
+     created_at TEXT NOT NULL,
+     revoked_at TEXT
+   ) STRICT;
+   CREATE INDEX usage_events_exported ON usage_events (exported_at) WHERE exported_at IS NOT NULL;`,
 ];
 
 /** Brings a runtime database up to the latest schema; safe to call on every start. */

@@ -55,6 +55,14 @@ export {
   fulltextConfigSchema,
   type FulltextConfig,
 } from './config/fulltext-config.js';
+export {
+  API_KEY_PREFIX,
+  apiKeyIdSchema,
+  apiKeySchema,
+  parseApiKey,
+  type ApiKey,
+  type ApiKeyId,
+} from './auth/api-key.js';
 export { landingConfigSchema, type LandingConfig } from './config/landing-config.js';
 export { parseConfig, type Env } from './config/parse-config.js';
 export { appError, isAppError, type AppError, type AppErrorDetails } from './errors/app-error.js';
@@ -74,7 +82,12 @@ export {
 } from './journal/journal-summary.js';
 export { mergeJournalTallies, type JournalTally } from './journal/merge-journal-tallies.js';
 export { toolNameSchema, type ToolName } from './metering/tool-name.js';
-export { usageEventSchema, type UsageEvent } from './metering/usage-event.js';
+export {
+  usageEventSchema,
+  usageStatusSchema,
+  type UsageEvent,
+  type UsageStatus,
+} from './metering/usage-event.js';
 export type { ArticleEnricher, Enrichment } from './ports/article-enricher.js';
 export type { ArticleReader } from './ports/article-reader.js';
 export type {
@@ -85,6 +98,7 @@ export type {
   VectorQuery,
 } from './ports/article-search.js';
 export type { ArticleRecord, ArticleWriter } from './ports/article-writer.js';
+export type { ApiKeyStore } from './ports/api-key-store.js';
 export type { Clock } from './ports/clock.js';
 export type { Embedder } from './ports/embedder.js';
 export type { AccessDecision, Caller, Entitlements } from './ports/entitlements.js';
@@ -95,6 +109,7 @@ export type { RandomToken } from './ports/random-token.js';
 export type { SessionStore } from './ports/session-store.js';
 export type { Source, SourcePage, SourceRequest } from './ports/source.js';
 export type { SyncStateStore } from './ports/sync-state-store.js';
+export type { UsageOutbox } from './ports/usage-outbox.js';
 export {
   INCREMENTAL_OVERLAP_MS,
   incrementalWindow,

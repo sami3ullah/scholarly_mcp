@@ -32,3 +32,10 @@ describe('usageEventSchema', () => {
     expect(parsed).not.toHaveProperty('query');
   });
 });
+
+describe('usage status', () => {
+  it('accepts INTERNAL for an unexpected failure, not billable', () => {
+    const event = { ...ok, status: 'INTERNAL', billable: false };
+    expect(usageEventSchema.safeParse(event).success).toBe(true);
+  });
+});

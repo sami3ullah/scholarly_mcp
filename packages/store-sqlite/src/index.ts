@@ -23,3 +23,5 @@ export { openDatabase, type Db } from './database/open-database.js';
 export { openIndexReader, type IndexReader } from './open-index-reader.js';
 export { openRuntimeDatabase } from './open-runtime-database.js';
 export { createSqliteSessionStore } from './sessions/create-sqlite-session-store.js';
+export { createSqliteApiKeyStore } from './auth/create-sqlite-api-key-store.js';
+export { createSqliteUsageOutbox } from './metering/create-sqlite-usage-outbox.js';
