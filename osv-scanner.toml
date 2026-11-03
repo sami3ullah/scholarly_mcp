@@ -1,0 +1,23 @@
+# Advisories osv-scanner reports in pnpm-lock.yaml that do not reach the images (SM-14).
+# Each is in a development tool only (`pnpm why -r --prod <package>` finds nothing), so it
+# never runs on untrusted input. Each ignore expires, so the advisory is looked at again.
+
+[[IgnoredVulns]]
+id = "GHSA-c475-qrg2-pj4r"
+ignoreUntil = 2027-02-01
+reason = "basic-ftp via @lhci/cli (Lighthouse CI, dev only); no FTP listings are parsed"
+
+[[IgnoredVulns]]
+id = "GHSA-3g3m-2fjr-6pw4"
+ignoreUntil = 2027-02-01
+reason = "glob via @lhci/cli and testcontainers (dev only); globs only the repository"
+
+[[IgnoredVulns]]
+id = "GHSA-g3hv-75wg-m249"
+ignoreUntil = 2027-02-01
+reason = "minimatch via eslint and its plugins (dev only); patterns come from our own config"
+
+[[IgnoredVulns]]
+id = "GHSA-w5hq-g745-h8pq"
+ignoreUntil = 2027-02-01
+reason = "uuid 8 via autocannon and @lhci/cli (dev only); no v3/v5/v6 calls with a buffer"

@@ -54,10 +54,13 @@ describe('the card view in an MCP Apps host', () => {
 
   async function hostPage() {
     const page = await browser.newPage();
+    // Our own view and host script, quoted for srcdoc and an inline script in a test page.
+    // nosemgrep: javascript.audit.detect-replaceall-sanitization.detect-replaceall-sanitization
     const view = cardViewHtml({ publisher: 'Thieme' })
       .replaceAll('&', '&amp;')
       .replaceAll('"', '&quot;');
     await page.setContent(
+      // nosemgrep: javascript.lang.security.audit.unknown-value-with-script-tag.unknown-value-with-script-tag
       `<!doctype html><html><body><iframe id="view" sandbox="allow-scripts" srcdoc="${view}" style="width:600px;height:800px"></iframe><script>${hostScript.replaceAll('</script', '<\\/script')}</script></body></html>`,
     );
     await page.evaluate(() => (globalThis as unknown as { ready: Promise<void> }).ready);

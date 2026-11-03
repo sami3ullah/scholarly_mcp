@@ -6,3 +6,9 @@ onlyBuiltDependencies:
   - onnxruntime-node
   - protobufjs
   - sharp
+# Supply chain (SM-14): new releases wait a week before they can be installed, a package
+# whose publishing evidence got weaker than in an earlier version is refused, and transitive
+# dependencies may come only from the registry.
+minimumReleaseAge: 10080
+trustPolicy: no-downgrade
+blockExoticSubdeps: true
