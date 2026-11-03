@@ -7,6 +7,7 @@ import {
 import { createFakeClock, createTestLogger } from '@scholarly-mcp/testkit';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createHttpHandler } from '../http/create-http-handler.js';
+import { createMemoryBucketStore } from '../limits/create-memory-bucket-store.js';
 import { createRateLimiter } from '../limits/create-rate-limiter.js';
 import { createMetrics } from '../telemetry/create-metrics.js';
 import { doi, startHarness, type Harness } from '../testing/server-harness.js';
@@ -42,6 +43,9 @@ async function api(options: { secret?: string; burst?: number; session?: Landing
       pages: harness.landingPages,
       referrals: harness.referrals,
       limiter: createRateLimiter({
+        store: createMemoryBucketStore(),
+        name: 'landing',
+        logger: createTestLogger(),
         perMinute: 60,
         burst: options.burst ?? 100,
         clock: createFakeClock(created),

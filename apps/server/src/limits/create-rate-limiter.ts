@@ -1,47 +1,54 @@
-import { appError, type Clock } from '@scholarly-mcp/core';
-import { isFull, takeToken, type Bucket, type BucketPolicy } from './token-bucket.js';
+import {
+  appError,
+  refillMs,
+  type BucketPolicy,
+  type Clock,
+  type Logger,
+  type RateBucketStore,
+} from '@scholarly-mcp/core';
 
-/** Allows or refuses one tool call per caller. */
+/** Allows or refuses one call per caller. */
 export interface RateLimiter {
-  /** Throws `RATE_LIMITED` with `retryAfterSeconds` when the caller's bucket is empty. */
-  take(callerId: string): void;
+  /** Rejects with `RATE_LIMITED` and `retryAfterSeconds` when the caller's bucket is empty. */
+  take(callerId: string, signal: AbortSignal): Promise<void>;
+  /** Forgets this limiter's buckets that have been idle long enough to be full again. */
+  sweep(signal: AbortSignal): Promise<number>;
 }
 
 export interface RateLimiterDeps extends BucketPolicy {
+  readonly store: RateBucketStore;
+  /** Keeps this limiter's buckets apart from another's in a shared store, e.g. `tools`. */
+  readonly name: string;
   readonly clock: Clock;
-  /** Buckets kept before full ones are swept; protects memory from many key ids. */
-  readonly maxBuckets?: number;
+  readonly logger: Logger;
 }
 
 /**
- * One token bucket per caller, in this process's memory. Several server processes each
- * allow the full rate; a shared limit would need a shared store (ADR 0031).
+ * One token bucket per caller, kept in `store`: this process's memory, or Postgres so that
+ * several replicas share one limit (ADR 0031, ADR 0036). When the store cannot answer, the
+ * call is allowed and a warning logged: the limit protects capacity, it is not access
+ * control, and the call itself will meet the same outage.
  */
 export function createRateLimiter(deps: RateLimiterDeps): RateLimiter {
-  const buckets = new Map<string, Bucket>();
-  const maxBuckets = deps.maxBuckets ?? 10_000;
-
-  const sweep = (now: number) => {
-    for (const [id, bucket] of buckets) if (isFull(bucket, now, deps)) buckets.delete(id);
-    // Still too many active callers: forget the oldest; they start with a full bucket.
-    for (const id of buckets.keys()) {
-      if (buckets.size <= maxBuckets) break;
-      buckets.delete(id);
-    }
-  };
-
+  const prefix = `${deps.name}:`;
   return {
-    take: (callerId) => {
-      const now = deps.clock.now().getTime();
-      const result = takeToken(buckets.get(callerId), now, deps);
-      buckets.delete(callerId);
-      buckets.set(callerId, result.bucket);
-      if (buckets.size > maxBuckets) sweep(now);
-      if (!result.allowed) {
-        throw appError('RATE_LIMITED', 'Too many requests for this API key; retry later', {
-          retryAfterSeconds: result.retryAfterSeconds,
+    take: async (callerId, signal) => {
+      let take;
+      try {
+        take = await deps.store.take(`${prefix}${callerId}`, deps, deps.clock.now(), signal);
+      } catch (error) {
+        deps.logger.warn({ err: error, limiter: deps.name }, 'Rate limit store failed; allowing');
+        return;
+      }
+      if (!take.allowed) {
+        throw appError('RATE_LIMITED', 'Too many requests; retry later', {
+          retryAfterSeconds: take.retryAfterSeconds,
         });
       }
+    },
+    sweep: (signal) => {
+      const before = new Date(deps.clock.now().getTime() - refillMs(deps));
+      return deps.store.sweep(prefix, before, signal);
     },
   };
 }

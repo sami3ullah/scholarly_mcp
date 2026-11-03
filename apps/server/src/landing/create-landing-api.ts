@@ -144,7 +144,7 @@ export function createLandingApi(deps: LandingApiDeps): LandingApi {
         VISITOR_MAX_LENGTH,
       );
       try {
-        deps.limiter.take(`landing:${visitor}`);
+        await deps.limiter.take(visitor, request.signal);
       } catch (error) {
         const retryAfter = isAppError(error) ? error.retryAfterSeconds : undefined;
         return json(

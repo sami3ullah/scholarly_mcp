@@ -19,6 +19,7 @@ export {
   type IndexStorageUnderTest,
 } from './contracts/index-storage-contract.js';
 export { runUsageOutboxContract } from './contracts/usage-outbox-contract.js';
+export { runRateBucketStoreContract } from './contracts/rate-bucket-store-contract.js';
 export { runSessionStoreContract } from './contracts/session-store-contract.js';
 export { runSourceContract, type SourceContractOptions } from './contracts/source-contract.js';
 export { runSyncStateStoreContract } from './contracts/sync-state-store-contract.js';

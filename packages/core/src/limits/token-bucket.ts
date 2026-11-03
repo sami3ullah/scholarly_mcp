@@ -4,7 +4,7 @@ export interface Bucket {
   readonly updatedAt: number;
 }
 
-/** Refill rate and size of every bucket. */
+/** Refill rate and size of a bucket. */
 export interface BucketPolicy {
   readonly perMinute: number;
   readonly burst: number;
@@ -18,7 +18,8 @@ export type Take =
 /**
  * Takes one token from a bucket that refills `perMinute` tokens a minute up to `burst`
  * (PLAN.md: per-key token bucket). A missing bucket starts full. When empty, the answer
- * says how many whole seconds until the next token. Pure, so time is passed in.
+ * says how many whole seconds until the next token. Pure, so time is passed in. The
+ * Postgres bucket store does the same sums in SQL.
  */
 export function takeToken(bucket: Bucket | undefined, now: number, policy: BucketPolicy): Take {
   const perMs = policy.perMinute / 60_000;
@@ -29,13 +30,17 @@ export function takeToken(bucket: Bucket | undefined, now: number, policy: Bucke
   return {
     allowed: false,
     bucket: { tokens, updatedAt: now },
-    retryAfterSeconds: Math.max(1, Math.ceil((1 - tokens) / perMs / 1000)),
+    retryAfterSeconds: retryAfterSeconds(tokens, policy),
   };
 }
 
-/** Whether a bucket has refilled completely, so forgetting it changes nothing. */
-export function isFull(bucket: Bucket, now: number, policy: BucketPolicy): boolean {
-  const refilled =
-    bucket.tokens + Math.max(0, now - bucket.updatedAt) * (policy.perMinute / 60_000);
-  return refilled >= policy.burst;
+/** Whole seconds until a bucket holding `tokens` (fewer than one) has a token; at least 1. */
+export function retryAfterSeconds(tokens: number, policy: BucketPolicy): number {
+  const perMs = policy.perMinute / 60_000;
+  return Math.max(1, Math.ceil((1 - tokens) / perMs / 1000));
+}
+
+/** How long an empty bucket takes to refill completely; idle longer, it can be forgotten. */
+export function refillMs(policy: BucketPolicy): number {
+  return Math.ceil((policy.burst / policy.perMinute) * 60_000);
 }

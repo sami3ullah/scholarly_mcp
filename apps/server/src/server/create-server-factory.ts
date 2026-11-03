@@ -123,7 +123,7 @@ async function runTool(
   let cardsByJournal: JournalCardCount[] = [];
   let result: CallToolResult;
   try {
-    deps.limiter.take(call.caller.apiKeyId);
+    await deps.limiter.take(call.caller.apiKeyId, call.signal);
     const input: unknown = tool.input.parse(args ?? {});
     const reply = await tool.run(input, { signal: call.signal, caller: call.caller, logger });
     resultCount = reply.resultCount;

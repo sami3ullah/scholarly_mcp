@@ -69,6 +69,15 @@ const MIGRATIONS: readonly string[] = [
    CREATE EXTENSION IF NOT EXISTS pg_trgm;`,
   // The live funnel pages through all stored events by time (ADR 0035).
   `CREATE INDEX usage_events_by_time ON scholarly.usage_events (occurred_at, id);`,
+  // Rate-limit buckets shared by server replicas (ADR 0036). Unlogged: losing them in a
+  // crash only refills every bucket.
+  `CREATE UNLOGGED TABLE scholarly.rate_buckets (
+     id text COLLATE "C" PRIMARY KEY,
+     tokens double precision NOT NULL,
+     updated_at timestamptz NOT NULL,
+     allowed boolean NOT NULL
+   );
+   CREATE INDEX rate_buckets_by_update ON scholarly.rate_buckets (updated_at);`,
 ];
 
 /** The schema version this code needs. */
@@ -120,9 +129,9 @@ export async function assertMigrated(pool: Pool, signal: AbortSignal): Promise<v
 }
 
 /**
- * Gives the server's role what it needs (ADR 0034): reading and writing sessions and
- * events, reading keys and the index pointer. Index schemas get their grants when a build
- * is committed.
+ * Gives the server's role what it needs (ADR 0034): reading and writing sessions, events
+ * and rate-limit buckets, reading keys and the index pointer. Index schemas get their
+ * grants when a build is committed.
  */
 export async function grantServerRole(
   pool: Pool,
@@ -133,7 +142,8 @@ export async function grantServerRole(
   await inTransaction(pool, signal, async (client) => {
     await client.query(`GRANT USAGE ON SCHEMA scholarly TO ${to}`);
     await client.query(
-      `GRANT SELECT, INSERT, UPDATE, DELETE ON scholarly.landing_sessions, scholarly.usage_events TO ${to}`,
+      `GRANT SELECT, INSERT, UPDATE, DELETE ON scholarly.landing_sessions, scholarly.usage_events,
+         scholarly.rate_buckets TO ${to}`,
     );
     await client.query(
       `GRANT SELECT ON scholarly.api_keys, scholarly.live_index, scholarly.migrations TO ${to}`,

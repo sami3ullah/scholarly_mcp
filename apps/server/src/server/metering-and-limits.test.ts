@@ -1,7 +1,8 @@
 import { InMemorySpanExporter, SimpleSpanProcessor } from '@opentelemetry/sdk-trace';
 import type { ToolCallEvent } from '@scholarly-mcp/core';
-import { createFakeClock } from '@scholarly-mcp/testkit';
+import { createFakeClock, createTestLogger } from '@scholarly-mcp/testkit';
 import { afterEach, describe, expect, it } from 'vitest';
+import { createMemoryBucketStore } from '../limits/create-memory-bucket-store.js';
 import { createRateLimiter } from '../limits/create-rate-limiter.js';
 import { createMetrics } from '../telemetry/create-metrics.js';
 import { startTracing } from '../telemetry/create-tracing.js';
@@ -53,7 +54,16 @@ describe('every tool call is metered, limited, counted and traced', () => {
   it('answers RATE_LIMITED with retryAfter once the bucket is empty, metered as not billable', async () => {
     const clock = createFakeClock(new Date('2026-11-02T10:00:00Z'));
     harness = await startHarness({
-      overrides: { limiter: createRateLimiter({ perMinute: 6, burst: 1, clock }) },
+      overrides: {
+        limiter: createRateLimiter({
+          store: createMemoryBucketStore(),
+          name: 'tools',
+          perMinute: 6,
+          burst: 1,
+          clock,
+          logger: createTestLogger(),
+        }),
+      },
     });
     expect((await harness.call('cite', { doi: '10.1055/a-1001' })).isError).not.toBe(true);
     const limited = await harness.call('cite', { doi: '10.1055/a-1001' });

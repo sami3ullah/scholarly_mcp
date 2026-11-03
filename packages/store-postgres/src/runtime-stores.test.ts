@@ -1,5 +1,6 @@
 import {
   runApiKeyStoreContract,
+  runRateBucketStoreContract,
   runSessionStoreContract,
   runUsageOutboxContract,
 } from '@scholarly-mcp/testkit';
@@ -10,6 +11,7 @@ import {
   assertMigrated,
   migrateDatabase,
 } from './database/runtime-schema.js';
+import { createPostgresBucketStore } from './limits/create-postgres-bucket-store.js';
 import { createPostgresUsageOutbox } from './metering/create-postgres-usage-outbox.js';
 import { createPostgresSessionStore } from './sessions/create-postgres-session-store.js';
 import { freshPool } from './testing/fresh-database.js';
@@ -30,6 +32,9 @@ runApiKeyStoreContract('Postgres API key store', async () =>
 );
 runUsageOutboxContract('Postgres usage outbox', async () =>
   createPostgresUsageOutbox(await migratedPool()),
+);
+runRateBucketStoreContract('Postgres bucket store', async () =>
+  createPostgresBucketStore(await migratedPool()),
 );
 
 describe('runtime migrations', () => {

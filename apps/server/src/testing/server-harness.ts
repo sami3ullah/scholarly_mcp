@@ -27,6 +27,7 @@ import { createApp, type AppDeps } from '../create-app.js';
 import type { LandingPages } from '../landing/create-landing-pages.js';
 import type { Referrals } from '../landing/create-referrals.js';
 import type { HttpHandler } from '../http/create-http-handler.js';
+import { createMemoryBucketStore } from '../limits/create-memory-bucket-store.js';
 import { createRateLimiter } from '../limits/create-rate-limiter.js';
 import { createOutboxMeter } from '../metering/create-outbox-meter.js';
 
@@ -209,7 +210,14 @@ export async function startHarness(options: HarnessOptions = {}): Promise<Harnes
     publisher: 'Thieme',
     journalUrlTemplate: 'https://journals.example.org/issn/{issn}',
     version: '0.0.0-test',
-    limiter: createRateLimiter({ perMinute: 60_000, burst: 1000, clock }),
+    limiter: createRateLimiter({
+      store: createMemoryBucketStore(),
+      name: 'tools',
+      perMinute: 60_000,
+      burst: 1000,
+      clock,
+      logger: createTestLogger(),
+    }),
     meter,
     eventId: () => `event-${String((events += 1))}`,
     ...options.overrides,

@@ -3,15 +3,18 @@ import { dirname } from 'node:path';
 import type {
   ApiKeyStore,
   IndexReader,
+  RateBucketStore,
   SessionStore,
   StoreConfig,
   UsageOutbox,
 } from '@scholarly-mcp/core';
 import type { FunnelStore } from '../funnel/run-funnel-command.js';
+import { createMemoryBucketStore } from '../limits/create-memory-bucket-store.js';
 import {
   assertMigrated,
   createPool,
   createPostgresApiKeyStore,
+  createPostgresBucketStore,
   createPostgresSessionStore,
   createPostgresUsageOutbox,
   openPostgresIndexReader,
@@ -43,13 +46,18 @@ export function storeSelectionFrom(
     : { store: 'sqlite', config: sqlite };
 }
 
-/** What the server keeps outside the process: the index, sessions, the outbox and keys. */
+/**
+ * What the server keeps outside the process: the index, sessions, the outbox, keys and,
+ * on Postgres, rate-limit buckets shared by replicas (ADR 0036). With SQLite there is one
+ * process, so its buckets stay in memory.
+ */
 export interface ServerStores {
   /** Opens the live index for `createLiveIndex`; rejects with `INDEX_UNAVAILABLE` meanwhile. */
   openIndex(signal: AbortSignal): Promise<IndexReader>;
   readonly sessions: SessionStore;
   readonly outbox: UsageOutbox;
   readonly keys: ApiKeyStore;
+  readonly buckets: RateBucketStore;
   close(): Promise<void>;
 }
 
@@ -71,6 +79,7 @@ export async function openServerStores(
       sessions: createSqliteSessionStore(db),
       outbox: createSqliteUsageOutbox(db),
       keys: createSqliteApiKeyStore(db),
+      buckets: createMemoryBucketStore(),
       close() {
         db.close();
         return Promise.resolve();
@@ -84,6 +93,7 @@ export async function openServerStores(
     sessions: createPostgresSessionStore(pool),
     outbox: createPostgresUsageOutbox(pool),
     keys: createPostgresApiKeyStore(pool),
+    buckets: createPostgresBucketStore(pool),
     close: () => pool.end(),
   };
 }

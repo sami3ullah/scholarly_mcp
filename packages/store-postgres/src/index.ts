@@ -22,5 +22,6 @@ export {
 export { readLiveIndex, type LiveIndex } from './build/live-index.js';
 export { verifyPostgresIndex, type PostgresVerifyOptions } from './build/verify-index.js';
 export { createPostgresApiKeyStore } from './auth/create-postgres-api-key-store.js';
+export { createPostgresBucketStore } from './limits/create-postgres-bucket-store.js';
 export { createPostgresSessionStore } from './sessions/create-postgres-session-store.js';
 export { createPostgresUsageOutbox } from './metering/create-postgres-usage-outbox.js';

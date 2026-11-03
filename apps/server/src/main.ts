@@ -41,6 +41,8 @@ import { startTracing } from './telemetry/create-tracing.js';
 import { MAX_BODY_BYTES, serveHttp, type HttpServer } from './transports/serve-http.js';
 
 const LOCAL_HOSTS = ['localhost', '127.0.0.1', '[::1]'];
+/** How often idle rate-limit buckets are forgotten (ADR 0036). */
+const BUCKET_SWEEP_MS = 60_000;
 const clock: Clock = { now: () => new Date() };
 
 /**
@@ -133,6 +135,22 @@ async function serve(config: ServerConfig, selection: StoreSelection): Promise<v
   );
   const { sessions, outbox } = stores;
   const index = createLiveIndex((signal) => stores.openIndex(signal), logger);
+  const toolLimiter = createRateLimiter({
+    store: stores.buckets,
+    name: 'tools',
+    perMinute: config.RATE_LIMIT_PER_MINUTE,
+    burst: config.RATE_LIMIT_BURST,
+    clock,
+    logger,
+  });
+  const landingLimiter = createRateLimiter({
+    store: stores.buckets,
+    name: 'landing',
+    perMinute: config.LANDING_RATE_LIMIT_PER_MINUTE,
+    burst: config.LANDING_RATE_LIMIT_BURST,
+    clock,
+    logger,
+  });
   await index.refresh();
 
   const sinks: UsageSink[] = [createJsonlSink(config.METER_JSONL_PATH)];
@@ -184,17 +202,20 @@ async function serve(config: ServerConfig, selection: StoreSelection): Promise<v
     }),
     searchOptions: searchOptionsFrom(config),
     version,
-    limiter: createRateLimiter({
-      perMinute: config.RATE_LIMIT_PER_MINUTE,
-      burst: config.RATE_LIMIT_BURST,
-      clock,
-    }),
+    limiter: toolLimiter,
     meter,
     eventId: randomUUID,
     metrics,
   });
 
   const timers = [
+    setInterval(() => {
+      for (const limiter of [toolLimiter, landingLimiter]) {
+        limiter.sweep(AbortSignal.timeout(10_000)).catch((error: unknown) => {
+          logger.warn({ err: error }, 'Idle rate-limit buckets not swept');
+        });
+      }
+    }, BUCKET_SWEEP_MS),
     setInterval(() => {
       void index.refresh().then(() => {
         metrics.indexReady.set(index.isReady() ? 1 : 0);
@@ -219,11 +240,7 @@ async function serve(config: ServerConfig, selection: StoreSelection): Promise<v
   const landing = createLandingApi({
     pages: landingPages,
     referrals,
-    limiter: createRateLimiter({
-      perMinute: config.LANDING_RATE_LIMIT_PER_MINUTE,
-      burst: config.LANDING_RATE_LIMIT_BURST,
-      clock,
-    }),
+    limiter: landingLimiter,
     ...(config.LANDING_API_SECRET !== undefined && { secret: config.LANDING_API_SECRET }),
     metrics,
   });

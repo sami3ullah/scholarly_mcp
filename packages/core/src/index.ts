@@ -106,6 +106,14 @@ export {
 export { LANDING_PATH, buildLandingUrl, type LandingLink } from './landing/landing-url.js';
 export { tokenSchema, type Token } from './landing/token.js';
 export {
+  refillMs,
+  retryAfterSeconds,
+  takeToken,
+  type Bucket,
+  type BucketPolicy,
+  type Take,
+} from './limits/token-bucket.js';
+export {
   JOURNAL_SUBJECT_LIMIT,
   journalSummarySchema,
   type JournalSummary,
@@ -170,6 +178,7 @@ export type { JournalDirectory } from './ports/journal-directory.js';
 export type { LogFields, Logger } from './ports/logger.js';
 export type { Meter } from './ports/meter.js';
 export type { RandomToken } from './ports/random-token.js';
+export type { BucketTake, RateBucketStore } from './ports/rate-bucket-store.js';
 export type { SessionStore } from './ports/session-store.js';
 export type { Source, SourcePage, SourceRequest } from './ports/source.js';
 export type { SyncStateStore } from './ports/sync-state-store.js';
