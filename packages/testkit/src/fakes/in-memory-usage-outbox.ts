@@ -1,4 +1,4 @@
-import type { UsageEvent, UsageOutbox } from '@scholarly-mcp/core';
+import type { UsageEvent, UsageEventQuery, UsageOutbox } from '@scholarly-mcp/core';
 import { settle } from './settle.js';
 
 /** An in-memory outbox that also exposes every stored event for assertions. */
@@ -12,7 +12,7 @@ export function createInMemoryUsageOutbox(): InMemoryUsageOutbox {
   const leases = new Map<string, Date>();
   const ordered = () =>
     [...events.values()].sort(
-      (a, b) => a.occurredAt.getTime() - b.occurredAt.getTime() || a.id.localeCompare(b.id),
+      (a, b) => a.occurredAt.getTime() - b.occurredAt.getTime() || compare(a.id, b.id),
     );
   const pending = () => ordered().filter((event) => event.exportedAt === undefined);
   return {
@@ -49,6 +49,28 @@ export function createInMemoryUsageOutbox(): InMemoryUsageOutbox {
         for (const event of old) events.delete(event.id);
         return old.length;
       }),
+    list: (query, signal) =>
+      settle(signal, () =>
+        ordered()
+          .filter((event) => listed(query, event))
+          .slice(0, Math.max(0, query.limit)),
+      ),
     all: ordered,
   };
+}
+
+function listed(query: UsageEventQuery, event: UsageEvent): boolean {
+  const at = event.occurredAt.getTime();
+  if (query.from !== undefined && at < query.from.getTime()) return false;
+  if (query.to !== undefined && at >= query.to.getTime()) return false;
+  if (query.apiKeyId !== undefined && event.apiKeyId !== query.apiKeyId) return false;
+  const { after } = query;
+  if (after === undefined) return true;
+  const since = after.occurredAt.getTime();
+  return at > since || (at === since && compare(event.id, after.id) > 0);
+}
+
+/** Byte order, as the stores sort ids. */
+function compare(a: string, b: string): number {
+  return a < b ? -1 : a > b ? 1 : 0;
 }

@@ -85,12 +85,26 @@ type Mutable<T> = { -readonly [K in keyof T]: T[K] };
 
 const noSteps = (): Steps => ({ searches: 0, cardsShown: 0, visits: 0, actions: 0 });
 
+/** Counts the funnel one event at a time, so a source can stream its events through it. */
+export interface FunnelCounter {
+  add(event: UsageEvent): void;
+  /** The funnel over the events added so far. */
+  result(): Funnel;
+}
+
 /**
  * Counts the funnel: searches, then cards shown per journal, then landing visits, then next
  * actions. Events are deduped by id, because exporters deliver at least once. Pure, so the
  * report's numbers can be checked against recorded events.
  */
 export function computeFunnel(events: Iterable<UsageEvent>, options: FunnelOptions = {}): Funnel {
+  const counter = createFunnelCounter(options);
+  for (const event of events) counter.add(event);
+  return counter.result();
+}
+
+/** The counter behind `computeFunnel`; it keeps every counted id to dedupe. */
+export function createFunnelCounter(options: FunnelOptions = {}): FunnelCounter {
   const seen = new Set<string>();
   let duplicates = 0;
   let first: Date | undefined;
@@ -112,11 +126,11 @@ export function computeFunnel(events: Iterable<UsageEvent>, options: FunnelOptio
     getOrAdd(days, event.occurredAt.toISOString().slice(0, 10), noSteps)[step] += by;
   };
 
-  for (const event of events) {
-    if (!covers(options, event)) continue;
+  const add = (event: UsageEvent) => {
+    if (!covers(options, event)) return;
     if (seen.has(event.id)) {
       duplicates += 1;
-      continue;
+      return;
     }
     seen.add(event.id);
     if (first === undefined || event.occurredAt < first) first = event.occurredAt;
@@ -149,9 +163,9 @@ export function computeFunnel(events: Iterable<UsageEvent>, options: FunnelOptio
         bump(event, 'actions');
         break;
     }
-  }
+  };
 
-  return {
+  const result = (): Funnel => ({
     period: first === undefined || last === undefined ? undefined : { first, last },
     events: seen.size,
     duplicates,
@@ -179,7 +193,9 @@ export function computeFunnel(events: Iterable<UsageEvent>, options: FunnelOptio
     byDay: [...days]
       .map(([day, row]) => ({ day, ...row }))
       .sort((a, b) => a.day.localeCompare(b.day)),
-  };
+  });
+
+  return { add, result };
 }
 
 function covers(options: FunnelOptions, event: UsageEvent): boolean {

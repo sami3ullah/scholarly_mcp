@@ -1,5 +1,17 @@
 import type { UsageEvent } from '../metering/usage-event.js';
 
+/** Which stored events `list` returns, a page at a time. */
+export interface UsageEventQuery {
+  /** Inclusive. */
+  readonly from?: Date;
+  /** Exclusive. */
+  readonly to?: Date;
+  readonly apiKeyId?: string;
+  /** The last event of the previous page; this page starts after it. */
+  readonly after?: { readonly occurredAt: Date; readonly id: string };
+  readonly limit: number;
+}
+
 /**
  * The durable metering outbox (PLAN.md: metering). Events wait here until every exporter
  * has taken them, so an exporter outage loses nothing. Several exporters may share one
@@ -21,4 +33,10 @@ export interface UsageOutbox {
   countPending(signal: AbortSignal): Promise<number>;
   /** Deletes events exported before `before`; returns how many. Pending events stay. */
   deleteExported(before: Date, signal: AbortSignal): Promise<number>;
+  /**
+   * Up to `limit` stored events, exported or not, in `(occurredAt, id)` order with ids in
+   * byte order, for read-only views such as the live funnel (ADR 0035). Leases are neither
+   * taken nor honoured. Exported events are only here until `deleteExported` removes them.
+   */
+  list(query: UsageEventQuery, signal: AbortSignal): Promise<UsageEvent[]>;
 }

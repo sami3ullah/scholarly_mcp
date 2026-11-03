@@ -2,6 +2,7 @@ import {
   doiSchema,
   type ToolCallEvent,
   type UsageEvent,
+  type UsageEventQuery,
   type UsageOutbox,
 } from '@scholarly-mcp/core';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -137,6 +138,47 @@ export function runUsageOutboxContract(
       await outbox.markExported(['e1'], NOW, signal);
       expect(await claim(10, new Date(NOW.getTime() + LEASE_MS))).toEqual([]);
       expect(await outbox.countPending(signal)).toBe(0);
+    });
+
+    it('lists stored events, exported or claimed, by time then id, within the filters', async () => {
+      const other = anEvent('e4', 3, { apiKeyId: 'key_bbbbbbbbbbbb' });
+      await outbox.append(anEvent('e3', 2), signal);
+      await outbox.append(other, signal);
+      await outbox.append(anEvent('e1', 0), signal);
+      await outbox.append(anEvent('e2', 1), signal);
+      const exportedAt = new Date('2026-11-03T11:00:00Z');
+      await outbox.markExported(['e1'], exportedAt, signal);
+      await claim(1);
+
+      expect(await outbox.list({ limit: 10 }, signal)).toEqual([
+        { ...anEvent('e1', 0), exportedAt },
+        anEvent('e2', 1),
+        anEvent('e3', 2),
+        other,
+      ]);
+      const ids = async (query: Omit<UsageEventQuery, 'limit'>) =>
+        (await outbox.list({ ...query, limit: 10 }, signal)).map(({ id }) => id);
+      expect(
+        await ids({
+          from: new Date(Date.UTC(2026, 10, 3, 10, 1)),
+          to: new Date(Date.UTC(2026, 10, 3, 10, 3)),
+        }),
+      ).toEqual(['e2', 'e3']);
+      expect(await ids({ apiKeyId: 'key_bbbbbbbbbbbb' })).toEqual(['e4']);
+      expect(await outbox.countPending(signal)).toBe(3);
+    });
+
+    it('pages after the last event, breaking time ties by id in byte order', async () => {
+      // Upper case sorts before lower case in byte order, as in base64url ids.
+      for (const id of ['b', 'B', 'a', 'A_', 'c']) await outbox.append(anEvent(id, 0), signal);
+      await outbox.append(anEvent('0', 1), signal);
+      const first = await outbox.list({ limit: 2 }, signal);
+      expect(first.map(({ id }) => id)).toEqual(['A_', 'B']);
+      const last = first.at(-1);
+      if (last === undefined) throw new Error('empty page');
+      const rest = await outbox.list({ after: last, limit: 10 }, signal);
+      expect(rest.map(({ id }) => id)).toEqual(['a', 'b', 'c', '0']);
+      expect(await outbox.list({ after: last, limit: 0 }, signal)).toEqual([]);
     });
 
     it('rejects when the caller has already aborted', async () => {

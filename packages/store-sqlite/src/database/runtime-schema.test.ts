@@ -21,7 +21,7 @@ describe('runtime database migrations', () => {
     first.close();
 
     const db = openRuntimeDatabase(path);
-    expect(db.pragma('user_version', { simple: true })).toBe(4);
+    expect(db.pragma('user_version', { simple: true })).toBe(5);
     expect(db.prepare('SELECT count(*) AS n FROM api_keys').get()).toEqual({ n: 0 });
     const signal = new AbortController().signal;
     const now = new Date('2026-11-03T12:00:00Z');
@@ -41,6 +41,6 @@ describe('runtime database migrations', () => {
       },
     ]);
     db.close();
-    expect(openRuntimeDatabase(path).pragma('user_version', { simple: true })).toBe(4);
+    expect(openRuntimeDatabase(path).pragma('user_version', { simple: true })).toBe(5);
   });
 });

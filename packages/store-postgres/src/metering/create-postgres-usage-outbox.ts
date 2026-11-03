@@ -80,6 +80,27 @@ export function createPostgresUsageOutbox(pool: Pool): UsageOutbox {
       );
       return result.rowCount ?? 0;
     },
+    list: async (filters, signal) => {
+      const { rows } = await query<UsageRow>(
+        pool,
+        signal,
+        `SELECT * FROM scholarly.usage_events
+         WHERE ($1::timestamptz IS NULL OR occurred_at >= $1)
+           AND ($2::timestamptz IS NULL OR occurred_at < $2)
+           AND ($3::text IS NULL OR api_key_id = $3)
+           AND ($4::timestamptz IS NULL OR (occurred_at, id) > ($4, $5::text COLLATE "C"))
+         ORDER BY occurred_at, id LIMIT $6`,
+        [
+          filters.from ?? null,
+          filters.to ?? null,
+          filters.apiKeyId ?? null,
+          filters.after?.occurredAt ?? null,
+          filters.after?.id ?? null,
+          Math.max(0, filters.limit),
+        ],
+      );
+      return rows.map(eventFromRow);
+    },
   };
 }
 

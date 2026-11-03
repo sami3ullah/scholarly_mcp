@@ -107,7 +107,9 @@ export { mergeJournalTallies, type JournalTally } from './journal/merge-journal-
 export { toolNameSchema, type ToolName } from './metering/tool-name.js';
 export {
   computeFunnel,
+  createFunnelCounter,
   type Funnel,
+  type FunnelCounter,
   type FunnelClientRow,
   type FunnelDayRow,
   type FunnelJournalRow,
@@ -133,6 +135,7 @@ export {
   type UsageStatus,
 } from './metering/usage-event.js';
 export { parseWireEvent, toWireEvent, type WireEvent } from './metering/wire-event.js';
+export { readUsageEvents } from './metering/read-usage-events.js';
 export type { ArticleEnricher, Enrichment } from './ports/article-enricher.js';
 export type { ArticleReader } from './ports/article-reader.js';
 export type {
@@ -163,7 +166,7 @@ export type { RandomToken } from './ports/random-token.js';
 export type { SessionStore } from './ports/session-store.js';
 export type { Source, SourcePage, SourceRequest } from './ports/source.js';
 export type { SyncStateStore } from './ports/sync-state-store.js';
-export type { UsageOutbox } from './ports/usage-outbox.js';
+export type { UsageEventQuery, UsageOutbox } from './ports/usage-outbox.js';
 export {
   INCREMENTAL_OVERLAP_MS,
   incrementalWindow,

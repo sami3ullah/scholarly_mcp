@@ -67,6 +67,8 @@ const MIGRATIONS: readonly string[] = [
   // profile creates both up front, so this is then a no-op.
   `CREATE EXTENSION IF NOT EXISTS vector;
    CREATE EXTENSION IF NOT EXISTS pg_trgm;`,
+  // The live funnel pages through all stored events by time (ADR 0035).
+  `CREATE INDEX usage_events_by_time ON scholarly.usage_events (occurred_at, id);`,
 ];
 
 /** The schema version this code needs. */

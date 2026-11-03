@@ -2,6 +2,15 @@ import { usageEventSchema, type UsageEvent, type UsageOutbox } from '@scholarly-
 import type { Db } from '../database/open-database.js';
 import { withSignal } from '../with-signal.js';
 
+interface ListParams {
+  readonly from: string | null;
+  readonly to: string | null;
+  readonly key: string | null;
+  readonly after: string | null;
+  readonly afterId: string | null;
+  readonly limit: number;
+}
+
 interface UsageRow {
   readonly id: string;
   readonly kind: string;
@@ -43,6 +52,15 @@ export function createSqliteUsageOutbox(db: Db): UsageOutbox {
   const prune = db.prepare(
     'DELETE FROM usage_events WHERE exported_at IS NOT NULL AND exported_at < ?',
   );
+  // Keyset paging on (occurred_at, id); each bound is skipped when its parameter is NULL.
+  const list = db.prepare<[ListParams], UsageRow>(
+    `SELECT * FROM usage_events
+     WHERE (@from IS NULL OR occurred_at >= @from)
+       AND (@to IS NULL OR occurred_at < @to)
+       AND (@key IS NULL OR api_key_id = @key)
+       AND (@after IS NULL OR occurred_at > @after OR (occurred_at = @after AND id > @afterId))
+     ORDER BY occurred_at, id LIMIT @limit`,
+  );
   const markAll = db.transaction((ids: readonly string[], at: string) => {
     for (const id of ids) mark.run(at, id);
   });
@@ -72,6 +90,19 @@ export function createSqliteUsageOutbox(db: Db): UsageOutbox {
     countPending: (signal) => withSignal(signal, () => count.get()?.n ?? 0),
     deleteExported: (before, signal) =>
       withSignal(signal, () => prune.run(before.toISOString()).changes),
+    list: (query, signal) =>
+      withSignal(signal, () =>
+        list
+          .all({
+            from: query.from?.toISOString() ?? null,
+            to: query.to?.toISOString() ?? null,
+            key: query.apiKeyId ?? null,
+            after: query.after?.occurredAt.toISOString() ?? null,
+            afterId: query.after?.id ?? null,
+            limit: Math.max(0, query.limit),
+          })
+          .map(eventFromRow),
+      ),
   };
 }
 

@@ -64,6 +64,8 @@ const MIGRATIONS: readonly string[] = [
    CREATE INDEX usage_events_exported ON usage_events (exported_at) WHERE exported_at IS NOT NULL;`,
   // SM-13 (ADR 0034): exporters claim events for a lease, so two never send the same batch.
   `ALTER TABLE usage_events ADD COLUMN claimed_until TEXT;`,
+  // SM-13 (ADR 0035): the live funnel pages through all stored events by time.
+  `CREATE INDEX usage_events_by_time ON usage_events (occurred_at, id);`,
 ];
 
 /** Brings a runtime database up to the latest schema; safe to call on every start. */
