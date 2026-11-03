@@ -8,7 +8,7 @@ import {
 } from '@scholarly-mcp/core';
 import { toJsonWithDates } from '../database/json-with-dates.js';
 import type { Db } from '../database/open-database.js';
-import { stemmedText } from '../text/terms.js';
+import { stemmedText } from '@scholarly-mcp/lexical';
 import { vectorBlob } from './rows.js';
 
 /** Writes and removes article records. Callers run each call inside one transaction. */

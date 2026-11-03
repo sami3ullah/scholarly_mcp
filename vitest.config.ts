@@ -11,6 +11,7 @@ export default defineConfig({
         'packages/cite/src/**',
         'packages/card-view/src/**/*.ts',
         'packages/logger/src/**',
+        'packages/lexical/src/**',
         'packages/http/src/**',
         'packages/source-*/src/**',
         'packages/embedder-*/src/**',

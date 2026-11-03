@@ -1,7 +1,8 @@
 import type { ArticleSearch, Doi, RankedChunk, SearchFilters } from '@scholarly-mcp/core';
 import { vectorBlob } from '../articles/rows.js';
 import type { Db } from '../database/open-database.js';
-import { hasStemAtWordEdge, mainMatch, trigramMatch, trigramStems } from '../text/fts-match.js';
+import { hasStemAtWordEdge, trigramStems } from '@scholarly-mcp/lexical';
+import { mainMatch, trigramMatch } from '../text/fts-match.js';
 import { withSignal } from '../with-signal.js';
 import { filterSql } from './filter-sql.js';
 

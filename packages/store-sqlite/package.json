@@ -15,8 +15,8 @@
   },
   "dependencies": {
     "@scholarly-mcp/core": "workspace:*",
+    "@scholarly-mcp/lexical": "workspace:*",
     "better-sqlite3": "^13.0.3",
-    "snowball-stemmers": "^0.6.0",
     "sqlite-vec": "^0.1.9",
     "zod": "^4.6.7"
   },

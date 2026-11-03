@@ -51,6 +51,13 @@ module.exports = {
       to: { pathNot: ['^packages/(core|search)/', 'node_modules/zod'] },
     },
     {
+      name: 'lexical-only-core',
+      comment: 'folding and stemming shared by the stores: core and snowball-stemmers only',
+      severity: 'error',
+      from: { path: '^packages/lexical/src', pathNot: '\\.test\\.ts$' },
+      to: { pathNot: ['^packages/(core|lexical)/', 'node_modules/snowball-stemmers'] },
+    },
+    {
       name: 'cite-only-core',
       comment:
         'citations are pure formatting: core, zod and citation-js only, no adapters, apps or testkit',
