@@ -16,17 +16,18 @@ pnpm build
 
 The server reads environment variables, validated at boot ([server README](../../apps/server/README.md#configuration)). The minimum is `LANDING_BASE_URL`. The Thieme preset (`presets/thieme.env`) sets it to the reference landing app, `http://localhost:3000`, and sets `PUBLISHER_NAME=Thieme`.
 
-| Variable               | Default               | Meaning                                                       |
-| ---------------------- | --------------------- | ------------------------------------------------------------- |
-| `MCP_TRANSPORT`        | `stdio`               | `stdio` for a local client, `http` for Streamable HTTP        |
-| `HTTP_HOST`            | `127.0.0.1`           | Loopback only until API keys and `Origin` checks land (SM-10) |
-| `HTTP_PORT`            | `8080`                | HTTP port; the endpoint is `/mcp`                             |
-| `INDEX_PATH`           | `data/index.sqlite`   | The index the ingest builds; reopened when a new build lands  |
-| `RUNTIME_DB_PATH`      | `data/runtime.sqlite` | Landing sessions; created when missing                        |
-| `EMBEDDER_CACHE_DIR`   | the library default   | Where the model is cached, e.g. `.cache/models`               |
-| `LANDING_BASE_URL`     | required              | Where card links point                                        |
-| `PUBLISHER_NAME`       | `the publisher`       | Named in descriptions and the notice                          |
-| `JOURNAL_URL_TEMPLATE` | unset                 | Journal page link with `{issn}`; no journal links without it  |
+| Variable               | Default               | Meaning                                                                                                 |
+| ---------------------- | --------------------- | ------------------------------------------------------------------------------------------------------- |
+| `MCP_TRANSPORT`        | `stdio`               | `stdio` for a local client, `http` for Streamable HTTP                                                  |
+| `HTTP_HOST`            | `127.0.0.1`           | Beyond loopback needs `AUTH_MODE` and `HTTP_ALLOWED_HOSTS` ([operating guide](operating-the-server.md)) |
+| `HTTP_PORT`            | `8080`                | HTTP port; the endpoint is `/mcp`                                                                       |
+| `INDEX_PATH`           | `data/index.sqlite`   | The index the ingest builds; reopened when a new build lands                                            |
+| `RUNTIME_DB_PATH`      | `data/runtime.sqlite` | Landing sessions, API keys and the usage outbox; created when missing                                   |
+| `AUTH_MODE`            | `none`                | `none`, `api-key` or `oauth` for HTTP ([operating guide](operating-the-server.md))                      |
+| `EMBEDDER_CACHE_DIR`   | the library default   | Where the model is cached, e.g. `.cache/models`                                                         |
+| `LANDING_BASE_URL`     | required              | Where card links point                                                                                  |
+| `PUBLISHER_NAME`       | `the publisher`       | Named in descriptions and the notice                                                                    |
+| `JOURNAL_URL_TEMPLATE` | unset                 | Journal page link with `{issn}`; no journal links without it                                            |
 
 ## Claude Desktop (stdio)
 
@@ -86,7 +87,7 @@ MCP_TRANSPORT=http EMBEDDER_CACHE_DIR=.cache/models \
   node --env-file=presets/thieme.env apps/server/dist/main.js
 ```
 
-The HTTP endpoint accepts only local `Host` and `Origin` headers, so it is safe from DNS rebinding while it has no API keys.
+By default the HTTP endpoint accepts only local `Host` and `Origin` headers and no auth (`AUTH_MODE=none`), which config allows on loopback only. To require API keys or OAuth, expose it beyond this machine, or meter usage, see [Operating the server](operating-the-server.md).
 
 ## What to expect
 

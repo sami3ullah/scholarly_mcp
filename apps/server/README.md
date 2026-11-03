@@ -19,7 +19,13 @@ Every response has a `notice` and a plain-text rendering for clients without str
 | -------------------------- | ---------------------------------------------------------------------------------- |
 | `tools/`                   | One file per tool, the shared schemas, text rendering and the single error mapping |
 | `server/`                  | The `McpServer` factory: registration, argument parsing, per-call logs             |
-| `transports/`              | Streamable HTTP at `/mcp` with `Host` and `Origin` guards                          |
+| `http/`                    | Routes: `/mcp` behind `Host`, `Origin` and auth checks, health, metrics, metadata  |
+| `transports/`              | The Node HTTP server: limits, in-flight tracking and draining                      |
+| `auth/`                    | API key and OAuth JWT verifiers, the caller carried in `AuthInfo`                  |
+| `limits/`                  | Per-caller token bucket                                                            |
+| `metering/`                | Outbox meter, exporter with backoff, JSON-lines and webhook sinks                  |
+| `telemetry/`               | Prometheus metrics and OpenTelemetry tracing                                       |
+| `keys/`                    | The `keys create`, `list` and `revoke` command                                     |
 | `journals/`                | Journal catalog cached per index version, name and ISSN matching                   |
 | `landing/`                 | Landing sessions and links                                                         |
 | `access/`                  | Card access badge and licence, mock entitlements                                   |
@@ -28,8 +34,8 @@ Every response has a `notice` and a plain-text rendering for clients without str
 
 ## Configuration
 
-`MCP_TRANSPORT`, `HTTP_HOST`, `HTTP_PORT`, `PUBLISHER_NAME`, `JOURNAL_URL_TEMPLATE`, `INDEX_REFRESH_MS` (30 s), `SESSION_CLEANUP_MS` (1 h), plus everything from the [embedder](../../packages/embedder-onnx/README.md), the [SQLite store](../../packages/store-sqlite/README.md), the [search service](../../packages/search/README.md), `LANDING_BASE_URL` and `LOG_LEVEL`. See the [guide](../../docs/guides/connecting-clients.md#configuration) for defaults.
+`MCP_TRANSPORT`, `HTTP_HOST`, `HTTP_PORT`, `HTTP_ALLOWED_HOSTS`, `HTTP_ALLOWED_ORIGINS`, `SHUTDOWN_TIMEOUT_MS`, `PUBLISHER_NAME`, `JOURNAL_URL_TEMPLATE`, `INDEX_REFRESH_MS` (30 s), `SESSION_CLEANUP_MS` (1 h), plus everything from the [embedder](../../packages/embedder-onnx/README.md), the [SQLite store](../../packages/store-sqlite/README.md), the [search service](../../packages/search/README.md), `LANDING_BASE_URL` and `LOG_LEVEL`. Auth (`AUTH_MODE`, `AUTH_CACHE_MS`, `OAUTH_*`), rate limits (`RATE_LIMIT_*`), metering (`METER_*`) and tracing (`OTEL_*`) are in the [operating guide](../../docs/guides/operating-the-server.md) ([ADR 0031](../../docs/adr/0031-auth-limits-metering-and-telemetry.md)). See the [client guide](../../docs/guides/connecting-clients.md#configuration) for defaults.
 
 ## Tests
 
-Protocol tests run the real wiring on in-memory adapters with the official SDK client, over the HTTP handler and over stdio, list the tools and call each. Other tests cover every error code, the full-text guardrail on every tool, response size, journal matching and the HTTP guards on a real port.
+Protocol tests run the real wiring on in-memory adapters with the official SDK client, over the HTTP handler and over stdio, list the tools and call each. Other tests cover every error code, the full-text guardrail on every tool, response size, journal matching the HTTP routes, guards and auth modes, API key and JWT verification, the token bucket (with a property test), metering through every outcome, exporter backoff and at-least-once delivery, webhook signatures, tracing without query text, and draining on a real port.

@@ -1,6 +1,6 @@
 # 0025 MCP server and tool rules
 
-- Status: accepted
+- Status: accepted, amended by ADR 0031 (HTTP auth replaces the loopback-only rule and the fixed local caller)
 - Date: 2026-11-02
 - Fills gaps in: PLAN.md "MCP tool contracts", "Server, protocol and operations" edge cases, key design decisions #2, #8, #11, #12 and #13, ticket SM-09
 
