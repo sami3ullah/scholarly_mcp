@@ -17,9 +17,14 @@ import {
   sqliteConfigSchema,
 } from '@scholarly-mcp/store-sqlite';
 import { httpAuthFromConfig } from './auth/http-auth-from-config.js';
-import { serverConfigSchema, type ServerConfig } from './config/server-config.js';
+import {
+  serverConfigSchema,
+  serverOwnConfigSchema,
+  type ServerConfig,
+} from './config/server-config.js';
 import { createApp } from './create-app.js';
 import { createHttpHandler, type HttpHandlerDeps } from './http/create-http-handler.js';
+import { runFunnelCommand } from './funnel/run-funnel-command.js';
 import { runKeysCommand } from './keys/run-keys-command.js';
 import { createLandingApi } from './landing/create-landing-api.js';
 import { createRateLimiter } from './limits/create-rate-limiter.js';
@@ -40,7 +45,7 @@ const clock: Clock = { now: () => new Date() };
 /**
  * The composition root (PLAN.md "Backend conventions"): reads config, creates the real
  * adapters, wires the app and serves it over stdio or Streamable HTTP. `keys …` manages
- * API keys instead. The model and the index are opened at boot; a missing index is retried
+ * API keys and `funnel …` writes the funnel report from the metering export instead. The model and the index are opened at boot; a missing index is retried
  * on every refresh tick, and tools answer `INDEX_UNAVAILABLE` meanwhile.
  */
 async function main(): Promise<void> {
@@ -57,6 +62,18 @@ async function main(): Promise<void> {
     } finally {
       db.close();
     }
+    return;
+  }
+  if (process.argv[2] === 'funnel') {
+    const { PUBLISHER_NAME } = parseConfig(
+      serverOwnConfigSchema.pick({ PUBLISHER_NAME: true }),
+      process.env,
+    );
+    process.exitCode = await runFunnelCommand(process.argv.slice(3), {
+      publisher: PUBLISHER_NAME,
+      clock,
+      out: (line) => process.stdout.write(`${line}\n`),
+    });
     return;
   }
   await serve(parseConfig(serverConfigSchema, process.env));
