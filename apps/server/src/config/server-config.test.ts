@@ -54,6 +54,30 @@ describe('serverConfigSchema', () => {
     ).toThrow(/at least 32 characters/);
   });
 
+  it('guards a landing API on its own port by where that port listens', () => {
+    const http = { ...base, MCP_TRANSPORT: 'http', AUTH_MODE: 'api-key' };
+    expect(parseConfig(serverConfigSchema, { ...http, LANDING_API_PORT: '8081' })).toMatchObject({
+      LANDING_API_HOST: '127.0.0.1',
+      LANDING_API_PORT: 8081,
+    });
+    expect(() =>
+      parseConfig(serverConfigSchema, {
+        ...http,
+        LANDING_API_HOST: '0.0.0.0',
+        LANDING_API_PORT: '8081',
+      }),
+    ).toThrow(/HTTP_ALLOWED_HOSTS[\s\S]*LANDING_API_SECRET/);
+    // A public MCP port with the landing API kept on loopback needs no landing secret.
+    expect(
+      parseConfig(serverConfigSchema, {
+        ...http,
+        HTTP_HOST: '0.0.0.0',
+        HTTP_ALLOWED_HOSTS: 'mcp.example.org',
+        LANDING_API_PORT: '8081',
+      }).LANDING_API_SECRET,
+    ).toBeUndefined();
+  });
+
   it('serves HTTP alongside stdio on request, with the same guards but no MCP auth', () => {
     expect(parseConfig(serverConfigSchema, base)).toMatchObject({
       HTTP_ALONGSIDE_STDIO: false,

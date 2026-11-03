@@ -23,7 +23,9 @@ const LOOPBACK = new Set(['127.0.0.1', '::1', 'localhost']);
  * landing API) while MCP runs on stdio, so a local client's links open a working landing
  * page. The landing API (ADR 0032) takes `LANDING_API_SECRET` as a bearer token and allows
  * `LANDING_RATE_LIMIT_PER_MINUTE` requests a minute per visitor, in bursts of
- * `LANDING_RATE_LIMIT_BURST`.
+ * `LANDING_RATE_LIMIT_BURST`. `LANDING_API_PORT` moves the landing API off the public port to
+ * its own listener on `LANDING_API_HOST`, so only the landing app's network reaches it; the
+ * public port then answers 404 below `/landing/v1/`.
  */
 export const serverOwnConfigSchema = z.object({
   MCP_TRANSPORT: z.enum(['stdio', 'http']).default('stdio'),
@@ -48,6 +50,8 @@ export const serverOwnConfigSchema = z.object({
     .optional(),
   LANDING_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().min(1).max(1_000_000).default(120),
   LANDING_RATE_LIMIT_BURST: z.coerce.number().int().min(1).max(100_000).default(30),
+  LANDING_API_HOST: z.string().min(1).default('127.0.0.1'),
+  LANDING_API_PORT: z.coerce.number().int().min(1).max(65_535).optional(),
 });
 
 /** Everything the server reads from the environment, validated at boot. */
@@ -64,6 +68,12 @@ export const serverConfigSchema = serverOwnConfigSchema
   .superRefine((config, ctx) => {
     const http = config.MCP_TRANSPORT === 'http' || config.HTTP_ALONGSIDE_STDIO;
     const exposed = http && !LOOPBACK.has(config.HTTP_HOST);
+    // Where the landing API listens: its own port when set, else the public one.
+    const landingExposed =
+      http &&
+      !LOOPBACK.has(
+        config.LANDING_API_PORT === undefined ? config.HTTP_HOST : config.LANDING_API_HOST,
+      );
     if (exposed && config.MCP_TRANSPORT === 'http' && config.AUTH_MODE === 'none') {
       ctx.addIssue({
         code: 'custom',
@@ -71,14 +81,14 @@ export const serverConfigSchema = serverOwnConfigSchema
         message: 'HTTP beyond loopback needs AUTH_MODE api-key or oauth',
       });
     }
-    if (exposed && config.HTTP_ALLOWED_HOSTS.length === 0) {
+    if ((exposed || landingExposed) && config.HTTP_ALLOWED_HOSTS.length === 0) {
       ctx.addIssue({
         code: 'custom',
         path: ['HTTP_ALLOWED_HOSTS'],
         message: 'HTTP beyond loopback needs HTTP_ALLOWED_HOSTS, the public hostnames',
       });
     }
-    if (exposed && config.LANDING_API_SECRET === undefined) {
+    if (landingExposed && config.LANDING_API_SECRET === undefined) {
       ctx.addIssue({
         code: 'custom',
         path: ['LANDING_API_SECRET'],

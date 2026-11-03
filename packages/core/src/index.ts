@@ -73,6 +73,7 @@ export {
 export { landingConfigSchema, type LandingConfig } from './config/landing-config.js';
 export { storeConfigSchema, type StoreConfig } from './config/store-config.js';
 export { parseConfig, type Env } from './config/parse-config.js';
+export { withSecretFiles } from './config/secret-files.js';
 export { appError, isAppError, type AppError, type AppErrorDetails } from './errors/app-error.js';
 export { errorCodeSchema, type ErrorCode } from './errors/error-code.js';
 export { indexMetaSchema, type IndexMeta } from './indexing/index-meta.js';

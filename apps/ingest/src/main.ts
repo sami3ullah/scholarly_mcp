@@ -6,6 +6,7 @@ import {
   fulltextConfigSchema,
   parseConfig,
   storeConfigSchema,
+  withSecretFiles,
   type Clock,
   type IndexStorage,
   type Logger,
@@ -70,6 +71,11 @@ const USAGE = `Usage:
  * run resumes it.
  */
 async function main(argv: readonly string[]): Promise<number> {
+  // `DATABASE_URL_FILE` may name a mounted secret; resolved before anything reads it.
+  Object.assign(
+    process.env,
+    withSecretFiles(process.env, ['DATABASE_URL'], (path) => readFileSync(path, 'utf8')),
+  );
   const command = argv[0];
   if (command === 'migrate') {
     if (argv.length !== 1) {

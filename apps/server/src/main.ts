@@ -3,7 +3,13 @@ import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { createMcpHandler } from '@modelcontextprotocol/server';
 import { serveStdio } from '@modelcontextprotocol/server/stdio';
-import { parseConfig, storeConfigSchema, type Clock, type Env } from '@scholarly-mcp/core';
+import {
+  parseConfig,
+  storeConfigSchema,
+  withSecretFiles,
+  type Clock,
+  type Env,
+} from '@scholarly-mcp/core';
 import { loadOnnxEmbedder } from '@scholarly-mcp/embedder-onnx';
 import { createLogger, loggingConfigSchema } from '@scholarly-mcp/logger';
 import { searchOptionsFrom } from '@scholarly-mcp/search';
@@ -45,6 +51,8 @@ const LOCAL_HOSTS = ['localhost', '127.0.0.1', '[::1]'];
 /** How often idle rate-limit buckets are forgotten (ADR 0036). */
 const BUCKET_SWEEP_MS = 60_000;
 const clock: Clock = { now: () => new Date() };
+/** Settings that may come from a mounted secret file as `<NAME>_FILE` (SM-14). */
+const SECRET_NAMES = ['LANDING_API_SECRET', 'METER_WEBHOOK_SECRET', 'DATABASE_URL'];
 
 /**
  * The composition root (PLAN.md "Backend conventions"): reads config, creates the real
@@ -56,6 +64,11 @@ const clock: Clock = { now: () => new Date() };
  * `INDEX_UNAVAILABLE` meanwhile.
  */
 async function main(): Promise<void> {
+  // Resolved once, before anything reads the environment.
+  Object.assign(
+    process.env,
+    withSecretFiles(process.env, SECRET_NAMES, (path) => readFileSync(path, 'utf8')),
+  );
   if (process.argv[2] === 'keys') {
     const store = await openKeyStore(
       storeSelectionOf(process.env, parseConfig(sqliteConfigSchema, process.env)),
@@ -247,24 +260,29 @@ async function serve(config: ServerConfig, selection: StoreSelection): Promise<v
   });
   const allowedHosts =
     config.HTTP_ALLOWED_HOSTS.length > 0 ? config.HTTP_ALLOWED_HOSTS : LOCAL_HOSTS;
+  const auth = httpAuthFromConfig(config, {
+    keys: stores.keys,
+    clock,
+    logger: logger.child({ component: 'auth' }),
+  });
+  const handlerDeps = {
+    auth,
+    allowedHosts,
+    allowedOrigins:
+      config.HTTP_ALLOWED_ORIGINS.length > 0 ? config.HTTP_ALLOWED_ORIGINS : LOCAL_HOSTS,
+    // The model is loaded before the server listens, so it is always ready here.
+    readiness: () => ({ index: index.isReady(), model: true, accepting: !stopping }),
+    metrics,
+    logger,
+  } satisfies Partial<HttpHandlerDeps>;
   const startHttp = (mcp?: HttpHandlerDeps['mcp']): Promise<HttpServer> =>
     serveHttp({
       handler: createHttpHandler({
+        ...handlerDeps,
         ...(mcp !== undefined && { mcp }),
-        landing,
-        auth: httpAuthFromConfig(config, {
-          keys: stores.keys,
-          clock,
-          logger: logger.child({ component: 'auth' }),
-        }),
-        allowedHosts,
-        allowedOrigins:
-          config.HTTP_ALLOWED_ORIGINS.length > 0 ? config.HTTP_ALLOWED_ORIGINS : LOCAL_HOSTS,
-        // The model is loaded before the server listens, so it is always ready here.
-        readiness: () => ({ index: index.isReady(), model: true, accepting: !stopping }),
-        metrics,
+        // On its own port the landing API is not served here, so the public port 404s it.
+        ...(config.LANDING_API_PORT === undefined && { landing }),
         exposeMetrics: config.METRICS_PORT === undefined,
-        logger,
       }),
       host: config.HTTP_HOST,
       port: config.HTTP_PORT,
@@ -273,6 +291,28 @@ async function serve(config: ServerConfig, selection: StoreSelection): Promise<v
         metrics.inFlight.set(count);
       },
     });
+  // Only the landing app's network reaches this listener; it serves no `/mcp` or metrics.
+  const startLandingHttp = (): Promise<HttpServer | undefined> =>
+    config.LANDING_API_PORT === undefined
+      ? Promise.resolve(undefined)
+      : serveHttp({
+          handler: createHttpHandler({ ...handlerDeps, landing, exposeMetrics: false }),
+          host: config.LANDING_API_HOST,
+          port: config.LANDING_API_PORT,
+          logger,
+          name: 'landing',
+        });
+
+  // Both or neither, so a failed landing listener does not leave the public one open.
+  const startBothHttp = async (mcp?: HttpHandlerDeps['mcp']) => {
+    const http = await startHttp(mcp);
+    try {
+      return [http, await startLandingHttp()] as const;
+    } catch (error) {
+      await http.close(0);
+      throw error;
+    }
+  };
 
   // Off the public port, so a load balancer that forwards it cannot expose the metrics.
   const metricsHttp =
@@ -294,14 +334,18 @@ async function serve(config: ServerConfig, selection: StoreSelection): Promise<v
       },
     });
     // A second local client may already hold the port; stdio keeps working without HTTP.
-    const http = config.HTTP_ALONGSIDE_STDIO
-      ? await startHttp().catch((error: unknown) => {
-          logger.warn({ err: error }, 'HTTP alongside stdio not started; landing links fail');
-          return undefined;
-        })
-      : undefined;
+    const [http, landingHttp]: readonly [HttpServer?, (HttpServer | undefined)?] =
+      config.HTTP_ALONGSIDE_STDIO
+        ? await startBothHttp().catch((error: unknown) => {
+            logger.warn({ err: error }, 'HTTP alongside stdio not started; landing links fail');
+            return [];
+          })
+        : [];
     stopTransport = async () => {
-      await http?.close(config.SHUTDOWN_TIMEOUT_MS);
+      await Promise.all([
+        http?.close(config.SHUTDOWN_TIMEOUT_MS),
+        landingHttp?.close(config.SHUTDOWN_TIMEOUT_MS),
+      ]);
       await handle.close();
     };
   } else {
@@ -311,9 +355,12 @@ async function serve(config: ServerConfig, selection: StoreSelection): Promise<v
         logger.warn({ reason: error.message }, 'MCP request rejected');
       },
     });
-    const http = await startHttp(mcp);
+    const [http, landingHttp] = await startBothHttp(mcp);
     stopTransport = async () => {
-      await http.close(config.SHUTDOWN_TIMEOUT_MS);
+      await Promise.all([
+        http.close(config.SHUTDOWN_TIMEOUT_MS),
+        landingHttp?.close(config.SHUTDOWN_TIMEOUT_MS),
+      ]);
       await mcp.close();
     };
   }
@@ -326,6 +373,7 @@ async function serve(config: ServerConfig, selection: StoreSelection): Promise<v
       ready: index.isReady(),
       tracing: tracing !== undefined,
       metricsPort: metricsHttp?.port,
+      landingApiPort: config.LANDING_API_PORT,
     },
     'Server started',
   );

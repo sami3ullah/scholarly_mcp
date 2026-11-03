@@ -1,12 +1,14 @@
 import 'server-only';
-import { parseConfig } from '@scholarly-mcp/core';
+import { readFileSync } from 'node:fs';
+import { parseConfig, withSecretFiles } from '@scholarly-mcp/core';
 import { loggingConfigSchema } from '@scholarly-mcp/logger';
 import { z } from 'zod';
 
 /**
  * The landing app's settings, validated on first use (ADR 0014). `LANDING_API_URL` is the
  * MCP server's HTTP address, `LANDING_API_SECRET` the bearer token its landing API expects
- * (required there beyond loopback), and `LANDING_API_TIMEOUT_MS` how long a page waits for it.
+ * (required there beyond loopback; or a mounted file named by `LANDING_API_SECRET_FILE`), and
+ * `LANDING_API_TIMEOUT_MS` how long a page waits for it.
  */
 export const landingEnvSchema = z
   .object({
@@ -25,6 +27,9 @@ let cached: LandingEnv | undefined;
 
 /** The validated settings; a bad value fails the first request with a clear message. */
 export function landingEnv(): LandingEnv {
-  cached ??= parseConfig(landingEnvSchema, process.env);
+  cached ??= parseConfig(
+    landingEnvSchema,
+    withSecretFiles(process.env, ['LANDING_API_SECRET'], (path) => readFileSync(path, 'utf8')),
+  );
   return cached;
 }
