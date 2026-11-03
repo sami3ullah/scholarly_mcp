@@ -159,7 +159,7 @@ services:
   # Sets x-forwarded-for from the reader's address, which the app's per-visitor limit uses.
   landing-proxy:
     profiles: [landing]
-    image: caddy:2.10.2-alpine
+    image: caddy:2.11.6-alpine
     user: '65532:65532'
     volumes:
       - ./docker/landing/Caddyfile:/etc/caddy/Caddyfile:ro
