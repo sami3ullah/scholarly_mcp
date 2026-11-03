@@ -57,22 +57,25 @@ Measured with `docker/e2e/load.sh` (autocannon, 10 connections, a fixed rate of 
 
 Full Thieme index (70,989 articles, 176,536 chunks), 60 s per run, on an Apple M4 Max under Docker Desktop, 2026-11-03:
 
-| Setup                                      | Offered/s | Served/s | p50 ms | p95 ms | p99 ms |                             Errors |
-| ------------------------------------------ | --------: | -------: | -----: | -----: | -----: | ---------------------------------: |
-| Postgres; server 2 vCPUs, Postgres 4 vCPUs |        20 |     20.0 |     74 |    299 |    377 |                                  0 |
-| Postgres; server 2 vCPUs, Postgres 2 vCPUs |        20 |     19.6 |    182 |    809 |  1,201 |                                  0 |
-| Postgres; no CPU limits                    |        20 |     19.9 |     61 |    201 |    908 |                                  0 |
-| SQLite, one container                      |         1 |      1.0 |    283 |    470 |    690 |                                  0 |
-| SQLite, one container                      |         4 |      4.0 |    625 |  1,125 |  1,376 |                                  0 |
-| SQLite, one container                      |        20 |      4.4 |  2,413 |  3,380 |  4,350 | 8 tool errors (codes not recorded) |
-| SQLite 0.1.0; 2 vCPUs                      |        20 |      4.4 |  2,338 |  3,527 |  5,043 |                       13 `TIMEOUT` |
-| SQLite, L2 scan (ADR 0040); 2 vCPUs        |        20 |     12.5 |    786 |  1,103 |  2,585 |                        5 `TIMEOUT` |
-| SQLite, L2 scan (ADR 0040); no CPU limits  |        20 |     13.0 |    780 |  1,075 |  1,567 |                                  0 |
+| Setup                                                 | Offered/s | Served/s | p50 ms | p95 ms | p99 ms |                             Errors |
+| ----------------------------------------------------- | --------: | -------: | -----: | -----: | -----: | ---------------------------------: |
+| Postgres; server 2 vCPUs, Postgres 4 vCPUs            |        20 |     20.0 |     74 |    299 |    377 |                                  0 |
+| Postgres; server 2 vCPUs, Postgres 2 vCPUs            |        20 |     19.6 |    182 |    809 |  1,201 |                                  0 |
+| Postgres; no CPU limits                               |        20 |     19.9 |     61 |    201 |    908 |                                  0 |
+| SQLite, one container                                 |         1 |      1.0 |    283 |    470 |    690 |                                  0 |
+| SQLite, one container                                 |         4 |      4.0 |    625 |  1,125 |  1,376 |                                  0 |
+| SQLite, one container                                 |        20 |      4.4 |  2,413 |  3,380 |  4,350 | 8 tool errors (codes not recorded) |
+| SQLite 0.1.0; 2 vCPUs                                 |        20 |      4.4 |  2,338 |  3,527 |  5,043 |                       13 `TIMEOUT` |
+| SQLite, L2 scan (ADR 0040); 2 vCPUs                   |        20 |     12.5 |    786 |  1,103 |  2,585 |                        5 `TIMEOUT` |
+| SQLite, L2 scan (ADR 0040); no CPU limits             |        20 |     13.0 |    780 |  1,075 |  1,567 |                                  0 |
+| SQLite, 1 search worker; 2 vCPUs                      |        20 |     12.8 |    860 |  1,023 |  1,454 |                                  0 |
+| SQLite, 2 search workers (default, ADR 0041); 2 vCPUs |        20 |     19.4 |    344 |    517 |    900 |                        1 `TIMEOUT` |
+| SQLite, 3 search workers; 2 vCPUs                     |        20 |     19.8 |    345 |    525 |    837 |                                  0 |
 
 - **Postgres meets the plan's target** (20 requests a second, p95 under 500 ms on a 2-vCPU server) when the database has 4 vCPUs. The server itself stays near 15% of one CPU at 20 calls a second; Postgres does the search work and is what to size.
-- **SQLite tops out at about 13 calls a second per container.** A search now spends about 50 ms natively and about 100 ms in the Linux image on the server's event loop (it was 200 ms, mostly the exact vector scan; [ADR 0040](adr/0040-sqlite-vector-scan-by-euclidean-distance.md)), so past that rate calls queue and some hit the 2 s search budget (`TIMEOUT`). More CPUs do not help yet: the one event loop is the limit. Fine for a trial or a pilot; use Postgres for more. [SM-17](../tickets/SM-17-sqlite-search-throughput.md) tracks raising it. `LOAD_CPUS=2` limits the server container in `load.sh`.
+- **SQLite serves about 20 calls a second on 2 vCPUs, at the edge.** A search costs about 50 ms natively and about 100 ms of CPU in the Linux image (it was 200 ms, mostly the exact vector scan; [ADR 0040](adr/0040-sqlite-vector-scan-by-euclidean-distance.md)), and runs on `SQLITE_SEARCH_WORKERS` threads (default 2) instead of the event loop ([ADR 0041](adr/0041-sqlite-search-on-worker-threads.md)). At 20 a second the 2 vCPUs are saturated and p95 sits near 500 ms; past it calls queue and some hit the 2 s search budget (`TIMEOUT`). For steady load at that rate give the server 3 vCPUs and 3 workers, or use Postgres. `LOAD_CPUS=2` limits the server container in `load.sh`, and `SQLITE_SEARCH_WORKERS` is passed on.
 - **Cold start** to ready: 1.2 to 1.9 s on the full SQLite index, about 1.8 s on the eval index.
-- **Memory:** the server holds about 560 MiB when ready (mostly the model) and 590 to 700 MiB under load on Postgres; Postgres about 250 MiB at this load. On SQLite the index file is mapped into memory (ADR 0040), and the pages it reads count as the container's file cache: about 1.3 GiB after a load run on the full index. Give a Postgres server 1 GiB and a SQLite server 1 GiB plus the index file size.
+- **Memory:** the server holds about 560 MiB when ready (mostly the model) and 590 to 700 MiB under load on Postgres; Postgres about 250 MiB at this load. On SQLite the index file is mapped into memory (ADR 0040), and the pages it reads count as the container's file cache: about 1.3 GiB after a load run on the full index, 1.4 GiB with the two search workers. Give a Postgres server 1 GiB and a SQLite server 1 GiB plus the index file size.
 
 The fuzz tests (`apps/server/src/http/http-edge.fuzz.test.ts`) and the E2E smoke test (`docker/e2e/smoke.sh`, in CI on both stores) cover correctness; these numbers cover load.
 
