@@ -11,6 +11,10 @@ async function visits(page: Page): Promise<unknown[]> {
   return (await (await page.request.get(`${STUB}/__visits`)).json()) as unknown[];
 }
 
+async function actions(page: Page): Promise<unknown[]> {
+  return (await (await page.request.get(`${STUB}/__actions`)).json()) as unknown[];
+}
+
 test.beforeEach(async ({ request }) => {
   await request.post(`${STUB}/__reset`);
 });
@@ -70,11 +74,13 @@ test.describe('a landing link from a search', () => {
 });
 
 test.describe('the referral beacon', () => {
-  test('fires once per token, not again on reload or a move to another result', async ({
+  test('fires once per result, not again on reload or a move to another result', async ({
     page,
   }) => {
     await page.goto(link(`t=${LIVE}&doi=10.5555/e2e-1&${UTM}`));
-    await expect.poll(() => visits(page)).toEqual([{ t: LIVE, tool: 'search_articles' }]);
+    await expect
+      .poll(() => visits(page))
+      .toEqual([{ t: LIVE, doi: '10.5555/e2e-1', tool: 'search_articles' }]);
     await page.reload();
     await page.getByRole('link', { name: 'Rivaroxaban dosing after falls' }).click();
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
@@ -82,6 +88,18 @@ test.describe('the referral beacon', () => {
     );
     await page.waitForTimeout(500);
     expect(await visits(page)).toHaveLength(1);
+  });
+
+  test('counts a second result opened from the chat', async ({ page }) => {
+    await page.goto(link(`t=${LIVE}&doi=10.5555/e2e-1&${UTM}`));
+    await expect.poll(() => visits(page)).toHaveLength(1);
+    await page.goto(link(`t=${LIVE}&doi=10.5555/e2e-2&${UTM}`));
+    await expect
+      .poll(() => visits(page))
+      .toEqual([
+        { t: LIVE, doi: '10.5555/e2e-1', tool: 'search_articles' },
+        { t: LIVE, doi: '10.5555/e2e-2', tool: 'search_articles' },
+      ]);
   });
 
   test('never counts a link preview that only fetches the HTML', async ({ page, request }) => {
@@ -95,7 +113,7 @@ test.describe('the referral beacon', () => {
 
   test('ignores beacons from preview agents and other sites', async ({ page, request }) => {
     const send = (headers: Record<string, string>) =>
-      request.post('/mcp/landing/visit', { data: { t: LIVE }, headers });
+      request.post('/mcp/landing/visit', { data: { t: LIVE, doi: '10.5555/e2e-1' }, headers });
     expect((await send({ 'user-agent': 'facebookexternalhit/1.1' })).status()).toBe(204);
     expect((await send({ 'sec-fetch-site': 'cross-site' })).status()).toBe(204);
     expect((await send({ 'sec-purpose': 'prefetch' })).status()).toBe(204);
@@ -104,7 +122,44 @@ test.describe('the referral beacon', () => {
 
   test('refuses a beacon body that is not a visit', async ({ request }) => {
     const response = await request.post('/mcp/landing/visit', {
-      data: { t: LIVE, query: 'Vorhofflimmern' },
+      data: { t: LIVE, doi: '10.5555/e2e-1', query: 'Vorhofflimmern' },
+    });
+    expect(response.status()).toBe(400);
+  });
+});
+
+test.describe('the action beacon', () => {
+  test.beforeEach(async ({ page }) => {
+    // The access buttons leave the site; answer them locally so the test stays offline.
+    await page.route(/^https:\/\/(doi\.org|publisher\.example)\//, (route) =>
+      route.fulfill({ status: 200, contentType: 'text/html', body: '<title>Publisher</title>' }),
+    );
+  });
+
+  test('records a click on an access button once per result', async ({ page }) => {
+    await page.goto(link(`t=${LIVE}&doi=10.5555/e2e-2&${UTM}`));
+    await page.getByRole('link', { name: 'Sign in through your institution' }).click();
+    await expect(page).toHaveTitle('Publisher');
+    await expect
+      .poll(() => actions(page))
+      .toEqual([{ t: LIVE, doi: '10.5555/e2e-2', action: 'sign_in' }]);
+    await page.goBack();
+    await page.getByRole('link', { name: 'Sign in through your institution' }).click();
+    await page.waitForTimeout(300);
+    expect(await actions(page)).toHaveLength(1);
+  });
+
+  test('records nothing once the token has expired', async ({ page }) => {
+    await page.goto(link(`t=${EXPIRED}&doi=10.5555/e2e-2&${UTM}`));
+    await page.getByRole('link', { name: 'Sign in through your institution' }).click();
+    await expect(page).toHaveTitle('Publisher');
+    await page.waitForTimeout(300);
+    expect(await actions(page)).toEqual([]);
+  });
+
+  test('refuses an action it does not know', async ({ request }) => {
+    const response = await request.post('/mcp/landing/action', {
+      data: { t: LIVE, doi: '10.5555/e2e-1', action: 'subscribe' },
     });
     expect(response.status()).toBe(400);
   });

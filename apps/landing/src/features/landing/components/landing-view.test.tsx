@@ -61,7 +61,7 @@ describe('LandingView', () => {
   it('sends the beacon only for a live session', () => {
     const page = aLandingPage();
     render(<LandingView page={page} token={token} campaign="find_related" />);
-    expect(useReferralBeacon).toHaveBeenLastCalledWith(token, 'find_related');
+    expect(useReferralBeacon).toHaveBeenLastCalledWith(token, page.chosen.doi, 'find_related');
     vi.mocked(useReferralBeacon).mockClear();
     render(
       <LandingView page={{ ...page, session: 'unavailable' }} token={token} campaign={undefined} />,
@@ -113,11 +113,13 @@ describe('LandingView', () => {
 describe('AccessOptions', () => {
   const article = { articleUrl: 'https://publisher.example/a' };
   const hrefs = () =>
-    screen.getAllByRole('link').map((link) => [link.textContent, link.getAttribute('href')]);
+    screen
+      .getAllByRole('link')
+      .map((link) => [link.textContent, link.getAttribute('href'), link.dataset['action']]);
 
   it('offers the full article when it is open', () => {
     render(<AccessOptions access={{ status: 'open' }} article={article} messages={messages} />);
-    expect(hrefs()).toEqual([['Read the full article', 'https://publisher.example/a']]);
+    expect(hrefs()).toEqual([['Read the full article', 'https://publisher.example/a', 'read']]);
   });
 
   it('offers sign-in, purchase and the publisher page for a paywalled article', () => {
@@ -133,18 +135,18 @@ describe('AccessOptions', () => {
       />,
     );
     expect(hrefs()).toEqual([
-      ['Sign in through your institution', 'https://idp.example/login'],
-      ['Buy this article', 'https://shop.example/buy'],
-      ["View on the publisher's site", 'https://publisher.example/a'],
+      ['Sign in through your institution', 'https://idp.example/login', 'sign_in'],
+      ['Buy this article', 'https://shop.example/buy', 'buy'],
+      ["View on the publisher's site", 'https://publisher.example/a', 'view_on_publisher'],
     ]);
   });
 
   it.each([
-    ['institution', 'Read via your institution'],
-    ['unknown', "Check access on the publisher's site"],
-  ] as const)('offers one action for %s access', (status, label) => {
+    ['institution', 'Read via your institution', 'read'],
+    ['unknown', "Check access on the publisher's site", 'check_access'],
+  ] as const)('offers one action for %s access', (status, label, action) => {
     render(<AccessOptions access={{ status }} article={article} messages={messages} />);
-    expect(hrefs()).toEqual([[label, 'https://publisher.example/a']]);
+    expect(hrefs()).toEqual([[label, 'https://publisher.example/a', action]]);
   });
 });
 

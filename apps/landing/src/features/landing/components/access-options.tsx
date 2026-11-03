@@ -1,7 +1,13 @@
-import type { LandingAccess, LandingArticle } from '@scholarly-mcp/core';
+import type { LandingAccess, LandingAction, LandingArticle } from '@scholarly-mcp/core';
 import type { Messages } from '../../../shared/lib/messages';
 import { ButtonLink } from '../../../shared/ui/button-link';
 import styles from './access-options.module.css';
+
+const READ: LandingAction = 'read';
+const SIGN_IN: LandingAction = 'sign_in';
+const BUY: LandingAction = 'buy';
+const VIEW: LandingAction = 'view_on_publisher';
+const CHECK: LandingAction = 'check_access';
 
 type AccessMessages = Pick<
   Messages,
@@ -17,7 +23,8 @@ type AccessMessages = Pick<
 /**
  * How the reader gets to the article (PLAN.md links and landing pages): open access and
  * institutional access read on the publisher's page; paywalled articles offer sign-in and
- * purchase; an unknown state sends the reader to check on the publisher's page.
+ * purchase; an unknown state sends the reader to check on the publisher's page. Each button
+ * names its funnel action (ADR 0033).
  */
 export function AccessOptions(props: {
   access: LandingAccess;
@@ -38,22 +45,36 @@ export function AccessOptions(props: {
 function actions(access: LandingAccess, articleUrl: string, messages: AccessMessages) {
   switch (access.status) {
     case 'open':
-      return <ButtonLink href={articleUrl}>{messages.readFullText}</ButtonLink>;
+      return (
+        <ButtonLink href={articleUrl} action={READ}>
+          {messages.readFullText}
+        </ButtonLink>
+      );
     case 'institution':
-      return <ButtonLink href={articleUrl}>{messages.readViaInstitution}</ButtonLink>;
+      return (
+        <ButtonLink href={articleUrl} action={READ}>
+          {messages.readViaInstitution}
+        </ButtonLink>
+      );
     case 'subscription':
       return (
         <>
-          <ButtonLink href={access.loginUrl ?? articleUrl}>{messages.signIn}</ButtonLink>
-          <ButtonLink href={access.purchaseUrl ?? articleUrl} variant="secondary">
+          <ButtonLink href={access.loginUrl ?? articleUrl} action={SIGN_IN}>
+            {messages.signIn}
+          </ButtonLink>
+          <ButtonLink href={access.purchaseUrl ?? articleUrl} variant="secondary" action={BUY}>
             {messages.buy}
           </ButtonLink>
-          <ButtonLink href={articleUrl} variant="secondary">
+          <ButtonLink href={articleUrl} variant="secondary" action={VIEW}>
             {messages.viewOnPublisher}
           </ButtonLink>
         </>
       );
     case 'unknown':
-      return <ButtonLink href={articleUrl}>{messages.checkAccess}</ButtonLink>;
+      return (
+        <ButtonLink href={articleUrl} action={CHECK}>
+          {messages.checkAccess}
+        </ButtonLink>
+      );
   }
 }

@@ -1,7 +1,7 @@
 // A stand-in for the server's landing API (ADR 0032) with synthetic articles, so the
 // Playwright suite and Lighthouse run without an index and never publish real content.
-// It records beacon visits; tests read them from GET /__visits and clear them with
-// POST /__reset.
+// It records beacon visits and actions; tests read them from GET /__visits and
+// GET /__actions and clear them with POST /__reset.
 import { createServer } from 'node:http';
 
 export const LIVE = 'LiveLiveLiveLiveLive01';
@@ -83,6 +83,7 @@ function page(token, doi) {
 }
 
 const visits = [];
+const actions = [];
 
 const json = (res, status, body) => {
   res.writeHead(status, { 'content-type': 'application/json' });
@@ -92,8 +93,10 @@ const json = (res, status, body) => {
 createServer((req, res) => {
   const url = new URL(req.url ?? '/', 'http://stub');
   if (url.pathname === '/__visits') return json(res, 200, visits);
+  if (url.pathname === '/__actions') return json(res, 200, actions);
   if (url.pathname === '/__reset') {
     visits.length = 0;
+    actions.length = 0;
     return json(res, 204);
   }
   if (SECRET !== undefined && req.headers.authorization !== `Bearer ${SECRET}`) {
@@ -106,11 +109,12 @@ createServer((req, res) => {
     );
     return result === undefined ? json(res, 404, { error: 'not_found' }) : json(res, 200, result);
   }
-  if (url.pathname === '/landing/v1/visits' && req.method === 'POST') {
+  const recorded = { '/landing/v1/visits': visits, '/landing/v1/actions': actions }[url.pathname];
+  if (recorded !== undefined && req.method === 'POST') {
     let body = '';
     req.on('data', (chunk) => (body += chunk));
     req.on('end', () => {
-      visits.push(JSON.parse(body));
+      recorded.push(JSON.parse(body));
       json(res, 204);
     });
     return undefined;

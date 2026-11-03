@@ -6,7 +6,7 @@ import { aLandingPage } from '../../../testing/a-landing-page';
 import type { LandingEnv } from '../../../shared/lib/env';
 import { fetchLandingPage } from './fetch-landing-page';
 import { clientAddress, type LandingApiDeps } from './landing-api';
-import { sendVisit } from './send-visit';
+import { sendReferral } from './send-referral';
 
 const token = tokenSchema.parse('pSSYWKV6y282qdANYe86LA');
 const doi = doiSchema.parse('10.1055/a-1001');
@@ -83,20 +83,31 @@ describe('fetchLandingPage', () => {
   });
 });
 
-describe('sendVisit', () => {
-  it('posts the token and tool to the visits route', async () => {
+describe('sendReferral', () => {
+  it('posts a visit to the visits route', async () => {
     const { deps, fetch } = depsWith(new Response(null, { status: 204 }));
-    await sendVisit({ t: token, tool: 'search_articles' }, deps);
+    const body = { t: token, doi, tool: 'search_articles' as const };
+    await sendReferral({ kind: 'visit', body }, deps);
     const [url, init] = fetch.mock.calls[0] ?? [];
     expect(urlOf(url)).toBe('http://api.internal:8080/landing/v1/visits');
     expect(init?.method).toBe('POST');
-    expect(JSON.parse(init?.body as string)).toEqual({ t: token, tool: 'search_articles' });
+    expect(JSON.parse(init?.body as string)).toEqual(body);
   });
 
-  it('logs and swallows a failure, as a visit is a side record', async () => {
+  it('posts an action to the actions route', async () => {
+    const { deps, fetch } = depsWith(new Response(null, { status: 204 }));
+    await sendReferral({ kind: 'action', body: { t: token, doi, action: 'buy' } }, deps);
+    const [url, init] = fetch.mock.calls[0] ?? [];
+    expect(urlOf(url)).toBe('http://api.internal:8080/landing/v1/actions');
+    expect(JSON.parse(init?.body as string)).toEqual({ t: token, doi, action: 'buy' });
+  });
+
+  it('logs and swallows a failure, as a referral is a side record', async () => {
     const logs: CapturedLine[] = [];
     const { deps } = depsWith(new Error('ECONNREFUSED'), logs);
-    await expect(sendVisit({ t: token }, deps)).resolves.toBeUndefined();
+    await expect(
+      sendReferral({ kind: 'visit', body: { t: token, doi } }, deps),
+    ).resolves.toBeUndefined();
     expect(logs[0]?.message).toBe('Landing visit not recorded');
   });
 });

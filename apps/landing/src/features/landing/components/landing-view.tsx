@@ -1,5 +1,6 @@
 import type { LandingPage, Token, ToolName } from '@scholarly-mcp/core';
 import { messagesFor } from '../../../shared/lib/messages';
+import { ActionTracker } from './action-tracker';
 import { ChosenArticle } from './chosen-article';
 import styles from './landing-view.module.css';
 import { MatchList } from './match-list';
@@ -16,7 +17,9 @@ export function LandingView(props: {
   token: Token | undefined;
   campaign: ToolName | undefined;
 }) {
-  const { page } = props;
+  const { page, token } = props;
+  // Only a live session attributes referrals to a search (ADR 0033).
+  const tracked = page.session === 'active' ? token : undefined;
   const messages = messagesFor(page.language);
   const heading =
     page.session !== 'active'
@@ -24,6 +27,15 @@ export function LandingView(props: {
       : page.topics.length > 0
         ? messages.resultsOn(page.topics.join(', '))
         : messages.resultsHeading;
+  const chosen = (
+    <ChosenArticle
+      article={page.chosen}
+      access={page.access}
+      passage={page.matchedPassage}
+      messages={messages}
+      language={page.language}
+    />
+  );
   return (
     <main className={styles['page']} lang={page.language}>
       <header className={styles['header']}>
@@ -33,21 +45,21 @@ export function LandingView(props: {
         )}
       </header>
       <div className={styles['columns']}>
-        <ChosenArticle
-          article={page.chosen}
-          access={page.access}
-          passage={page.matchedPassage}
-          messages={messages}
-          language={page.language}
-        />
+        {tracked === undefined ? (
+          chosen
+        ) : (
+          <ActionTracker token={tracked} doi={page.chosen.doi}>
+            {chosen}
+          </ActionTracker>
+        )}
         <aside className={styles['aside']}>
           <MatchList matches={page.matches} token={props.token} messages={messages} />
           <RelatedReading related={page.related} messages={messages} />
         </aside>
       </div>
       <footer className={styles['footer']}>{messages.disclaimer}</footer>
-      {page.session === 'active' && (
-        <ReferralBeacon token={props.token} campaign={props.campaign} />
+      {tracked !== undefined && (
+        <ReferralBeacon token={tracked} doi={page.chosen.doi} campaign={props.campaign} />
       )}
     </main>
   );
