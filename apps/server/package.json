@@ -13,12 +13,19 @@
   "dependencies": {
     "@modelcontextprotocol/node": "2.1.2",
     "@modelcontextprotocol/server": "2.4.0",
+    "@opentelemetry/api": "^1.10.0",
+    "@opentelemetry/context-async-hooks": "3.0.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.300.0",
+    "@opentelemetry/resources": "^3.0.0",
+    "@opentelemetry/sdk-trace": "3.0.0",
+    "@prometheus-io/client": "0.16.1",
     "@scholarly-mcp/cite": "workspace:*",
     "@scholarly-mcp/core": "workspace:*",
     "@scholarly-mcp/embedder-onnx": "workspace:*",
     "@scholarly-mcp/logger": "workspace:*",
     "@scholarly-mcp/search": "workspace:*",
     "@scholarly-mcp/store-sqlite": "workspace:*",
+    "jose": "^6.2.15",
     "zod": "^4.6.7"
   },
   "devDependencies": {
