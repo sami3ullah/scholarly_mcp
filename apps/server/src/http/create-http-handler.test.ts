@@ -13,7 +13,9 @@ import { startHarness, structured, type Harness } from '../testing/server-harnes
 import { createHttpHandler, type HttpAuth, type HttpHandlerDeps } from './create-http-handler.js';
 
 const LOCAL = ['localhost', '127.0.0.1', '[::1]'];
-const clock = createFakeClock(new Date('2026-11-03T10:00:00Z'));
+// Now, not a fixed date: the SDK checks a token's expiry against the wall clock, so a key
+// accepted at a fixed past time would expire an hour after it.
+const clock = createFakeClock(new Date());
 
 function handlerWith(extra: Partial<HttpHandlerDeps> = {}) {
   const metrics = createMetrics({ defaults: false });
