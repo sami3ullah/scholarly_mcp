@@ -3,6 +3,7 @@ import {
   chunkSchema,
   embeddingTextOf,
   type ArticleEnricher,
+  type JournalSubjects,
   type ArticleRecord,
   type Clock,
   type Doi,
@@ -33,6 +34,8 @@ export interface IngestIndexDeps {
   readonly source: Source;
   /** Europe PMC subjects and matching-only full text, when `EUROPEPMC_ENABLED` (ADR 0024). */
   readonly enricher?: ArticleEnricher;
+  /** Journal-level subjects for articles the enricher gave none (ADR 0004). */
+  readonly journalSubjects?: JournalSubjects;
   /** Loaded first: the plan depends on whether the live index used the same model. */
   readonly loadEmbedder: () => Promise<Embedder>;
   readonly clock: Clock;

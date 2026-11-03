@@ -25,3 +25,8 @@ Guardrails:
 
 - Articles not in Europe PMC (many German-language ones) get journal-level subjects only, which are coarser.
 - One more API call per article during ingestion; done in batches with the same retry and checkpoint rules as Crossref.
+
+## Implementation (SM-14)
+
+- `presets/thieme.subjects.json` lists 216 journals of the indexed corpus, each once with all its ISSNs and one to four English labels, MeSH descriptor names where one fits. `JOURNAL_SUBJECTS_FILE` points the ingest at it; the file is checked at startup (ISSN format, no ISSN under two journals).
+- An article gets its journal's subjects (origin `journal`) only when Europe PMC gave it no MeSH or keyword subjects, whether or not Europe PMC is turned on. At SM-14 that is about 57,000 of 70,911 articles.

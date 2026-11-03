@@ -2,12 +2,14 @@ import {
   chunkSourceSchema,
   enrichArticle,
   incrementalWindow,
+  withJournalSubjects,
   type Article,
   type ArticleEnricher,
   type ArticleRecord,
   type ArticleWriter,
   type Clock,
   type Embedder,
+  type JournalSubjects,
   type Logger,
   type Source,
   type SyncState,
@@ -26,6 +28,8 @@ export interface IngestDeps {
   readonly previous?: RecordLookup;
   /** Adds subjects and matching-only full text, e.g. Europe PMC; absent when turned off. */
   readonly enricher?: ArticleEnricher;
+  /** Journal-level subjects for articles the enricher gave none (ADR 0004). */
+  readonly journalSubjects?: JournalSubjects;
   readonly clock: Clock;
   readonly logger: Logger;
 }
@@ -90,11 +94,18 @@ export async function runIngest(
         },
         signal,
       );
-      const found = await deps.enricher?.lookup(page.articles, signal);
+      const matches = await deps.enricher?.lookup(page.articles, signal);
       const records: ArticleRecord[] = [];
       for (const fetched of page.articles) {
+        const match = matches?.get(fetched.doi);
+        const enrichment =
+          deps.journalSubjects === undefined
+            ? match
+            : withJournalSubjects(match, fetched.journal, deps.journalSubjects);
         const article =
-          found === undefined ? fetched : await enrichArticle(fetched, found.get(fetched.doi));
+          matches === undefined && enrichment === undefined
+            ? fetched
+            : await enrichArticle(fetched, enrichment);
         const prepared = await prepareRecord(article, { ...deps, chunkSource, isStored }, signal);
         counts[prepared.kind] += 1;
         if (prepared.fullTextSkipped) counts.fullTextSkipped += 1;

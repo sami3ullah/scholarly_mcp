@@ -7,6 +7,13 @@ export { enrichArticle, withoutFullText } from './article/enrich-article.js';
 export { fullTextRefSchema, type FullTextRef } from './article/full-text-ref.js';
 export { hashArticleContent, type ArticleContent } from './article/hash-article-content.js';
 export { issnSchema, journalSchema, type Journal } from './article/journal.js';
+export {
+  journalSubjectsOf,
+  journalSubjectsPresetSchema,
+  withJournalSubjects,
+  type JournalSubjects,
+  type JournalSubjectsPreset,
+} from './article/journal-subjects.js';
 export { languageSchema, type Language } from './article/language.js';
 export { licenseSchema, type License } from './article/license.js';
 export {

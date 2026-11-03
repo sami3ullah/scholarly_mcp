@@ -1,0 +1,1082 @@
+[
+  {
+    "name": "ACI Open",
+    "issns": ["2566-9346"],
+    "subjects": ["Medical Informatics"]
+  },
+  {
+    "name": "Acta Aorta",
+    "issns": ["3054-4572", "3054-4580"],
+    "subjects": ["Aorta", "Aortic Diseases"]
+  },
+  {
+    "name": "Adipositas - Ursachen, Folgeerkrankungen, Therapie",
+    "issns": ["1865-1739", "2567-6334"],
+    "subjects": ["Obesity"]
+  },
+  {
+    "name": "AINS - Anästhesiologie · Intensivmedizin · Notfallmedizin · Schmerztherapie",
+    "issns": ["0939-2661", "1439-1074"],
+    "subjects": ["Anesthesiology", "Critical Care", "Emergency Medicine", "Pain Management"]
+  },
+  {
+    "name": "Aktuelle Dermatologie",
+    "issns": ["0340-2541", "1438-938X"],
+    "subjects": ["Dermatology"]
+  },
+  {
+    "name": "Aktuelle Ernährungsmedizin",
+    "issns": ["0341-0501", "1438-9916"],
+    "subjects": ["Nutrition Therapy", "Clinical Nutrition"]
+  },
+  {
+    "name": "Aktuelle Kardiologie",
+    "issns": ["2193-5203", "2193-5211"],
+    "subjects": ["Cardiology"]
+  },
+  {
+    "name": "Aktuelle Rheumatologie",
+    "issns": ["0341-051X", "1438-9940"],
+    "subjects": ["Rheumatology"]
+  },
+  {
+    "name": "Aktuelle Urologie",
+    "issns": ["0001-7868", "1438-8820"],
+    "subjects": ["Urology"]
+  },
+  {
+    "name": "Allgemein- und Viszeralchirurgie up2date",
+    "issns": ["1611-6437", "1611-6461"],
+    "subjects": ["General Surgery", "Digestive System Surgical Procedures"]
+  },
+  {
+    "name": "Allgemeine Homöopathische Zeitung",
+    "issns": ["1438-2563", "1439-8990"],
+    "subjects": ["Homeopathy"]
+  },
+  {
+    "name": "Allgemeinmedizin up2date",
+    "issns": ["2699-8696", "2699-870X"],
+    "subjects": ["General Practice", "Family Practice"]
+  },
+  {
+    "name": "American Journal of Perinatology",
+    "issns": ["0735-1631", "1098-8785"],
+    "subjects": ["Perinatology", "Obstetrics", "Neonatology"]
+  },
+  {
+    "name": "American Journal of Perinatology Reports",
+    "issns": ["2157-6998", "2157-7005"],
+    "subjects": ["Perinatology", "Obstetrics", "Neonatology"]
+  },
+  {
+    "name": "Angewandte Nuklearmedizin",
+    "issns": ["2749-7445", "2749-7453"],
+    "subjects": ["Nuclear Medicine"]
+  },
+  {
+    "name": "AORTA",
+    "issns": ["2325-4637"],
+    "subjects": ["Aorta", "Aortic Diseases", "Cardiac Surgical Procedures"]
+  },
+  {
+    "name": "Applied Clinical Informatics",
+    "issns": ["1869-0327"],
+    "subjects": ["Medical Informatics"]
+  },
+  {
+    "name": "Archives of Plastic Surgery",
+    "issns": ["2234-6163", "2234-6171"],
+    "subjects": ["Surgery, Plastic"]
+  },
+  {
+    "name": "Arquivos Brasileiros de Neurocirurgia: Brazilian Neurosurgery",
+    "issns": ["0103-5355", "2359-5922"],
+    "subjects": ["Neurosurgery"]
+  },
+  {
+    "name": "Arquivos de Neuro-Psiquiatria",
+    "issns": ["0004-282X", "1678-4227"],
+    "subjects": ["Neurology", "Psychiatry"]
+  },
+  {
+    "name": "Arthritis und Rheuma",
+    "issns": ["0176-5167", "2567-5753"],
+    "subjects": ["Rheumatology", "Arthritis"]
+  },
+  {
+    "name": "Asian Journal of Neurosurgery",
+    "issns": ["1793-5482", "2248-9614"],
+    "subjects": ["Neurosurgery"]
+  },
+  {
+    "name": "Augenheilkunde up2date",
+    "issns": ["1616-9719", "1616-9735"],
+    "subjects": ["Ophthalmology"]
+  },
+  {
+    "name": "Avicenna Journal of Medicine",
+    "issns": ["2231-0770", "2249-4464"],
+    "subjects": ["General Medicine", "Internal Medicine"]
+  },
+  {
+    "name": "B&G Bewegungstherapie und Gesundheitssport",
+    "issns": ["1613-0863", "1613-3269"],
+    "subjects": ["Exercise Therapy", "Sports"]
+  },
+  {
+    "name": "Brazilian Journal of Oncology",
+    "issns": ["2526-8732"],
+    "subjects": ["Medical Oncology"]
+  },
+  {
+    "name": "Chinese medicine and natural products",
+    "issns": ["2096-918X", "2749-568X"],
+    "subjects": ["Medicine, Chinese Traditional", "Natural Products"]
+  },
+  {
+    "name": "Clinics in Colon and Rectal Surgery",
+    "issns": ["1531-0043", "1530-9681"],
+    "subjects": ["Colorectal Surgery"]
+  },
+  {
+    "name": "CNE Pflegemanagement",
+    "issns": ["2196-9310", "2626-6229"],
+    "subjects": ["Nursing", "Nursing Administration"]
+  },
+  {
+    "name": "CNE.fortbildung",
+    "issns": ["2190-3034", "2196-9396"],
+    "subjects": ["Nursing", "Education, Nursing, Continuing"]
+  },
+  {
+    "name": "Das Gesundheitswesen",
+    "issns": ["0941-3790", "1439-4421"],
+    "subjects": ["Public Health", "Health Services Research"]
+  },
+  {
+    "name": "Deutsche Heilpraktiker-Zeitschrift",
+    "issns": ["1862-2267", "1862-2275"],
+    "subjects": ["Naturopathy", "Complementary Therapies"]
+  },
+  {
+    "name": "Diabetes aktuell",
+    "issns": ["1861-6089", "1864-1733"],
+    "subjects": ["Diabetes Mellitus"]
+  },
+  {
+    "name": "Diabetologie und Stoffwechsel",
+    "issns": ["1861-9002", "1861-9010"],
+    "subjects": ["Diabetes Mellitus", "Metabolism"]
+  },
+  {
+    "name": "Die Rehabilitation",
+    "issns": ["0034-3536", "1439-1309"],
+    "subjects": ["Rehabilitation"]
+  },
+  {
+    "name": "Die Wirbelsäule",
+    "issns": ["2509-8241", "2509-825X"],
+    "subjects": ["Spine", "Spinal Diseases"]
+  },
+  {
+    "name": "Digestive Disease Interventions",
+    "issns": ["2472-8721", "2472-873X"],
+    "subjects": ["Radiology, Interventional", "Digestive System Diseases"]
+  },
+  {
+    "name": "DMW - Deutsche Medizinische Wochenschrift",
+    "issns": ["0012-0472", "1439-4413"],
+    "subjects": ["Internal Medicine", "General Medicine"]
+  },
+  {
+    "name": "DO - Deutsche Zeitschrift für Osteopathie",
+    "issns": ["1610-5044", "1613-3781"],
+    "subjects": ["Osteopathic Medicine"]
+  },
+  {
+    "name": "Drug Research",
+    "issns": ["2194-9379", "2194-9387"],
+    "subjects": ["Pharmacology", "Drug Development"]
+  },
+  {
+    "name": "Endo-Praxis",
+    "issns": ["0177-4077", "1611-6429"],
+    "subjects": ["Endoscopy", "Nursing"]
+  },
+  {
+    "name": "Endoscopy",
+    "issns": ["0013-726X", "1438-8812"],
+    "subjects": ["Endoscopy", "Gastroenterology"]
+  },
+  {
+    "name": "Endoscopy International Open",
+    "issns": ["2364-3722", "2196-9736"],
+    "subjects": ["Endoscopy", "Gastroenterology"]
+  },
+  {
+    "name": "Erfahrungsheilkunde",
+    "issns": ["0014-0082", "1439-4294"],
+    "subjects": ["Complementary Therapies", "Naturopathy"]
+  },
+  {
+    "name": "ergopraxis",
+    "issns": ["1439-2283", "1869-5507"],
+    "subjects": ["Occupational Therapy"]
+  },
+  {
+    "name": "Ernährung & Medizin",
+    "issns": ["1439-1635", "1438-9002"],
+    "subjects": ["Nutrition Therapy", "Diet"]
+  },
+  {
+    "name": "European Dental Research and Biomaterials Journal",
+    "issns": ["2791-7452"],
+    "subjects": ["Dentistry", "Biocompatible Materials"]
+  },
+  {
+    "name": "European Journal of Dentistry",
+    "issns": ["1305-7456", "1305-7464"],
+    "subjects": ["Dentistry"]
+  },
+  {
+    "name": "European Journal of General Dentistry",
+    "issns": ["2278-9626", "2320-4753"],
+    "subjects": ["Dentistry"]
+  },
+  {
+    "name": "European Journal of Pediatric Surgery",
+    "issns": ["0939-7248", "1439-359X"],
+    "subjects": ["Pediatric Surgery"]
+  },
+  {
+    "name": "European Journal of Pediatric Surgery Reports",
+    "issns": ["2194-7619", "2194-7627"],
+    "subjects": ["Pediatric Surgery"]
+  },
+  {
+    "name": "Experimental and Clinical Endocrinology & Diabetes",
+    "issns": ["0947-7349", "1439-3646"],
+    "subjects": ["Endocrinology", "Diabetes Mellitus"]
+  },
+  {
+    "name": "Facial Plastic Surgery",
+    "issns": ["0736-6825", "1098-8793"],
+    "subjects": ["Surgery, Plastic", "Face"]
+  },
+  {
+    "name": "Flugmedizin · Tropenmedizin · Reisemedizin - FTR",
+    "issns": ["1864-4538", "1864-175X"],
+    "subjects": ["Aerospace Medicine", "Tropical Medicine", "Travel Medicine"]
+  },
+  {
+    "name": "Fortschritte der Neurologie · Psychiatrie",
+    "issns": ["0720-4299", "1439-3522"],
+    "subjects": ["Neurology", "Psychiatry"]
+  },
+  {
+    "name": "Frauenheilkunde up2date",
+    "issns": ["1439-3719", "1611-650X"],
+    "subjects": ["Gynecology", "Obstetrics"]
+  },
+  {
+    "name": "Gastroenterologie up2date",
+    "issns": ["1616-9670", "1616-9727"],
+    "subjects": ["Gastroenterology"]
+  },
+  {
+    "name": "Geburtshilfe und Frauenheilkunde",
+    "issns": ["0016-5751", "1438-8804"],
+    "subjects": ["Gynecology", "Obstetrics"]
+  },
+  {
+    "name": "Gefäßmedizin Scan - Zeitschrift für Angiologie, Gefäßchirurgie, diagnostische und interventionelle Radiologie",
+    "issns": ["2197-5922", "2197-5930"],
+    "subjects": ["Angiology", "Vascular Surgical Procedures", "Radiology, Interventional"]
+  },
+  {
+    "name": "Geriatrics Gerontology and Aging",
+    "issns": ["2447-2123", "2447-2115"],
+    "subjects": ["Geriatrics", "Gerontology"]
+  },
+  {
+    "name": "Geriatrie up2date",
+    "issns": ["2627-0889", "2627-0897"],
+    "subjects": ["Geriatrics"]
+  },
+  {
+    "name": "Gesundheitsökonomie & Qualitätsmanagement",
+    "issns": ["1432-2625", "1439-4049"],
+    "subjects": ["Health Care Economics", "Quality of Health Care"]
+  },
+  {
+    "name": "Handchirurgie Scan",
+    "issns": ["2194-8976", "2194-8984"],
+    "subjects": ["Hand Surgery"]
+  },
+  {
+    "name": "Handchirurgie · Mikrochirurgie · Plastische Chirurgie",
+    "issns": ["0722-1819", "1439-3980"],
+    "subjects": ["Hand Surgery", "Microsurgery", "Surgery, Plastic"]
+  },
+  {
+    "name": "Hands on - Manuelle und Physikalische Therapien in der Tiermedizin",
+    "issns": ["2628-6033", "2628-6262"],
+    "subjects": ["Veterinary Medicine", "Physical Therapy Modalities"]
+  },
+  {
+    "name": "Hebamme",
+    "issns": ["0932-8122", "1439-4197"],
+    "subjects": ["Midwifery"]
+  },
+  {
+    "name": "Heilpflanzen",
+    "issns": ["2747-4410", "2747-4429"],
+    "subjects": ["Plants, Medicinal", "Phytotherapy"]
+  },
+  {
+    "name": "Homeopathy",
+    "issns": ["1475-4916", "1476-4245"],
+    "subjects": ["Homeopathy"]
+  },
+  {
+    "name": "Homœopathic Links",
+    "issns": ["1019-2050", "1860-3149"],
+    "subjects": ["Homeopathy"]
+  },
+  {
+    "name": "Hormone and Metabolic Research",
+    "issns": ["0018-5043", "1439-4286"],
+    "subjects": ["Endocrinology", "Metabolism"]
+  },
+  {
+    "name": "Hämostaseologie",
+    "issns": ["0720-9355", "2567-5761"],
+    "subjects": ["Hemostasis", "Thrombosis", "Hematology"]
+  },
+  {
+    "name": "Ibnosina Journal of Medicine and Biomedical Sciences",
+    "issns": ["1947-489X"],
+    "subjects": ["General Medicine", "Biomedical Research"]
+  },
+  {
+    "name": "Im OP",
+    "issns": ["1611-7905", "1611-7913"],
+    "subjects": ["Operating Room Nursing"]
+  },
+  {
+    "name": "Indian Journal of Medical and Paediatric Oncology",
+    "issns": ["0971-5851", "0975-2129"],
+    "subjects": ["Medical Oncology", "Pediatric Oncology"]
+  },
+  {
+    "name": "Indian Journal of Neurosurgery",
+    "issns": ["2277-954X", "2277-9167"],
+    "subjects": ["Neurosurgery"]
+  },
+  {
+    "name": "Indian Journal of Neurotrauma",
+    "issns": ["0973-0508", "2213-3739"],
+    "subjects": ["Neurosurgery", "Brain Injuries", "Spinal Cord Injuries"]
+  },
+  {
+    "name": "Indian Journal of Plastic Surgery",
+    "issns": ["0970-0358", "1998-376X"],
+    "subjects": ["Surgery, Plastic"]
+  },
+  {
+    "name": "Indian Journal of Radiology and Imaging",
+    "issns": ["0971-3026", "1998-3808"],
+    "subjects": ["Radiology", "Diagnostic Imaging"]
+  },
+  {
+    "name": "Indographics",
+    "issns": ["2583-8229"],
+    "subjects": ["Radiology", "Diagnostic Imaging"]
+  },
+  {
+    "name": "Infektiologie up2date",
+    "issns": ["2944-6406", "2944-6414"],
+    "subjects": ["Infectious Disease Medicine", "Communicable Diseases"]
+  },
+  {
+    "name": "Informationen aus Orthodontie & Kieferorthopädie",
+    "issns": ["0020-0336", "1439-4200"],
+    "subjects": ["Orthodontics"]
+  },
+  {
+    "name": "intensiv",
+    "issns": ["0942-6035", "1439-3840"],
+    "subjects": ["Critical Care Nursing"]
+  },
+  {
+    "name": "Intensivmedizin up2date",
+    "issns": ["1614-4856", "1614-6697"],
+    "subjects": ["Critical Care"]
+  },
+  {
+    "name": "International Archives of Otorhinolaryngology",
+    "issns": ["1809-9777", "1809-4864"],
+    "subjects": ["Otolaryngology"]
+  },
+  {
+    "name": "International Journal of Angiology",
+    "issns": ["1061-1711", "1615-5939"],
+    "subjects": ["Angiology", "Vascular Diseases"]
+  },
+  {
+    "name": "International Journal of Epilepsy",
+    "issns": ["2213-6320", "2213-6339"],
+    "subjects": ["Epilepsy"]
+  },
+  {
+    "name": "International Journal of Practical Otolaryngology",
+    "issns": ["2569-1783"],
+    "subjects": ["Otolaryngology"]
+  },
+  {
+    "name": "International Journal of Sports Medicine",
+    "issns": ["0172-4622", "1439-3964"],
+    "subjects": ["Sports Medicine", "Exercise"]
+  },
+  {
+    "name": "Journal Club AINS",
+    "issns": ["2194-9719", "2194-9727"],
+    "subjects": ["Anesthesiology", "Critical Care", "Emergency Medicine"]
+  },
+  {
+    "name": "Journal of Brachial Plexus and Peripheral Nerve Injury",
+    "issns": ["1749-7221"],
+    "subjects": ["Brachial Plexus", "Peripheral Nerve Injuries"]
+  },
+  {
+    "name": "Journal of Clinical Interventional Radiology ISVIR",
+    "issns": ["2456-4869"],
+    "subjects": ["Radiology, Interventional"]
+  },
+  {
+    "name": "Journal of Coloproctology",
+    "issns": ["2237-9363", "2317-6423"],
+    "subjects": ["Colorectal Surgery", "Proctology"]
+  },
+  {
+    "name": "Journal of Diabetes and Endocrine Practice",
+    "issns": ["2772-7653"],
+    "subjects": ["Diabetes Mellitus", "Endocrinology"]
+  },
+  {
+    "name": "Journal of Digestive Endoscopy",
+    "issns": ["0976-5042", "0976-5050"],
+    "subjects": ["Endoscopy, Digestive System", "Gastroenterology"]
+  },
+  {
+    "name": "Journal of Exercise & Sports Medicine",
+    "issns": ["3056-1353"],
+    "subjects": ["Sports Medicine", "Exercise"]
+  },
+  {
+    "name": "Journal of Fetal Medicine",
+    "issns": ["2348-1153", "2348-8859"],
+    "subjects": ["Fetal Medicine", "Prenatal Diagnosis"]
+  },
+  {
+    "name": "Journal of Gastrointestinal and Abdominal Radiology",
+    "issns": ["2581-9178"],
+    "subjects": ["Radiology", "Gastrointestinal Tract", "Abdomen"]
+  },
+  {
+    "name": "Journal of Gastrointestinal Infections",
+    "issns": ["2583-844X"],
+    "subjects": ["Gastrointestinal Diseases", "Infectious Disease Medicine"]
+  },
+  {
+    "name": "Journal of Neuroanaesthesiology and Critical Care",
+    "issns": ["2348-0548", "2348-926X"],
+    "subjects": ["Neuroanesthesia", "Critical Care"]
+  },
+  {
+    "name": "Journal of Neurological Surgery Part A: Central European Neurosurgery",
+    "issns": ["2193-6315", "2193-6323"],
+    "subjects": ["Neurosurgery"]
+  },
+  {
+    "name": "Journal of Neurological Surgery Part B: Skull Base",
+    "issns": ["2193-6331", "2193-634X"],
+    "subjects": ["Neurosurgery", "Skull Base"]
+  },
+  {
+    "name": "Journal of Neurological Surgery Reports",
+    "issns": ["2193-6358", "2193-6366"],
+    "subjects": ["Neurosurgery"]
+  },
+  {
+    "name": "Journal of Reconstructive Microsurgery",
+    "issns": ["0743-684X", "1098-8947"],
+    "subjects": ["Microsurgery", "Reconstructive Surgical Procedures"]
+  },
+  {
+    "name": "Journal of Reconstructive Microsurgery Open",
+    "issns": ["2377-0813", "2377-0821"],
+    "subjects": ["Microsurgery", "Reconstructive Surgical Procedures"]
+  },
+  {
+    "name": "Journal of Wrist Surgery",
+    "issns": ["2163-3916", "2163-3924"],
+    "subjects": ["Wrist", "Hand Surgery"]
+  },
+  {
+    "name": "JuKiP - Ihr Fachmagazin für Gesundheits- und Kinderkrankenpflege",
+    "issns": ["1439-2569", "1439-9164"],
+    "subjects": ["Pediatric Nursing"]
+  },
+  {
+    "name": "Kardiologie up2date",
+    "issns": ["1611-6534", "1860-3513"],
+    "subjects": ["Cardiology"]
+  },
+  {
+    "name": "Kinder- und Jugendmedizin",
+    "issns": ["1617-0288", "2567-577X"],
+    "subjects": ["Pediatrics", "Adolescent Medicine"]
+  },
+  {
+    "name": "KJP up2date",
+    "issns": ["2942-4666", "2942-4674"],
+    "subjects": ["Child Psychiatry", "Adolescent Psychiatry"]
+  },
+  {
+    "name": "kleintier konkret",
+    "issns": ["1434-9132", "1439-3832"],
+    "subjects": ["Veterinary Medicine", "Pets"]
+  },
+  {
+    "name": "Klinik Einkauf",
+    "issns": ["2627-0439", "2627-0455"],
+    "subjects": ["Hospital Administration", "Purchasing, Hospital"]
+  },
+  {
+    "name": "Klinische Monatsblätter für Augenheilkunde",
+    "issns": ["0023-2165", "1439-3999"],
+    "subjects": ["Ophthalmology"]
+  },
+  {
+    "name": "Klinische Neurophysiologie",
+    "issns": ["1434-0275", "1439-4081"],
+    "subjects": ["Neurophysiology", "Electrodiagnosis"]
+  },
+  {
+    "name": "Klinische Pädiatrie",
+    "issns": ["0300-8630", "1439-3824"],
+    "subjects": ["Pediatrics"]
+  },
+  {
+    "name": "kma - Klinik Management aktuell",
+    "issns": ["1439-3514", "2197-621X"],
+    "subjects": ["Hospital Administration"]
+  },
+  {
+    "name": "Krankenhaushygiene up2date",
+    "issns": ["1862-5797", "1862-5800"],
+    "subjects": ["Infection Control", "Cross Infection"]
+  },
+  {
+    "name": "Laryngo-Rhino-Otologie",
+    "issns": ["0935-8943", "1438-8685"],
+    "subjects": ["Otolaryngology"]
+  },
+  {
+    "name": "Libyan International Medical University Journal",
+    "issns": ["2519-139X"],
+    "subjects": ["General Medicine", "Biomedical Research"]
+  },
+  {
+    "name": "Methods of Information in Medicine",
+    "issns": ["0026-1270", "2511-705X"],
+    "subjects": ["Medical Informatics", "Biostatistics"]
+  },
+  {
+    "name": "MSK – Muskuloskelettale Physiotherapie",
+    "issns": ["2701-6986", "2701-7818"],
+    "subjects": ["Physical Therapy Modalities", "Musculoskeletal Diseases"]
+  },
+  {
+    "name": "Neonatologie Scan",
+    "issns": ["2194-5462", "2194-5470"],
+    "subjects": ["Neonatology"]
+  },
+  {
+    "name": "Nephrologie aktuell",
+    "issns": ["2751-9120", "2751-9139"],
+    "subjects": ["Nephrology"]
+  },
+  {
+    "name": "Nervenheilkunde",
+    "issns": ["0722-1541", "2567-5788"],
+    "subjects": ["Neurology", "Psychiatry"]
+  },
+  {
+    "name": "Neurologie up2date",
+    "issns": ["2511-3453", "2511-3658"],
+    "subjects": ["Neurology"]
+  },
+  {
+    "name": "Neuropediatrics",
+    "issns": ["0174-304X", "1439-1899"],
+    "subjects": ["Neurology", "Pediatrics"]
+  },
+  {
+    "name": "Neuroradiologie Scan",
+    "issns": ["1616-9697", "1616-9700"],
+    "subjects": ["Neuroradiology"]
+  },
+  {
+    "name": "neuroreha",
+    "issns": ["1611-6496", "1611-7654"],
+    "subjects": ["Neurological Rehabilitation"]
+  },
+  {
+    "name": "NOTARZT",
+    "issns": ["0177-2309", "1438-8693"],
+    "subjects": ["Emergency Medicine", "Emergency Medical Services"]
+  },
+  {
+    "name": "Notaufnahme up2date",
+    "issns": ["2628-7595", "2628-7609"],
+    "subjects": ["Emergency Medicine", "Emergency Service, Hospital"]
+  },
+  {
+    "name": "Notfallmedizin up2date",
+    "issns": ["1611-6550", "1862-6955"],
+    "subjects": ["Emergency Medicine"]
+  },
+  {
+    "name": "Nuklearmedizin - NuclearMedicine",
+    "issns": ["0029-5566", "2567-6407"],
+    "subjects": ["Nuclear Medicine"]
+  },
+  {
+    "name": "Onkologische Welt",
+    "issns": ["1869-0874", "2567-5796"],
+    "subjects": ["Medical Oncology"]
+  },
+  {
+    "name": "OP-Journal",
+    "issns": ["0178-1715", "1439-2496"],
+    "subjects": ["Orthopedics", "Traumatology"]
+  },
+  {
+    "name": "OP-Management up2date",
+    "issns": ["2702-2153", "2702-2161"],
+    "subjects": ["Operating Rooms", "Hospital Administration"]
+  },
+  {
+    "name": "Organic Materials",
+    "issns": ["2625-1825"],
+    "subjects": ["Chemistry, Organic", "Materials Science"]
+  },
+  {
+    "name": "Orthopädie und Unfallchirurgie up2date",
+    "issns": ["1611-7859", "1861-1982"],
+    "subjects": ["Orthopedics", "Traumatology"]
+  },
+  {
+    "name": "Osteologie",
+    "issns": ["1019-1291", "2567-5818"],
+    "subjects": ["Bone Diseases", "Osteoporosis"]
+  },
+  {
+    "name": "pferde spiegel",
+    "issns": ["1860-3203", "1868-0445"],
+    "subjects": ["Veterinary Medicine", "Horses"]
+  },
+  {
+    "name": "Pharmaceutical Fronts",
+    "issns": ["2628-5088", "2628-5096"],
+    "subjects": ["Pharmaceutical Sciences", "Drug Discovery"]
+  },
+  {
+    "name": "Pharmacopsychiatry",
+    "issns": ["0176-3679", "1439-0795"],
+    "subjects": ["Psychopharmacology", "Psychiatry"]
+  },
+  {
+    "name": "Phlebologie",
+    "issns": ["0939-978X", "2567-5826"],
+    "subjects": ["Phlebology", "Venous Insufficiency"]
+  },
+  {
+    "name": "Physikalische Medizin, Rehabilitationsmedizin, Kurortmedizin",
+    "issns": ["0940-6689", "1439-085X"],
+    "subjects": ["Physical and Rehabilitation Medicine", "Balneology"]
+  },
+  {
+    "name": "physiopraxis",
+    "issns": ["1439-023X", "1869-5515"],
+    "subjects": ["Physical Therapy Modalities"]
+  },
+  {
+    "name": "physioscience",
+    "issns": ["1860-3092", "1860-3351"],
+    "subjects": ["Physical Therapy Modalities"]
+  },
+  {
+    "name": "PiD - Psychotherapie im Dialog",
+    "issns": ["1438-7026", "1439-913X"],
+    "subjects": ["Psychotherapy"]
+  },
+  {
+    "name": "Planta Medica",
+    "issns": ["0032-0943", "1439-0221"],
+    "subjects": ["Plants, Medicinal", "Pharmacognosy", "Natural Products"]
+  },
+  {
+    "name": "Pneumologie",
+    "issns": ["0934-8387", "1438-8790"],
+    "subjects": ["Pulmonary Medicine"]
+  },
+  {
+    "name": "PPH",
+    "issns": ["0949-1619", "1439-0213"],
+    "subjects": ["Psychiatric Nursing"]
+  },
+  {
+    "name": "PPmP - Psychotherapie · Psychosomatik · Medizinische Psychologie",
+    "issns": ["0937-2032", "1439-1058"],
+    "subjects": ["Psychotherapy", "Psychosomatic Medicine", "Psychology, Medical"]
+  },
+  {
+    "name": "Praxis Handreha",
+    "issns": ["2628-4545", "2628-4553"],
+    "subjects": ["Hand Therapy", "Rehabilitation"]
+  },
+  {
+    "name": "PSYCH up2date",
+    "issns": ["2194-8895", "2194-8909"],
+    "subjects": ["Psychiatry", "Psychotherapy"]
+  },
+  {
+    "name": "Psychiatrische Praxis",
+    "issns": ["0303-4259", "1439-0876"],
+    "subjects": ["Psychiatry"]
+  },
+  {
+    "name": "Pädiatrie up2date",
+    "issns": ["1611-6445", "1862-9393"],
+    "subjects": ["Pediatrics"]
+  },
+  {
+    "name": "Radiologie up2date",
+    "issns": ["1616-0681", "1617-8300"],
+    "subjects": ["Radiology"]
+  },
+  {
+    "name": "Radiopraxis",
+    "issns": ["1866-1033", "1866-1041"],
+    "subjects": ["Radiology", "Radiologic Technology"]
+  },
+  {
+    "name": "Reisemedizin up2date",
+    "issns": ["2940-8105", "2940-8113"],
+    "subjects": ["Travel Medicine"]
+  },
+  {
+    "name": "retten!",
+    "issns": ["2193-2387", "2193-2395"],
+    "subjects": ["Emergency Medical Services"]
+  },
+  {
+    "name": "Revista Brasileira de Cirurgia Plástica (RBCP) – Brazilian Journal of Plastic Surgery",
+    "issns": ["1983-5175", "2177-1235"],
+    "subjects": ["Surgery, Plastic"]
+  },
+  {
+    "name": "Revista Brasileira de Ortopedia",
+    "issns": ["0102-3616", "1982-4378"],
+    "subjects": ["Orthopedics", "Traumatology"]
+  },
+  {
+    "name": "Revista Chilena de Ortopedia y Traumatología",
+    "issns": ["0716-4548", "0719-918X"],
+    "subjects": ["Orthopedics", "Traumatology"]
+  },
+  {
+    "name": "Revista Iberoamericana de Cirugía de la Mano",
+    "issns": ["1698-8396", "1698-840X"],
+    "subjects": ["Hand Surgery"]
+  },
+  {
+    "name": "RöFo - Fortschritte auf dem Gebiet der Röntgenstrahlen und der bildgebenden Verfahren",
+    "issns": ["1438-9029", "1438-9010"],
+    "subjects": ["Radiology", "Diagnostic Imaging"]
+  },
+  {
+    "name": "Seminars in Hearing",
+    "issns": ["0734-0451", "1098-8955"],
+    "subjects": ["Audiology", "Hearing"]
+  },
+  {
+    "name": "Seminars in Interventional Radiology",
+    "issns": ["0739-9529", "1098-8963"],
+    "subjects": ["Radiology, Interventional"]
+  },
+  {
+    "name": "Seminars in Liver Disease",
+    "issns": ["0272-8087", "1098-8971"],
+    "subjects": ["Hepatology", "Liver Diseases"]
+  },
+  {
+    "name": "Seminars in Musculoskeletal Radiology",
+    "issns": ["1089-7860", "1098-898X"],
+    "subjects": ["Radiology", "Musculoskeletal System"]
+  },
+  {
+    "name": "Seminars in Neurology",
+    "issns": ["0271-8235", "1098-9021"],
+    "subjects": ["Neurology"]
+  },
+  {
+    "name": "Seminars in Plastic Surgery",
+    "issns": ["1535-2188", "1536-0067"],
+    "subjects": ["Surgery, Plastic"]
+  },
+  {
+    "name": "Seminars in Reproductive Medicine",
+    "issns": ["1526-8004", "1526-4564"],
+    "subjects": ["Reproductive Medicine"]
+  },
+  {
+    "name": "Seminars in Respiratory and Critical Care Medicine",
+    "issns": ["1069-3424", "1098-9048"],
+    "subjects": ["Pulmonary Medicine", "Critical Care"]
+  },
+  {
+    "name": "Seminars in Speech and Language",
+    "issns": ["0734-0478", "1098-9056"],
+    "subjects": ["Speech-Language Pathology"]
+  },
+  {
+    "name": "Seminars in Thrombosis and Hemostasis",
+    "issns": ["0094-6176", "1098-9064"],
+    "subjects": ["Thrombosis", "Hemostasis", "Hematology"]
+  },
+  {
+    "name": "Senologie - Zeitschrift für Mammadiagnostik und -therapie",
+    "issns": ["1611-6453", "1611-647X"],
+    "subjects": ["Breast Diseases", "Breast Neoplasms"]
+  },
+  {
+    "name": "Sleep Science",
+    "issns": ["1984-0659", "1984-0063"],
+    "subjects": ["Sleep Medicine"]
+  },
+  {
+    "name": "Sportphysio",
+    "issns": ["2196-5951", "2196-596X"],
+    "subjects": ["Sports Medicine", "Physical Therapy Modalities"]
+  },
+  {
+    "name": "Sports Medicine International Open",
+    "issns": ["2367-1890"],
+    "subjects": ["Sports Medicine", "Exercise"]
+  },
+  {
+    "name": "Sportverletzung · Sportschaden",
+    "issns": ["0932-0555", "1439-1236"],
+    "subjects": ["Sports Medicine", "Athletic Injuries"]
+  },
+  {
+    "name": "Sprache · Stimme · Gehör",
+    "issns": ["0342-0477", "1439-1260"],
+    "subjects": ["Speech-Language Pathology", "Voice", "Hearing"]
+  },
+  {
+    "name": "Suchttherapie",
+    "issns": ["1439-9903", "1439-989X"],
+    "subjects": ["Substance-Related Disorders", "Addiction Medicine"]
+  },
+  {
+    "name": "Sustainability & Circularity NOW",
+    "issns": ["2940-1852"],
+    "subjects": ["Green Chemistry", "Sustainable Development"]
+  },
+  {
+    "name": "Synfacts",
+    "issns": ["1861-1958", "1861-194X"],
+    "subjects": ["Chemistry, Organic", "Chemistry Techniques, Synthetic"]
+  },
+  {
+    "name": "Synlett",
+    "issns": ["0936-5214", "1437-2096"],
+    "subjects": ["Chemistry, Organic", "Chemistry Techniques, Synthetic"]
+  },
+  {
+    "name": "SynOpen",
+    "issns": ["2509-9396"],
+    "subjects": ["Chemistry, Organic", "Chemistry Techniques, Synthetic"]
+  },
+  {
+    "name": "Synthesis",
+    "issns": ["0039-7881", "1437-210X"],
+    "subjects": ["Chemistry, Organic", "Chemistry Techniques, Synthetic"]
+  },
+  {
+    "name": "team.konkret",
+    "issns": ["1869-3202", "1869-3210"],
+    "subjects": ["Veterinary Medicine", "Animal Technicians"]
+  },
+  {
+    "name": "TH Open",
+    "issns": ["2512-9465"],
+    "subjects": ["Thrombosis", "Hemostasis", "Hematology"]
+  },
+  {
+    "name": "The Journal of Hip Surgery",
+    "issns": ["2472-8446", "2472-8454"],
+    "subjects": ["Hip", "Orthopedic Procedures"]
+  },
+  {
+    "name": "The Journal of Knee Surgery",
+    "issns": ["1538-8506", "1938-2480"],
+    "subjects": ["Knee", "Orthopedic Procedures"]
+  },
+  {
+    "name": "The Surgery Journal",
+    "issns": ["2378-5128", "2378-5136"],
+    "subjects": ["General Surgery"]
+  },
+  {
+    "name": "The Thoracic and Cardiovascular Surgeon",
+    "issns": ["0171-6425", "1439-1902"],
+    "subjects": ["Thoracic Surgery", "Cardiac Surgical Procedures"]
+  },
+  {
+    "name": "The Thoracic and Cardiovascular Surgeon Reports",
+    "issns": ["2194-7635", "2194-7643"],
+    "subjects": ["Thoracic Surgery", "Cardiac Surgical Procedures"]
+  },
+  {
+    "name": "Therapeutics NOW",
+    "issns": ["2944-0548"],
+    "subjects": ["Pharmacology", "Drug Therapy"]
+  },
+  {
+    "name": "Thrombosis and Haemostasis",
+    "issns": ["0340-6245", "2567-689X"],
+    "subjects": ["Thrombosis", "Hemostasis", "Hematology"]
+  },
+  {
+    "name": "Tierärztliche Praxis Ausgabe G: Großtiere / Nutztiere",
+    "issns": ["1434-1220", "2567-5834"],
+    "subjects": ["Veterinary Medicine", "Livestock"]
+  },
+  {
+    "name": "Tierärztliche Praxis Ausgabe K: Kleintiere / Heimtiere",
+    "issns": ["1434-1239", "2567-5842"],
+    "subjects": ["Veterinary Medicine", "Pets"]
+  },
+  {
+    "name": "Transfusionsmedizin",
+    "issns": ["2191-8805", "2191-8813"],
+    "subjects": ["Transfusion Medicine"]
+  },
+  {
+    "name": "TumorDiagnostik & Therapie",
+    "issns": ["0722-219X", "1439-1279"],
+    "subjects": ["Medical Oncology"]
+  },
+  {
+    "name": "Ultraschall in der Medizin - European Journal of Ultrasound",
+    "issns": ["0172-4614", "1438-8782"],
+    "subjects": ["Ultrasonography"]
+  },
+  {
+    "name": "Ultrasound International Open",
+    "issns": ["2509-596X", "2199-7152"],
+    "subjects": ["Ultrasonography"]
+  },
+  {
+    "name": "VCOT Open",
+    "issns": ["2625-2325"],
+    "subjects": ["Veterinary Medicine", "Orthopedics", "Traumatology"]
+  },
+  {
+    "name": "Veterinary and Comparative Orthopaedics and Traumatology",
+    "issns": ["0932-0814", "2567-6911"],
+    "subjects": ["Veterinary Medicine", "Orthopedics", "Traumatology"]
+  },
+  {
+    "name": "VPT Magazin",
+    "issns": ["2364-2904", "2364-5490"],
+    "subjects": ["Physical Therapy Modalities"]
+  },
+  {
+    "name": "WFNS Journal",
+    "issns": ["2942-2302", "2942-2299"],
+    "subjects": ["Neurosurgery"]
+  },
+  {
+    "name": "World Journal of Nuclear Medicine",
+    "issns": ["1450-1147", "1607-3312"],
+    "subjects": ["Nuclear Medicine"]
+  },
+  {
+    "name": "Yearbook of Medical Informatics",
+    "issns": ["0943-4747", "2364-0502"],
+    "subjects": ["Medical Informatics"]
+  },
+  {
+    "name": "Zahnmedizin up2date",
+    "issns": ["1865-0457", "1865-0465"],
+    "subjects": ["Dentistry"]
+  },
+  {
+    "name": "Zeitschrift für Ganzheitliche Tiermedizin",
+    "issns": ["0939-7868", "1439-1422"],
+    "subjects": ["Veterinary Medicine", "Complementary Therapies"]
+  },
+  {
+    "name": "Zeitschrift für Gastroenterologie",
+    "issns": ["0044-2771", "1439-7803"],
+    "subjects": ["Gastroenterology", "Hepatology"]
+  },
+  {
+    "name": "Zeitschrift für Geburtshilfe und Neonatologie",
+    "issns": ["0948-2393", "1439-1651"],
+    "subjects": ["Obstetrics", "Neonatology"]
+  },
+  {
+    "name": "Zeitschrift für Komplementärmedizin",
+    "issns": ["1867-6081", "1867-6103"],
+    "subjects": ["Complementary Therapies", "Integrative Medicine"]
+  },
+  {
+    "name": "Zeitschrift für Orthomolekulare Medizin",
+    "issns": ["1611-5562", "1864-2470"],
+    "subjects": ["Orthomolecular Therapy", "Nutrition Therapy"]
+  },
+  {
+    "name": "Zeitschrift für Orthopädie und Unfallchirurgie",
+    "issns": ["1864-6697", "1864-6743"],
+    "subjects": ["Orthopedics", "Traumatology"]
+  },
+  {
+    "name": "Zeitschrift für Palliativmedizin",
+    "issns": ["1615-2921", "1615-293X"],
+    "subjects": ["Palliative Medicine"]
+  },
+  {
+    "name": "Zeitschrift für Phytotherapie",
+    "issns": ["0722-348X", "1438-9584"],
+    "subjects": ["Phytotherapy"]
+  },
+  {
+    "name": "Zeitschrift für Sexualforschung",
+    "issns": ["0932-8114", "1438-9460"],
+    "subjects": ["Sexology", "Sexual Behavior"]
+  },
+  {
+    "name": "Zentralblatt für Chirurgie - Zeitschrift für Allgemeine, Viszeral-, Thorax- und Gefäßchirurgie",
+    "issns": ["0044-409X", "1438-9592"],
+    "subjects": ["General Surgery", "Thoracic Surgery", "Vascular Surgical Procedures"]
+  }
+]

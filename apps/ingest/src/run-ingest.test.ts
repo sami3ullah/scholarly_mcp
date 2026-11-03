@@ -1,4 +1,10 @@
-import { appError, type Article, type Source, type SyncState } from '@scholarly-mcp/core';
+import {
+  appError,
+  journalSubjectsOf,
+  type Article,
+  type Source,
+  type SyncState,
+} from '@scholarly-mcp/core';
 import {
   createFakeClock,
   createInMemoryArticleStore,
@@ -260,6 +266,42 @@ describe('runIngest', () => {
       const record = await lookupIn(store).findRecord(open(1).doi, signal);
       expect(record?.article.subjects).toEqual([]);
       expect(record?.chunks.every((chunk) => chunk.origin !== 'fulltext')).toBe(true);
+    });
+  });
+
+  describe('with journal-level subjects', () => {
+    const journalSubjects = journalSubjectsOf([
+      { name: 'Thrombosis and Haemostasis', issns: ['0340-6245'], subjects: ['Hematology'] },
+    ]);
+    const subjectsOf = async (n: number) =>
+      (await store.findByDoi(article(n).doi, signal))?.subjects;
+
+    it('gives every article of a listed journal its subjects, without an enricher', async () => {
+      await runIngest(deps(source([article(1)]), { journalSubjects }), 'full', signal);
+      expect(await subjectsOf(1)).toEqual([{ label: 'Hematology', origin: 'journal' }]);
+    });
+
+    it('uses them only for articles the enricher gave no subjects', async () => {
+      const enricher = createInMemoryEnricher([
+        { doi: article(1).doi, enrichment: { subjects: [{ label: 'Stroke', origin: 'mesh' }] } },
+      ]);
+      await runIngest(
+        deps(source([article(1), article(2)]), { enricher, journalSubjects }),
+        'full',
+        signal,
+      );
+      expect(await subjectsOf(1)).toEqual([{ label: 'Stroke', origin: 'mesh' }]);
+      expect(await subjectsOf(2)).toEqual([{ label: 'Hematology', origin: 'journal' }]);
+    });
+
+    it('writes nothing when the same records come again', async () => {
+      await runIngest(deps(source([article(1)]), { journalSubjects }), 'full', signal);
+      const again = await runIngest(
+        deps(source([article(1)]), { journalSubjects }),
+        'incremental',
+        signal,
+      );
+      expect(again).toMatchObject({ unchanged: 1, written: 0 });
     });
   });
 });

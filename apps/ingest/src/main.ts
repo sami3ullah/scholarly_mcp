@@ -35,6 +35,7 @@ import {
   type SqliteConfig,
 } from '@scholarly-mcp/store-sqlite';
 import { ingestConfigSchema } from './config/ingest-config.js';
+import { loadJournalSubjects } from './config/load-journal-subjects.js';
 import {
   copyIndex,
   extractSubset,
@@ -249,6 +250,9 @@ async function main(argv: readonly string[]): Promise<number> {
         source: createCrossrefSource({ config, clock, logger }),
         ...(config.EUROPEPMC_ENABLED && {
           enricher: createEuropepmcEnricher({ config, fulltext: config, clock, logger }),
+        }),
+        ...(config.JOURNAL_SUBJECTS_FILE !== undefined && {
+          journalSubjects: loadJournalSubjects(config.JOURNAL_SUBJECTS_FILE),
         }),
         loadEmbedder: () => loadOnnxEmbedder(config),
         clock,
