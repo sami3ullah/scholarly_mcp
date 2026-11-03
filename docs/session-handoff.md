@@ -194,3 +194,25 @@ Append-only. Newest entry at the bottom.
   5. Follow-up from SM-12: live funnel view over `scholarly.usage_events` (decide shape; note events are pruned after 30 days).
 - **Gotchas:** zsh `set -e` inside a one-line chain did not stop on a failed `git commit`; commit one step per command. lint-staged fails on a test importing a workspace package that is not staged yet. `better-sqlite3` rejects `?1`-style numbered params when the same values are bound positionally; use plain `?`. Run tests from the repo root (`pnpm exec vitest run --project store-postgres`); Docker must be running.
 - **Pushed** to origin (`1ce5de6`); the pre-push eval gate passed. `pnpm check` green except `format:check` on the gitignored, Next-generated `apps/landing/next-env.d.ts` (local only): 1,341 tests, 95.56% lines. CI has not run the new Testcontainers suite yet; the GitHub runner needs Docker (ubuntu-latest has it).
+
+## 2026-11-03 - session 15, SM-13 step 1 done (Postgres index store)
+
+- **Objective:** SM-13 "Next, in order" step 1 from session 14: the Postgres index store per ADR 0034.
+- **Done (committed on `main`):**
+  - `ec9437c` refactor: `toJsonWithDates`/`fromJsonWithDates` moved from `store-sqlite` to core (`core/src/json`). `VerifyCheck`, `VerifyReport`, `verifyResult` and `sampleQueryChecks` (title and own-vector sample queries over `reader` + `search`) moved to core (`core/src/indexing/verify-report.ts`). `store-sqlite` re-exports the types, so the ingest is unchanged.
+  - `924dd61` `store-postgres` index store:
+    - Runtime migration 2 creates the `vector` and `pg_trgm` extensions.
+    - `database/index-schema.ts` (`INDEX_LAYOUT_VERSION = 1`) defines the per-build schema: `layout` (version, dimensions), `articles` (record `jsonb`), `chunks` (filter columns plus `search_language`, `text_stemmed`/`text_folded`/`title_stemmed`/`title_text_folded`, generated weighted `tsv`, `vector(d)`), `index_meta` and `sync_state`. Indexes: by doi, GIN `tsv`, GIN trigram, HNSW cosine. A copy creates the indexes after the rows.
+    - `createPostgresIndexStore(pool, schema)`: batched `unnest` upserts (last record per DOI wins), `ON DELETE CASCADE` chunks, purge, journals.
+    - Search: `to_tsquery('simple')` text from `text/ts-query.ts` (stems `:AB`, folded word `:C`), `ts_rank('{0.05,0.25,0.5,1}', …, 1)`. The trigram top-up is `LIKE ANY` (bitmap index scan confirmed) plus `hasStemAtWordEdge`. Vector search runs in a transaction with `set_config` for `iterative_scan = strict_order`, `ef_search` 200 and `max_scan_tuples` 1e6.
+    - `beginPostgresIndexBuild({pool, kind, now, dimensions, serverRole?}, signal)` returns `{kind, resumed, schema, store, commit(meta, signal), discard(signal)}`. Commit runs ANALYZE, writes the meta, grants `serverRole`, flips `live_index` (keeps the previous build, drops the one before it) and clears `index_build`. Builds take an advisory lock and run with `statement_timeout = 0`.
+    - `verifyPostgresIndex(pool, schema, options, signal)`. `readLiveIndex(db)`.
+  - `4784268` docs: package README, ticket ticks, ADR 0034 notes (weights halved because `ts_rank` takes weights up to 1; server grants are explicit at commit, not default privileges).
+- **Verified:** `pnpm lint`, `typecheck` and `depcruise` are green. The suite has 1,421 tests (store-postgres alone 106, including the full article and sync state contracts and the SQLite German search cases) with 95.5% lines. `format:check` fails only on the local, gitignored `apps/landing/next-env.d.ts`. A scratch load of 20k synthetic chunks inserted in about 45 s (HNSW and GIN maintained per row). Vector queries took about 6 ms with HNSW under a year filter, lexical about 10 ms.
+- **Gotchas:** `ts_rank` weights must be within 0..1 ("weight out of range"). A Python `str.replace` with the wrong indentation fails silently; assert that the pattern is present, or use Edit. `freshIndexStore()` (in `testing/index-schemas.ts`) shares one migrated database per test file and gives each test its own schema.
+- **Next, in order:** steps 2-5 from session 14 are unchanged.
+  - Step 2: async server index reader over `readLiveIndex` + `createPostgresIndexStore`, refreshed when `live_index.version` changes. Then `STORE` wiring, `ingest migrate`, and an abstraction over the two build APIs, because the ingest uses `build.db` and the sync `commit`/`close` on SQLite.
+  - Step 3: compose profile.
+  - Step 4: exit eval copy plus `eval golden` on both stores, and tuning `ts_rank` normalisation and `ef_search`.
+  - Step 5: funnel view.
+  - Consider creating the full-build indexes after loading if the exit copy is slow.
