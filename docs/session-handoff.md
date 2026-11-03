@@ -132,3 +132,23 @@ Append-only. Newest entry at the bottom.
 - **Gotchas:** web `Request` drops `Host`, so the Host allowlist checks the URL host (the Node adapter builds it from `Host`). API key secrets are base64url and may contain `_`: take the last 43 chars, never split on `_`. OTel 2.x `sdk-trace-node` and `prom-client` are deprecated; use the 3.0 line (api 1.10) and `@prometheus-io/client`. `SimpleSpanProcessor`/`BatchSpanProcessor` take `{ exporter }`.
 - **Still open for the user:** Claude Desktop manual check (from SM-09).
 - **Next:** SM-11 (landing sessions and Next.js landing page), then SM-12. Follow-ups added to SM-13 (Postgres key store and outbox with row claiming) and SM-14 (image entrypoint for `keys`, internal `/metrics`, shared rate limits for replicas).
+
+## 2026-11-03 - session 12, SM-11 done
+
+- **Done:** SM-11 (ADR 0032, guide `docs/guides/landing-page.md`).
+  - **Core.** `landingPageSchema`, the page contract shared by the server and the app; it strips text from a full-text passage. Also `doiUrl`.
+  - **Server.** `landing/`: `createLandingPages` builds the chosen article, the other results in order, the matched passage, topics from shared subjects, access via entitlements and up to 3 related articles. Each side system fails soft. `createLandingApi` serves `GET /landing/v1/page` and `POST /landing/v1/visits`. Config adds `LANDING_API_SECRET` (required beyond loopback), `LANDING_RATE_LIMIT_*` and `HTTP_ALONGSIDE_STDIO`. Metrics `landing_pages_total{session}` and `landing_visits_total{tool}`. `createApp` now returns `{ factory, landingPages }`.
+  - **New `apps/landing`.** Next.js 16.4.4 and React 19.3.1: server components, a beacon hook, an expandable abstract, CSS Modules on tokens, en/de strings.
+  - **Tests.** Playwright with axe (28 tests, desktop and mobile) and Lighthouse CI run against `e2e/stub-api.mjs`, which serves synthetic articles. New CI job `landing`. ESLint has the react-hooks and next plugins, and two new depcruise rules guard the landing app.
+- **Verified live (real index, ports 8080/3100):** a German search link renders the page in 0.2-0.27 s. Lighthouse LCP is about 620 ms, with performance and accessibility at 1.0. An unknown DOI answers 307 to doi.org, and a dead link answers 404. `pnpm check` is green: 1,236 tests, 95.8% lines.
+- **Gotchas:**
+  - **No `loading.tsx` on `/mcp/landing`.** A streamed shell fixes the status at 200, which breaks the redirect and 404 (ADR 0032).
+  - **No `output: 'standalone'`.** `next start` refuses it; the image belongs to SM-14.
+  - **Root scripts.** `build:packages` skips the landing app; use `pnpm --filter @scholarly-mcp/landing build`.
+  - **Headless UAs.** Headless Chrome's UA counts as a preview agent, so Playwright's desktop project sets a normal UA.
+  - **Testing Library.** It needs `src/testing/setup.ts` for cleanup, because vitest globals are off.
+  - **Port 3000.** On this machine port 3000 is held by another Next server (since Oct 27), so local checks used 3100. The preset still points links at 3000.
+  - **Playwright browser.** Run `pnpm --filter @scholarly-mcp/landing exec playwright install chromium` once.
+- **Not pushed CI-verified yet:** the new `landing` CI job has only run locally (same commands).
+- **Still open for the user:** Claude Desktop manual check (from SM-09), now with `HTTP_ALONGSIDE_STDIO=true` so the links open.
+- **Next:** SM-12 (MCP Apps cards and funnel dashboard). Its visit events must go into the outbox, because `visitCount` is deleted with its session (follow-ups are in the ticket). Then SM-13 and SM-14.
