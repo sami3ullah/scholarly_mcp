@@ -44,7 +44,7 @@ x-app: &app
 services:
   # Ends TLS and routes: /mcp to the server, everything else to the landing app.
   caddy:
-    image: caddy:2.10.2-alpine
+    image: caddy:2.11.6-alpine
     # Root inside the container, so it owns its volumes, with every capability dropped but
     # the one the image's binary is marked with (it needs no privileged port: 8080 and 8443
     # are published as 80 and 443).
