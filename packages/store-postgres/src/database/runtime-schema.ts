@@ -63,6 +63,10 @@ const MIGRATIONS: readonly string[] = [
      dimensions integer NOT NULL,
      started_at timestamptz NOT NULL
    );`,
+  // Index builds need vectors and trigrams. Creating them may need a superuser; the compose
+  // profile creates both up front, so this is then a no-op.
+  `CREATE EXTENSION IF NOT EXISTS vector;
+   CREATE EXTENSION IF NOT EXISTS pg_trgm;`,
 ];
 
 /** The schema version this code needs. */
