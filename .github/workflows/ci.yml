@@ -35,3 +35,29 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm depcruise
       - run: pnpm test:coverage
+
+  # The landing page end to end (ADR 0032): Playwright with axe and Lighthouse CI, against a
+  # stub landing API with synthetic articles, so no index or content is needed here.
+  landing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build:packages
+      - run: pnpm --filter @scholarly-mcp/landing build
+      - run: pnpm --filter @scholarly-mcp/landing exec playwright install --with-deps chromium
+      - run: pnpm --filter @scholarly-mcp/landing e2e
+      - run: pnpm --filter @scholarly-mcp/landing lhci
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: landing-reports
+          path: |
+            apps/landing/playwright-report
+            apps/landing/test-results
+            apps/landing/.lighthouseci
