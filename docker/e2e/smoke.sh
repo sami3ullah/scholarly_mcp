@@ -11,7 +11,7 @@ set -euo pipefail
 store=${1:-sqlite}
 case "$store" in
   sqlite) server=server ;;
-  postgres) server=server-pg ;;
+  postgres) server='server-pg' ;;
   *) echo "usage: docker/e2e/smoke.sh [sqlite|postgres]" >&2; exit 2 ;;
 esac
 cd "$(dirname "$0")/../.."
