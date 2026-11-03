@@ -36,6 +36,7 @@ import {
   type SqliteConfig,
 } from '@scholarly-mcp/store-sqlite';
 import { ingestConfigSchema } from './config/ingest-config.js';
+import { loadDoiList } from './config/load-doi-list.js';
 import { loadJournalSubjects } from './config/load-journal-subjects.js';
 import {
   copyIndex,
@@ -247,13 +248,15 @@ async function main(argv: readonly string[]): Promise<number> {
     return 2;
   }
 
+  const dois =
+    config.INGEST_DOIS_FILE === undefined ? undefined : loadDoiList(config.INGEST_DOIS_FILE);
   return withStorage(config, controller.signal, async (storage) => {
     const outcome = await ingestIndex(
       command,
       {
         storage,
         fullRunDays: config.INGEST_FULL_RUN_DAYS,
-        source: createCrossrefSource({ config, clock, logger }),
+        source: createCrossrefSource({ config, clock, logger, ...(dois && { dois }) }),
         ...(config.EUROPEPMC_ENABLED && {
           enricher: createEuropepmcEnricher({ config, fulltext: config, clock, logger }),
         }),

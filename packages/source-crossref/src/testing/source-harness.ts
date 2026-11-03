@@ -1,4 +1,4 @@
-import type { Source } from '@scholarly-mcp/core';
+import type { Doi, Source } from '@scholarly-mcp/core';
 import { createFakeClock, createTestLogger, type CapturedLine } from '@scholarly-mcp/testkit';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
@@ -52,8 +52,11 @@ export function useCrossrefServer() {
   return { server, requests };
 }
 
-/** A source with a fake clock, instant recorded sleeps, fixed jitter and a capturing logger. */
-export function createTestSource(overrides: Partial<CrossrefConfig> = {}) {
+/**
+ * A source with a fake clock, instant recorded sleeps, fixed jitter and a capturing logger;
+ * with `dois`, one that looks up only those.
+ */
+export function createTestSource(overrides: Partial<CrossrefConfig> = {}, dois?: readonly Doi[]) {
   const clock = createFakeClock(new Date('2026-11-02T10:00:00Z'));
   const sleeps: number[] = [];
   const lines: CapturedLine[] = [];
@@ -61,6 +64,7 @@ export function createTestSource(overrides: Partial<CrossrefConfig> = {}) {
     config: { ...testConfig, ...overrides },
     clock,
     logger: createTestLogger(lines),
+    ...(dois && { dois }),
     random: () => 0.5,
     sleep: (ms, signal) => {
       signal.throwIfAborted();

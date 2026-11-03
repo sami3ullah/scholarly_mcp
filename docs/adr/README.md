@@ -44,3 +44,4 @@ Each ADR records one decision: the context, what we chose and what follows from 
 | [0036](0036-shared-rate-limit-buckets.md)               | Shared rate-limit buckets                                        | accepted           |
 | [0037](0037-container-image-and-compose-profiles.md)    | Container image and compose profiles                             | accepted           |
 | [0038](0038-landing-image-proxy-and-secret-files.md)    | Landing image, proxy and secret files                            | accepted           |
+| [0039](0039-demo-index-from-a-cc-by-doi-list.md)        | Demo index from a CC BY DOI list                                 | accepted           |

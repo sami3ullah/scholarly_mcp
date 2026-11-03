@@ -7,9 +7,10 @@ import {
   type Sleep,
 } from '@scholarly-mcp/http';
 import type { CrossrefConfig } from './config/crossref-config.js';
+import { decodeListCursor, encodeListCursor } from './paging/list-cursor.js';
 import { decodeCursor, encodeCursor, type CursorState } from './paging/source-cursor.js';
 import { worksUrl } from './paging/works-url.js';
-import { pageArticles } from './page-articles.js';
+import { LOOKUP_BATCH, pageArticles } from './page-articles.js';
 import { readWorks } from './read-works.js';
 import type { CrossrefWork } from './work/crossref-work.js';
 
@@ -18,6 +19,8 @@ export interface CrossrefSourceOptions {
   readonly config: CrossrefConfig;
   readonly clock: Clock;
   readonly logger: Logger;
+  /** Only these DOIs, looked up in batches, instead of walking the whole prefix (ADR 0039). */
+  readonly dois?: readonly Doi[];
   readonly fetch?: typeof fetch;
   readonly sleep?: Sleep;
   readonly random?: () => number;
@@ -29,6 +32,9 @@ export interface CrossrefSourceOptions {
  * articles a retraction notice retracts are fetched and emitted as retracted, so an
  * incremental run catches a retraction even when the original was not re-deposited. When
  * Crossref expires a cursor, the walk restarts from the latest deposit already seen.
+ *
+ * With `dois` it looks up just those DOIs, a batch per page, still within the prefix and the
+ * publication-date scope, so a small index such as the demo index builds in minutes.
  *
  * Requests run one at a time, as Crossref asks; do not call `fetchPage` concurrently.
  */
@@ -48,6 +54,39 @@ export function createCrossrefSource(options: CrossrefSourceOptions): Source {
     timeoutMs: config.CROSSREF_TIMEOUT_MS,
     maxRetries: config.CROSSREF_MAX_RETRIES,
   });
+
+  const lookupIn = (signal: AbortSignal) => async (dois: readonly Doi[]) => {
+    const found = readWorks(await getJson(http, worksUrl(config, { dois }), signal));
+    return found.kind === 'page' ? found.works : [];
+  };
+
+  const list = options.dois === undefined ? undefined : [...new Set(options.dois)];
+  if (list !== undefined) {
+    return {
+      name: 'crossref',
+      async fetchPage(request, signal) {
+        signal.throwIfAborted();
+        const offset = request.cursor === undefined ? 0 : decodeListCursor(request.cursor);
+        const batch = list.slice(offset, offset + LOOKUP_BATCH);
+        const lookup = lookupIn(signal);
+        const found = batch.length === 0 ? [] : await lookup(batch);
+        const since = request.updatedSince;
+        const works = found.filter(
+          (work) => since === undefined || new Date(work.deposited['date-time']) >= since,
+        );
+        const { articles, skipped, followedUp } = await pageArticles(works, clock.now(), lookup);
+        logger.info(
+          { emitted: articles.length, skipped, notFound: batch.length - found.length, followedUp },
+          'Crossref DOI batch read',
+        );
+        const next = offset + batch.length;
+        return {
+          articles,
+          ...(next < list.length && { nextCursor: encodeListCursor(next) }),
+        };
+      },
+    };
+  }
 
   return {
     name: 'crossref',
@@ -71,11 +110,11 @@ export function createCrossrefSource(options: CrossrefSourceOptions): Source {
         (work) => from === undefined || new Date(work.deposited['date-time']) >= from,
       );
       const watermark = latestDeposit(page.works, state.watermark);
-      const lookup = async (dois: readonly Doi[]) => {
-        const found = readWorks(await getJson(http, worksUrl(config, { dois }), signal));
-        return found.kind === 'page' ? found.works : [];
-      };
-      const { articles, skipped, followedUp } = await pageArticles(works, clock.now(), lookup);
+      const { articles, skipped, followedUp } = await pageArticles(
+        works,
+        clock.now(),
+        lookupIn(signal),
+      );
       logger.info(
         { emitted: articles.length, skipped, invalid: page.invalid, followedUp },
         'Crossref page read',
