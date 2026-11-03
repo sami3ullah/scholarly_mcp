@@ -50,6 +50,12 @@ describe('createHttpHandler routes', () => {
     expect(await metrics.text()).toContain('http_requests_total');
   });
 
+  it('leaves /metrics to the internal listener when told to', async () => {
+    const { handler } = handlerWith({ exposeMetrics: false });
+    expect((await handler.fetch(get('/metrics'))).status).toBe(404);
+    expect((await handler.fetch(get('/healthz'))).status).toBe(200);
+  });
+
   it('is not ready while any check fails, e.g. the index is missing or it is draining', async () => {
     const { handler } = handlerWith({
       readiness: () => ({ index: false, model: true, accepting: true }),

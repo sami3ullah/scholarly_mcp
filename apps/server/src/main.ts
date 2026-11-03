@@ -18,6 +18,7 @@ import {
 import { meteringConfigSchema } from './config/metering-config.js';
 import { createApp } from './create-app.js';
 import { createHttpHandler, type HttpHandlerDeps } from './http/create-http-handler.js';
+import { createMetricsHandler } from './http/create-metrics-handler.js';
 import { runFunnelCommand } from './funnel/run-funnel-command.js';
 import { runKeysCommand } from './keys/run-keys-command.js';
 import { createLandingApi } from './landing/create-landing-api.js';
@@ -262,6 +263,7 @@ async function serve(config: ServerConfig, selection: StoreSelection): Promise<v
         // The model is loaded before the server listens, so it is always ready here.
         readiness: () => ({ index: index.isReady(), model: true, accepting: !stopping }),
         metrics,
+        exposeMetrics: config.METRICS_PORT === undefined,
         logger,
       }),
       host: config.HTTP_HOST,
@@ -271,6 +273,18 @@ async function serve(config: ServerConfig, selection: StoreSelection): Promise<v
         metrics.inFlight.set(count);
       },
     });
+
+  // Off the public port, so a load balancer that forwards it cannot expose the metrics.
+  const metricsHttp =
+    config.METRICS_PORT === undefined
+      ? undefined
+      : await serveHttp({
+          handler: createMetricsHandler(metrics),
+          host: config.METRICS_HOST,
+          port: config.METRICS_PORT,
+          logger,
+          name: 'metrics',
+        });
 
   let stopTransport: () => Promise<unknown>;
   if (config.MCP_TRANSPORT === 'stdio') {
@@ -311,6 +325,7 @@ async function serve(config: ServerConfig, selection: StoreSelection): Promise<v
       version,
       ready: index.isReady(),
       tracing: tracing !== undefined,
+      metricsPort: metricsHttp?.port,
     },
     'Server started',
   );
@@ -326,6 +341,7 @@ async function serve(config: ServerConfig, selection: StoreSelection): Promise<v
       void (async () => {
         try {
           await stopTransport();
+          await metricsHttp?.close(config.SHUTDOWN_TIMEOUT_MS);
           await exporter.stop();
           await meter.flush(AbortSignal.timeout(5000)).catch((error: unknown) => {
             logger.warn({ err: error }, 'Usage events left in the outbox for the next start');

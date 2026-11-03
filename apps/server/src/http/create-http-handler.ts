@@ -57,6 +57,8 @@ export interface HttpHandlerDeps {
   readonly allowedOrigins: readonly string[];
   readonly readiness: Readiness;
   readonly metrics: ServerMetrics;
+  /** False when `/metrics` has its own internal listener instead (`METRICS_PORT`). */
+  readonly exposeMetrics?: boolean;
   readonly logger: Logger;
 }
 
@@ -79,6 +81,7 @@ const tracer = trace.getTracer('scholarly-mcp');
 export function createHttpHandler(deps: HttpHandlerDeps): HttpHandler {
   const { auth, metrics } = deps;
   const prmPath = auth.mode === 'bearer' ? auth.protectedResource?.url.pathname : undefined;
+  const metricsPath = deps.exposeMetrics === false ? undefined : '/metrics';
 
   const route = async (request: Request, path: string): Promise<Response> => {
     if (request.url.length > MAX_URL_LENGTH) return plain(414, 'URI too long');
@@ -89,7 +92,7 @@ export function createHttpHandler(deps: HttpHandlerDeps): HttpHandler {
         : json(403, { error: 'forbidden', message: 'Host not allowed' });
     }
     if (request.method !== 'GET' && request.method !== 'HEAD') {
-      return path === '/healthz' || path === '/readyz' || path === '/metrics' || path === prmPath
+      return path === '/healthz' || path === '/readyz' || path === metricsPath || path === prmPath
         ? plain(405, 'Method not allowed', { allow: 'GET, HEAD' })
         : plain(404, 'Not found');
     }
@@ -99,11 +102,7 @@ export function createHttpHandler(deps: HttpHandlerDeps): HttpHandler {
       const ready = Object.values(checks).every(Boolean);
       return json(ready ? 200 : 503, { status: ready ? 'ready' : 'not ready', checks });
     }
-    if (path === '/metrics') {
-      return new Response(await metrics.registry.metrics(), {
-        headers: { 'content-type': metrics.registry.contentType, 'cache-control': 'no-store' },
-      });
-    }
+    if (path === metricsPath) return metricsResponse(metrics);
     if (path === prmPath && auth.mode === 'bearer' && auth.protectedResource !== undefined) {
       return json(200, auth.protectedResource.document);
     }
@@ -183,6 +182,13 @@ function routeLabel(path: string, prmPath: string | undefined): string {
     return path;
   }
   return path === prmPath ? '/.well-known/oauth-protected-resource' : 'other';
+}
+
+/** The Prometheus exposition of `metrics`, never cached. */
+export async function metricsResponse(metrics: ServerMetrics): Promise<Response> {
+  return new Response(await metrics.registry.metrics(), {
+    headers: { 'content-type': metrics.registry.contentType, 'cache-control': 'no-store' },
+  });
 }
 
 function plain(status: number, text: string, headers: Record<string, string> = {}): Response {
