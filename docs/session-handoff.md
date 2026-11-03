@@ -152,3 +152,28 @@ Append-only. Newest entry at the bottom.
 - **Not pushed CI-verified yet:** the new `landing` CI job has only run locally (same commands).
 - **Still open for the user:** Claude Desktop manual check (from SM-09), now with `HTTP_ALONGSIDE_STDIO=true` so the links open.
 - **Next:** SM-12 (MCP Apps cards and funnel dashboard). Its visit events must go into the outbox, because `visitCount` is deleted with its session (follow-ups are in the ticket). Then SM-13 and SM-14.
+
+## 2026-11-03 - session 13, SM-12 done
+
+- **Owner decisions (ADR 0033):** the funnel is a CLI over the JSON lines export that writes a static HTML report. Visits count per token and DOI. Next actions come from a beacon on the landing page's access buttons.
+- **CI fix first:** `check` had failed since SM-16, because `model.ts` pins three revisions and the cache key step grepped one SHA. The cache now keys on `hashFiles('packages/embedder-onnx/src/model.ts')`. CI was green on `4490746` (both jobs).
+- **Done:** SM-12 (ADR 0033, guide `docs/guides/funnel-and-card-view.md`).
+  - **Core.** `UsageEvent` is a union on `kind`. `tool_call` gains `cardsByJournal`. The new kinds `landing_visit` and `landing_action` are always `billable: false`. Core also gets `toWireEvent`/`parseWireEvent` (it reads pre-SM-12 lines without `kind`) and `computeFunnel` (dedupes by id). `LandingSession.tool` is optional.
+  - **Store.** Runtime migration 3: sessions get a `tool` column, and `usage_events` is rebuilt as an envelope plus a JSON `payload`, with old rows copied as tool calls.
+  - **Server.** `landing/create-referrals.ts` records visits and actions only for a live token with the DOI in the results, with the journal from the index and id = sha256(kind, token, doi[, action]) in base64url. The visits route now requires `doi`. New `POST /landing/v1/actions` and `landing_actions_total{action}`. New `scholarly-mcp funnel --from --out [--json --since --until --key]` command. Tool replies report `cards`, so the factory records cards per journal.
+  - **Landing app.** The visit beacon fires once per token, DOI and tab, and skips same-origin moves without UTM tags. `ActionTracker` plus `data-action` on the `ButtonLink`s post to `/mcp/landing/action`. A shared `referralRoute` handles both routes.
+  - **New `packages/card-view`.** esbuild inlines `src/view` (the ext-apps `App`, from `app-with-deps`) into `dist/card-view.html` (597 KB, 133 KB gzipped). The server registers `ui://scholarly-mcp/cards.html` (no CSP domains), and `search_articles` has `_meta.ui.resourceUri`.
+- **Verified:**
+  - **`pnpm check`.** Green: 1,304 tests, 95.69% lines.
+  - **Playwright.** The landing suite passes: 36 tests, desktop and mobile.
+  - **Live smoke (real index, stdio with the landing API on 8091).** The UI metadata and the resource are served. The search took 980 ms. A visit and an action went to `usage.jsonl` with the journal and no token, the repeated visit was stored once and the forged DOI recorded nothing. `funnel` reported 1 search, 5 cards, 1 visit and 1 action. No query text appears in the export.
+  - **Report.** Checked by screenshot in light, dark and phone layouts.
+- **Gotchas:**
+  - **`pick` and refinements.** zod `.pick()` fails on schemas with refinements; use `serverOwnConfigSchema.pick` (the funnel command does).
+  - **Card view tsconfig and lint.** Browser code needs its own `src/view/tsconfig.json` so the ESLint project service finds it. Use `app.addEventListener('toolresult', …)`, because the `on*` setters are deprecated and fail lint.
+  - **Commit subjects.** commitlint rejects an uppercase subject start ("MCP …").
+  - **Workspace deps in zsh.** Quote `"pkg@workspace:*"`, or zsh globs it.
+  - **Browser in CI.** The card view's Chromium test needs `playwright install chromium` for `@scholarly-mcp/card-view`. It was added to the CI `check` job, but that job has not run on GitHub yet.
+  - **Metric vs funnel.** `landing_visits_total` counts accepted beacons, so a repeat adds 1. The funnel counts unique ids.
+- **Still open for the user:** the Claude Desktop manual check, now covering both links (`HTTP_ALONGSIDE_STDIO=true`) and the card view.
+- **Next:** SM-13 (Postgres adapter: the outbox as envelope plus `jsonb`, row claiming, sessions with `tool`; a live funnel view is a follow-up there), then SM-14.
