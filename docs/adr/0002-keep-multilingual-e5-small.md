@@ -1,6 +1,6 @@
 # 0002 Keep multilingual-e5-small after the Phase 0 spike
 
-- Status: accepted
+- Status: superseded by [ADR 0029](0029-keep-e5-small-after-model-comparison.md)
 - Date: 2026-11-02
 - Confirms: PLAN.md key design decision #5
 

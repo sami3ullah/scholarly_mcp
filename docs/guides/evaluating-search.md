@@ -6,7 +6,7 @@ How search quality is measured, and how to check that a ranking change does not 
 
 ## The golden set
 
-`packages/testkit/golden/golden-set.json` holds 60 queries: 20 German, 20 English and 20 cross-language, abbreviation or compound queries. Each has its information need and graded judgments: `2` mainly about the need, `1` partially relevant. Judgments were made from title and abstract only, over candidates pooled from several retrieval runs; the rubric is in the file. Results nobody judged count as not relevant.
+`packages/testkit/golden/golden-set.json` (version 2) holds 60 queries: 20 German, 20 English and 20 cross-language, abbreviation or compound queries. Each has its information need and graded judgments: `2` mainly about the need, `1` partially relevant. Judgments were made from title and abstract only, over candidates pooled from several retrieval runs; the rubric is in the file. Results nobody judged count as not relevant.
 
 Scores, over the first page of ten:
 
@@ -56,6 +56,19 @@ INDEX_PATH=data/eval-index.sqlite LOG_LEVEL=warn EMBEDDER_CACHE_DIR=.cache/model
 ```
 
 GitHub CI does not run the gate, since it has no index.
+
+## Comparing embedding models
+
+The model is a setting (`EMBEDDER_MODEL`, [ADR 0028](../adr/0028-selectable-embedding-model.md)). To score another model on the same text, embed a copy of the eval index with it, chunking unchanged:
+
+```bash
+EMBEDDER_MODEL=bge-m3 EMBEDDER_CACHE_DIR=.cache/models node --env-file=presets/thieme.env \
+  apps/ingest/dist/main.js reembed --from data/eval-index.sqlite --out data/eval-index-bge-m3.sqlite
+INDEX_PATH=data/eval-index-bge-m3.sqlite EMBEDDER_MODEL=bge-m3 LOG_LEVEL=warn EMBEDDER_CACHE_DIR=.cache/models \
+  pnpm eval golden --rankings data/rankings-bge-m3.json
+```
+
+The golden set was pooled from earlier runs, so a new model's results nobody judged count against it. Before comparing, judge its top ten (from `--rankings`) that are neither graded nor in the current model's top ten, as a new golden set version (below). [ADR 0029](../adr/0029-keep-e5-small-after-model-comparison.md) did this for e5-base and bge-m3.
 
 ## Changing the golden set
 

@@ -1,6 +1,6 @@
 # 0027 Measure a larger embedding model before switching
 
-- Status: proposed
+- Status: superseded by [ADR 0029](0029-keep-e5-small-after-model-comparison.md) (done: e5-small kept)
 - Date: 2026-11-03
 - Follows: ADR 0002 ("revisit only if the SM-08 golden set misses its targets; the fallback is bge-m3"), PLAN.md key design decision #5, ADR 0026
 
