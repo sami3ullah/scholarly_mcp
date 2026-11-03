@@ -1,0 +1,17 @@
+# The build context: sources and the lockfile only. An index is passed as its own
+# build context (docker/README.md), never from here.
+**/node_modules
+**/dist
+**/.next
+**/.turbo
+**/coverage
+**/test-results
+**/*.tsbuildinfo
+.git
+.husky
+.env
+.env.*
+data
+spikes
+apps/landing
+**/*.log

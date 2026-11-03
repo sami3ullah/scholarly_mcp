@@ -1,9 +1,66 @@
-# Local services (ADR 0034). The default profile is empty: SQLite needs no service.
-#   docker compose --profile postgres up -d --wait
-# Passwords default to local-only values; set them in .env for anything else.
+# Local services (ADR 0034, SM-14). Pick one profile:
+#   docker compose --profile sqlite up -d --wait     # the server on SQLite files
+#   docker compose --profile postgres up -d --wait   # Postgres, migrated, and the server on it
+# One-off commands run in the same image, e.g. `docker compose run --rm server keys create`.
+# Secrets default to local-only values; set them in .env for anything else.
 name: scholarly-mcp
 
+x-server: &server
+  image: ${SCHOLARLY_IMAGE:-scholarly-mcp:local}
+  build:
+    context: .
+    dockerfile: docker/server/Dockerfile
+    # A directory holding index.sqlite to bake into the image (docker/README.md).
+    additional_contexts:
+      index: ${INDEX_DIR:-docker/server/no-index}
+  env_file: [presets/thieme.env]
+  environment: &server-env
+    AUTH_MODE: api-key
+    HTTP_ALLOWED_HOSTS: ${HTTP_ALLOWED_HOSTS:-localhost,127.0.0.1}
+    LANDING_API_SECRET: ${LANDING_API_SECRET:-local-only-landing-secret-change-me}
+    LANDING_BASE_URL: ${LANDING_BASE_URL:-http://localhost:3000}
+    LOG_LEVEL: ${LOG_LEVEL:-info}
+  read_only: true
+  tmpfs: [/tmp]
+  ports:
+    # The MCP endpoint and the landing API. Metrics (9464) stay on the compose network.
+    - 127.0.0.1:${HTTP_PORT:-8080}:8080
+  # Above SHUTDOWN_TIMEOUT_MS (10 s) plus 5 s, so requests in flight drain (ADR 0031).
+  stop_grace_period: 20s
+  healthcheck:
+    test:
+      [
+        CMD,
+        /nodejs/bin/node,
+        -e,
+        "fetch('http://127.0.0.1:8080/readyz').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))",
+      ]
+    interval: 5s
+    timeout: 3s
+    retries: 24
+    start_period: 10s
+
 services:
+  server:
+    <<: *server
+    profiles: [sqlite]
+    volumes:
+      # A baked-in index seeds the empty volume on first start; `ingest full` writes here too.
+      - index:/data
+      - state:/var/lib/scholarly
+
+  # One-off ingest commands on the SQLite index, e.g. `docker compose run --rm ingest full`.
+  ingest:
+    <<: *server
+    profiles: [tools]
+    entrypoint: [/nodejs/bin/node, /app/scholarly-mcp.mjs, ingest]
+    command: [verify]
+    ports: []
+    healthcheck: { disable: true }
+    volumes:
+      - index:/data
+      - state:/var/lib/scholarly
+
   postgres:
     profiles: [postgres]
     image: pgvector/pgvector:0.8.7-pg18-trixie
@@ -29,5 +86,32 @@ services:
       timeout: 3s
       retries: 30
 
+  # Brings the runtime tables up to date and grants the server role, as the writer.
+  migrate:
+    <<: *server
+    profiles: [postgres]
+    command: [ingest, migrate]
+    ports: []
+    healthcheck: { disable: true }
+    environment:
+      <<: *server-env
+      STORE: postgres
+      PG_SERVER_ROLE: scholarly_server
+      DATABASE_URL: postgres://scholarly_ingest:${PG_INGEST_PASSWORD:-ingest-local}@postgres:5432/scholarly
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  server-pg:
+    <<: *server
+    profiles: [postgres]
+    environment:
+      <<: *server-env
+      STORE: postgres
+      DATABASE_URL: postgres://scholarly_server:${PG_SERVER_PASSWORD:-server-local}@postgres:5432/scholarly
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+
 volumes:
+  index:
+  state:
   postgres-data:

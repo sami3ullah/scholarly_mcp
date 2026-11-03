@@ -66,8 +66,11 @@ export default tseslint.config(
       'apps/landing/e2e/**/*.mjs',
       'apps/landing/*.cjs',
       'packages/card-view/scripts/**/*.mjs',
+      'docker/**/*.mjs',
     ],
-    languageOptions: { globals: { process: 'readonly', URL: 'readonly' } },
+    languageOptions: {
+      globals: { process: 'readonly', URL: 'readonly', AbortSignal: 'readonly' },
+    },
   },
   prettier,
 );
