@@ -31,11 +31,6 @@ export interface LandingPages {
    * indexed DOI. The landing app then sends the reader to the DOI or shows its not-found page.
    */
   resolve(request: LandingPageRequest, signal: AbortSignal): Promise<LandingPage | undefined>;
-  /**
-   * Counts a visit the reader's browser confirmed, when the token is live. Returns whether
-   * it was counted; a failing store is logged, never thrown, as a visit is a side record.
-   */
-  recordVisit(token: Token, signal: AbortSignal): Promise<boolean>;
 }
 
 export interface LandingPagesDeps {
@@ -107,17 +102,6 @@ export function createLandingPages(deps: LandingPagesDeps): LandingPages {
   }
 
   return {
-    async recordVisit(token, signal) {
-      if ((await activeSession(token, signal)) === undefined) return false;
-      try {
-        await sessions.recordVisit(token, signal);
-        return true;
-      } catch (error) {
-        if (signal.aborted) throw error;
-        logger.warn({ err: error }, 'Landing visit not recorded');
-        return false;
-      }
-    },
     async resolve({ token, doi }, signal) {
       const session = token === undefined ? undefined : await activeSession(token, signal);
       const results = session?.results ?? [];

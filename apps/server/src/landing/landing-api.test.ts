@@ -20,6 +20,7 @@ const live: LandingSession = {
   token,
   results: [{ doi: doi('10.1055/a-1001'), matchedChunkId: '10.1055/a-1001#0' }],
   language: 'en',
+  tool: 'search_articles',
   apiKeyId: 'key_test',
   createdAt: created,
   expiresAt: new Date(created.getTime() + LANDING_SESSION_TTL_MS),
@@ -32,13 +33,14 @@ afterEach(async () => {
   harness = undefined;
 });
 
-async function api(options: { secret?: string; burst?: number } = {}) {
+async function api(options: { secret?: string; burst?: number; session?: LandingSession } = {}) {
   harness = await startHarness();
-  await harness.sessions.save(live, signal);
+  await harness.sessions.save(options.session ?? live, signal);
   const metrics = createMetrics({ defaults: false });
   const handler = createHttpHandler({
     landing: createLandingApi({
       pages: harness.landingPages,
+      referrals: harness.referrals,
       limiter: createRateLimiter({
         perMinute: 60,
         burst: options.burst ?? 100,
@@ -54,17 +56,22 @@ async function api(options: { secret?: string; burst?: number } = {}) {
     metrics,
     logger: createTestLogger(),
   });
-  return { handler, metrics, sessions: harness.sessions };
+  return { handler, metrics, sessions: harness.sessions, outbox: harness.outbox, harness };
 }
 
 const page = (query: string, headers: Record<string, string> = {}) =>
   new Request(`http://localhost/landing/v1/page?${query}`, { headers });
-const visit = (body: unknown, headers: Record<string, string> = {}) =>
-  new Request('http://localhost/landing/v1/visits', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', ...headers },
-    body: JSON.stringify(body),
-  });
+const post =
+  (path: string) =>
+  (body: unknown, headers: Record<string, string> = {}) =>
+    new Request(`http://localhost${path}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', ...headers },
+      body: JSON.stringify(body),
+    });
+const visit = post('/landing/v1/visits');
+const action = post('/landing/v1/actions');
+const A1001 = '10.1055/a-1001';
 
 describe('GET /landing/v1/page', () => {
   it('returns the page for a live token and DOI, uncached and not indexable', async () => {
@@ -106,33 +113,54 @@ describe('GET /landing/v1/page', () => {
 });
 
 describe('POST /landing/v1/visits', () => {
-  it('counts a visit on a live token by the tool that made the link', async () => {
-    const { handler, metrics, sessions } = await api();
-    const response = await handler.fetch(visit({ t: token, tool: 'search_articles' }));
+  it('records a visit to a result by the tool that made the session', async () => {
+    const { handler, metrics, sessions, outbox, harness: live } = await api();
+    const response = await handler.fetch(visit({ t: token, doi: A1001, tool: 'cite' }));
     expect(response.status).toBe(204);
     expect((await sessions.find(token, signal))?.visitCount).toBe(1);
     expect(await metrics.registry.metrics()).toContain(
       'landing_visits_total{tool="search_articles"} 1',
     );
+    await live.flushMeter();
+    expect(outbox.all()).toEqual([
+      expect.objectContaining({ kind: 'landing_visit', doi: A1001, tool: 'search_articles' }),
+    ]);
   });
 
-  it('answers unknown tokens the same way without counting anything', async () => {
-    const { handler, metrics } = await api();
+  it('answers unknown tokens and foreign DOIs the same way without counting anything', async () => {
+    const { handler, metrics, outbox, harness: live } = await api();
     const other = 'UUUUUUUUUUUUUUUUUUUUUU';
-    expect((await handler.fetch(visit({ t: other }))).status).toBe(204);
+    expect((await handler.fetch(visit({ t: other, doi: A1001 }))).status).toBe(204);
+    expect((await handler.fetch(visit({ t: token, doi: '10.1055/a-1002' }))).status).toBe(204);
     expect(await metrics.registry.metrics()).not.toContain('landing_visits_total{');
+    await live.flushMeter();
+    expect(outbox.all()).toEqual([]);
   });
 
-  it('counts a tool it does not know as unknown', async () => {
-    const { handler, metrics } = await api();
-    await handler.fetch(visit({ t: token, tool: 'newsletter' }));
-    expect(await metrics.registry.metrics()).toContain('landing_visits_total{tool="unknown"} 1');
+  it('falls back to the link campaign for an older session, and unknown beyond that', async () => {
+    const old: LandingSession = { ...live };
+    delete old.tool;
+    const { handler, metrics } = await api({ session: old });
+    await handler.fetch(visit({ t: token, doi: A1001, tool: 'find_related' }));
+    expect(await metrics.registry.metrics()).toContain(
+      'landing_visits_total{tool="find_related"} 1',
+    );
+    const again = await api({
+      session: { ...old, token: tokenSchema.parse('VVVVVVVVVVVVVVVVVVVVVV') },
+    });
+    await again.handler.fetch(
+      visit({ t: 'VVVVVVVVVVVVVVVVVVVVVV', doi: A1001, tool: 'newsletter' }),
+    );
+    expect(await again.metrics.registry.metrics()).toContain(
+      'landing_visits_total{tool="unknown"} 1',
+    );
   });
 
   it.each([
-    ['a missing token', {}],
-    ['extra fields', { t: token, query: 'Vorhofflimmern' }],
-    ['a malformed token', { t: 'abc' }],
+    ['a missing token', { doi: A1001 }],
+    ['a missing DOI', { t: token }],
+    ['extra fields', { t: token, doi: A1001, query: 'Vorhofflimmern' }],
+    ['a malformed token', { t: 'abc', doi: A1001 }],
   ])('refuses a body with %s', async (_case, body) => {
     const { handler } = await api();
     expect((await handler.fetch(visit(body))).status).toBe(400);
@@ -145,6 +173,45 @@ describe('POST /landing/v1/visits', () => {
       body: 'not json',
     });
     expect((await handler.fetch(request)).status).toBe(400);
+  });
+});
+
+describe('POST /landing/v1/actions', () => {
+  it('records an access button click and counts it by action', async () => {
+    const { handler, metrics, sessions, outbox, harness: live } = await api();
+    const response = await handler.fetch(action({ t: token, doi: A1001, action: 'read' }));
+    expect(response.status).toBe(204);
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    expect(await metrics.registry.metrics()).toContain('landing_actions_total{action="read"} 1');
+    expect((await sessions.find(token, signal))?.visitCount).toBe(0);
+    await live.flushMeter();
+    expect(outbox.all()).toEqual([
+      expect.objectContaining({ kind: 'landing_action', action: 'read', doi: A1001 }),
+    ]);
+  });
+
+  it('records nothing for an unknown token, still answering 204', async () => {
+    const { handler, metrics } = await api();
+    const body = { t: 'UUUUUUUUUUUUUUUUUUUUUU', doi: A1001, action: 'buy' };
+    expect((await handler.fetch(action(body))).status).toBe(204);
+    expect(await metrics.registry.metrics()).not.toContain('landing_actions_total{');
+  });
+
+  it.each([
+    ['an unknown action', { t: token, doi: A1001, action: 'subscribe' }],
+    ['a missing DOI', { t: token, action: 'read' }],
+    ['extra fields', { t: token, doi: A1001, action: 'read', q: 'x' }],
+  ])('refuses a body with %s', async (_case, body) => {
+    const { handler } = await api();
+    expect((await handler.fetch(action(body))).status).toBe(400);
+  });
+
+  it('takes the shared secret like the other routes', async () => {
+    const { handler } = await api({ secret: SECRET });
+    const body = { t: token, doi: A1001, action: 'read' };
+    expect((await handler.fetch(action(body))).status).toBe(401);
+    const signed = action(body, { authorization: `Bearer ${SECRET}` });
+    expect((await handler.fetch(signed)).status).toBe(204);
   });
 });
 

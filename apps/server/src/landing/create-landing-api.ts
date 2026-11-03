@@ -2,6 +2,7 @@ import { createHash, timingSafeEqual } from 'node:crypto';
 import {
   doiSchema,
   isAppError,
+  landingActionSchema,
   landingPageSchema,
   tokenSchema,
   toolNameSchema,
@@ -10,10 +11,12 @@ import { z } from 'zod';
 import type { RateLimiter } from '../limits/create-rate-limiter.js';
 import type { ServerMetrics } from '../telemetry/create-metrics.js';
 import type { LandingPages } from './create-landing-pages.js';
+import type { Referrals } from './create-referrals.js';
 
 /** Paths of the landing API (ADR 0032). */
 export const LANDING_PAGE_PATH = '/landing/v1/page';
 export const LANDING_VISITS_PATH = '/landing/v1/visits';
+export const LANDING_ACTIONS_PATH = '/landing/v1/actions';
 
 /** The header the landing app names its visitor in, for the per-visitor rate limit. */
 export const VISITOR_HEADER = 'x-landing-visitor';
@@ -23,12 +26,21 @@ const VISITOR_MAX_LENGTH = 64;
 
 const visitSchema = z.strictObject({
   t: tokenSchema,
-  /** The link's `utm_campaign`, counted per tool; anything else counts as `unknown`. */
+  /** The result the reader opened (ADR 0033). */
+  doi: doiSchema,
+  /** The link's `utm_campaign`; used only when the session does not know its tool. */
   tool: z.string().max(40).optional(),
+});
+
+const actionSchema = z.strictObject({
+  t: tokenSchema,
+  doi: doiSchema,
+  action: landingActionSchema,
 });
 
 export interface LandingApiDeps {
   readonly pages: LandingPages;
+  readonly referrals: Referrals;
   readonly limiter: RateLimiter;
   /** When set, every request must carry it as a bearer token. */
   readonly secret?: string;
@@ -42,13 +54,14 @@ export interface LandingApi {
 
 /**
  * The token resolver API the landing page calls from its server (ADR 0032).
- * `GET /landing/v1/page?t=<token>&doi=<doi>` returns the page; `POST /landing/v1/visits`
- * with `{ t, tool }` counts a visit the browser confirmed. Reading a page never counts or
- * consumes anything, so link previews cannot use a token up. Both routes take the shared
- * secret and a token bucket per visitor, and neither ever sees query text.
+ * `GET /landing/v1/page?t=<token>&doi=<doi>` returns the page. `POST /landing/v1/visits`
+ * with `{ t, doi, tool }` records a visit the browser confirmed, and `POST
+ * /landing/v1/actions` with `{ t, doi, action }` an access button click (ADR 0033). Reading
+ * a page never counts or consumes anything, so link previews cannot use a token up. Every
+ * route takes the shared secret and a token bucket per visitor; none ever sees query text.
  */
 export function createLandingApi(deps: LandingApiDeps): LandingApi {
-  const { pages, metrics } = deps;
+  const { pages, referrals, metrics } = deps;
   const secret = deps.secret === undefined ? undefined : digest(deps.secret);
 
   const authorised = (request: Request) => {
@@ -88,22 +101,36 @@ export function createLandingApi(deps: LandingApiDeps): LandingApi {
   const visit = async (request: Request): Promise<Response> => {
     const body = visitSchema.safeParse(await request.json().catch(() => undefined));
     if (!body.success) return json(400, { error: 'invalid_visit' });
-    if (await pages.recordVisit(body.data.t, request.signal)) {
-      const tool = toolNameSchema.safeParse(body.data.tool);
-      metrics.landingVisits.inc({ tool: tool.success ? tool.data : 'unknown' });
+    const { t: token, doi } = body.data;
+    const event = await referrals.record({ kind: 'landing_visit', token, doi }, request.signal);
+    if (event !== undefined) {
+      const campaign = toolNameSchema.safeParse(body.data.tool);
+      const tool = event.tool ?? (campaign.success ? campaign.data : 'unknown');
+      metrics.landingVisits.inc({ tool });
     }
-    // The same answer for live and unknown tokens: a visit says nothing about the token.
-    return new Response(null, { status: 204, headers: { 'cache-control': 'no-store' } });
+    return accepted();
+  };
+
+  const action = async (request: Request): Promise<Response> => {
+    const body = actionSchema.safeParse(await request.json().catch(() => undefined));
+    if (!body.success) return json(400, { error: 'invalid_action' });
+    const { t: token, doi, action: clicked } = body.data;
+    const referral = { kind: 'landing_action', token, doi, action: clicked } as const;
+    if ((await referrals.record(referral, request.signal)) !== undefined) {
+      metrics.landingActions.inc({ action: clicked });
+    }
+    return accepted();
+  };
+
+  const routes: Record<string, { method: string; handle: typeof page } | undefined> = {
+    [LANDING_PAGE_PATH]: { method: 'GET', handle: page },
+    [LANDING_VISITS_PATH]: { method: 'POST', handle: visit },
+    [LANDING_ACTIONS_PATH]: { method: 'POST', handle: action },
   };
 
   return {
     fetch: async (request, path) => {
-      const route =
-        path === LANDING_PAGE_PATH
-          ? { method: 'GET', handle: page }
-          : path === LANDING_VISITS_PATH
-            ? { method: 'POST', handle: visit }
-            : undefined;
+      const route = routes[path];
       if (route === undefined) return json(404, { error: 'not_found' });
       if (
         request.method !== route.method &&
@@ -129,6 +156,11 @@ export function createLandingApi(deps: LandingApiDeps): LandingApi {
       return route.handle(request);
     },
   };
+}
+
+/** The same answer for live and unknown tokens: a referral says nothing about the token. */
+function accepted(): Response {
+  return new Response(null, { status: 204, headers: { 'cache-control': 'no-store' } });
 }
 
 function digest(value: string): Buffer {

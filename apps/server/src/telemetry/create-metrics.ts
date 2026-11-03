@@ -19,6 +19,7 @@ export interface ServerMetrics {
   readonly inFlight: Gauge;
   readonly landingPages: Counter<'session'>;
   readonly landingVisits: Counter<'tool'>;
+  readonly landingActions: Counter<'action'>;
 }
 
 /** Creates a fresh registry, so tests and several apps in one process never collide. */
@@ -93,6 +94,12 @@ export function createMetrics(options: { readonly defaults?: boolean } = {}): Se
       name: 'landing_visits_total',
       help: 'Landing visits confirmed by the browser beacon, by the tool that made the link',
       labelNames: ['tool'],
+      registers,
+    }),
+    landingActions: new Counter({
+      name: 'landing_actions_total',
+      help: 'Access buttons clicked on landing pages (read, sign_in, buy, view_on_publisher, check_access)',
+      labelNames: ['action'],
       registers,
     }),
   };

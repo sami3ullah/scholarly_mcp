@@ -126,7 +126,7 @@ async function serve(config: ServerConfig): Promise<void> {
     },
   });
 
-  const { factory, landingPages } = createApp({
+  const { factory, landingPages, referrals } = createApp({
     index,
     embedder,
     sessions,
@@ -173,6 +173,7 @@ async function serve(config: ServerConfig): Promise<void> {
   let stopping = false;
   const landing = createLandingApi({
     pages: landingPages,
+    referrals,
     limiter: createRateLimiter({
       perMinute: config.LANDING_RATE_LIMIT_PER_MINUTE,
       burst: config.LANDING_RATE_LIMIT_BURST,

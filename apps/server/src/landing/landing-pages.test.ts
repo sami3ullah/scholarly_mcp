@@ -262,36 +262,3 @@ describe('side systems', () => {
     expect(logs.some((line) => line.message.includes('Related reading failed'))).toBe(true);
   });
 });
-
-describe('recording visits', () => {
-  it('counts a visit on a live token without consuming it', async () => {
-    const live = await withSession(session([result('10.1055/a-1001')]));
-    expect(await live.landingPages.recordVisit(token, signal)).toBe(true);
-    expect(await live.landingPages.recordVisit(token, signal)).toBe(true);
-    expect((await live.sessions.find(token, signal))?.visitCount).toBe(2);
-    expect(await live.landingPages.resolve({ token }, signal)).toBeDefined();
-  });
-
-  it('never counts a visit for an unknown or expired token', async () => {
-    const live = await withSession(
-      session([result('10.1055/a-1001')], {
-        createdAt: new Date(created.getTime() - LANDING_SESSION_TTL_MS),
-        expiresAt: created,
-      }),
-    );
-    expect(await live.landingPages.recordVisit(token, signal)).toBe(false);
-    const other = tokenSchema.parse('UUUUUUUUUUUUUUUUUUUUUU');
-    expect(await live.landingPages.recordVisit(other, signal)).toBe(false);
-  });
-
-  it('reports a visit the store could not record as not counted', async () => {
-    const store = createInMemorySessionStore();
-    const failing: SessionStore = {
-      ...store,
-      recordVisit: () => Promise.reject(new Error('disk full')),
-    };
-    harness = await startHarness({ overrides: { sessions: failing } });
-    await failing.save(session([result('10.1055/a-1001')]), signal);
-    expect(await harness.landingPages.recordVisit(token, signal)).toBe(false);
-  });
-});

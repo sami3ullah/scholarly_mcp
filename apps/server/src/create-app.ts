@@ -11,6 +11,7 @@ import { createSearchService, type SearchOptions } from '@scholarly-mcp/search';
 import { createMockEntitlements } from './access/create-mock-entitlements.js';
 import { createJournalCatalog } from './journals/journal-catalog.js';
 import { createLandingPages, type LandingPages } from './landing/create-landing-pages.js';
+import { createReferrals, type Referrals } from './landing/create-referrals.js';
 import { createLinkMaker } from './landing/create-link-maker.js';
 import type { RateLimiter } from './limits/create-rate-limiter.js';
 import type { LiveIndex } from './runtime/live-index.js';
@@ -40,10 +41,11 @@ export interface AppDeps {
   readonly entitlements?: Entitlements;
 }
 
-/** The wired app: the MCP server factory and the landing pages its links open. */
+/** The wired app: the MCP server factory, the landing pages its links open and their referrals. */
 export interface App {
   readonly factory: ReturnType<typeof createServerFactory>;
   readonly landingPages: LandingPages;
+  readonly referrals: Referrals;
 }
 
 /**
@@ -103,6 +105,13 @@ export function createApp(deps: AppDeps): App {
       entitlements,
       clock,
       logger: logger.child({ component: 'landing' }),
+    }),
+    referrals: createReferrals({
+      reader: index.reader,
+      sessions: deps.sessions,
+      meter: deps.meter,
+      clock,
+      logger: logger.child({ component: 'referrals' }),
     }),
   };
 }
