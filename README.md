@@ -208,25 +208,26 @@ pnpm check        # format, lint, typecheck, layering rules, tests with coverage
 
 ## Roadmap
 
-| Ticket                                            | Scope                                                | Status |
-| ------------------------------------------------- | ---------------------------------------------------- | :----: |
-| [SM-00](tickets/SM-00-feasibility-spike.md)       | Feasibility spike ([results](docs/spike-results.md)) |   ✅   |
-| [SM-01](tickets/SM-01-foundations.md)             | Monorepo foundations and CI                          |   ✅   |
-| [SM-02](tickets/SM-02-core-domain.md)             | Core domain, ports, config, errors, testkit          |   ✅   |
-| [SM-03](tickets/SM-03-crossref-source.md)         | Crossref source and normalisation                    |   ✅   |
-| [SM-04](tickets/SM-04-chunker-embedder.md)        | Chunker and ONNX embedder                            |   ✅   |
-| [SM-05](tickets/SM-05-sqlite-store-ingest.md)     | SQLite store and ingest CLI                          |   ✅   |
-| [SM-06](tickets/SM-06-europepmc-source.md)        | Europe PMC full-text source                          |   ✅   |
-| [SM-07](tickets/SM-07-search-service.md)          | Search service                                       |   ✅   |
-| [SM-08](tickets/SM-08-golden-set-eval.md)         | Golden set, eval and tuning                          |   ✅   |
-| [SM-09](tickets/SM-09-mcp-server.md)              | MCP server: six tools and transports                 |   ✅   |
-| [SM-10](tickets/SM-10-auth-telemetry-metering.md) | Auth, rate limits, telemetry, metering               |   ✅   |
-| [SM-11](tickets/SM-11-landing.md)                 | Landing sessions and Next.js landing page            |   ✅   |
-| [SM-12](tickets/SM-12-mcp-apps-funnel.md)         | MCP Apps cards and funnel dashboard                  |   ✅   |
-| [SM-13](tickets/SM-13-postgres-adapter.md)        | Postgres adapter                                     |   ✅   |
-| [SM-14](tickets/SM-14-hardening-docs.md)          | Hardening, image and docs                            |   ⬜   |
-| [SM-15](tickets/SM-15-demo-outreach.md)           | Demo deployment                                      |   ⬜   |
-| [SM-16](tickets/SM-16-embedding-model-eval.md)    | Embedding model evaluation (bge-m3)                  |   ✅   |
+| Ticket                                             | Scope                                                | Status |
+| -------------------------------------------------- | ---------------------------------------------------- | :----: |
+| [SM-00](tickets/SM-00-feasibility-spike.md)        | Feasibility spike ([results](docs/spike-results.md)) |   ✅   |
+| [SM-01](tickets/SM-01-foundations.md)              | Monorepo foundations and CI                          |   ✅   |
+| [SM-02](tickets/SM-02-core-domain.md)              | Core domain, ports, config, errors, testkit          |   ✅   |
+| [SM-03](tickets/SM-03-crossref-source.md)          | Crossref source and normalisation                    |   ✅   |
+| [SM-04](tickets/SM-04-chunker-embedder.md)         | Chunker and ONNX embedder                            |   ✅   |
+| [SM-05](tickets/SM-05-sqlite-store-ingest.md)      | SQLite store and ingest CLI                          |   ✅   |
+| [SM-06](tickets/SM-06-europepmc-source.md)         | Europe PMC full-text source                          |   ✅   |
+| [SM-07](tickets/SM-07-search-service.md)           | Search service                                       |   ✅   |
+| [SM-08](tickets/SM-08-golden-set-eval.md)          | Golden set, eval and tuning                          |   ✅   |
+| [SM-09](tickets/SM-09-mcp-server.md)               | MCP server: six tools and transports                 |   ✅   |
+| [SM-10](tickets/SM-10-auth-telemetry-metering.md)  | Auth, rate limits, telemetry, metering               |   ✅   |
+| [SM-11](tickets/SM-11-landing.md)                  | Landing sessions and Next.js landing page            |   ✅   |
+| [SM-12](tickets/SM-12-mcp-apps-funnel.md)          | MCP Apps cards and funnel dashboard                  |   ✅   |
+| [SM-13](tickets/SM-13-postgres-adapter.md)         | Postgres adapter                                     |   ✅   |
+| [SM-14](tickets/SM-14-hardening-docs.md)           | Hardening, image and docs                            |   ✅   |
+| [SM-15](tickets/SM-15-demo-outreach.md)            | Demo deployment                                      |   ⬜   |
+| [SM-16](tickets/SM-16-embedding-model-eval.md)     | Embedding model evaluation (bge-m3)                  |   ✅   |
+| [SM-17](tickets/SM-17-sqlite-search-throughput.md) | SQLite search throughput                             |   ⬜   |
 
 Full board: [tickets/README.md](tickets/README.md).
 

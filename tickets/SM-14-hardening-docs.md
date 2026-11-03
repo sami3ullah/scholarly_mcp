@@ -32,3 +32,7 @@ Worked in this order. The order puts the slow full rebuild first, so it runs in 
 ## Exit
 
 Fresh clone to working server in under 5 minutes, unaided.
+
+## Result
+
+Exit met on 2026-11-03 with release `v0.1.0` (images public on GHCR, SBOMs on the release). From no cached images and logged out of GHCR, the README quick start (`docker run`, `keys create`, one `search_articles` call over HTTP) answered in 104 s, most of it the image pull. A fresh `git clone` plus `docker compose --profile sqlite --profile landing up` on the published images, a key and the 13 smoke checks took a further 38 s (server image already pulled). Follow-up: SQLite throughput (SM-17).

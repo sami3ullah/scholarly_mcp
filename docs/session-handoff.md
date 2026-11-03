@@ -314,3 +314,9 @@ Append-only. Newest entry at the bottom.
 - **Next, in order:** confirm CI + Security green on `89b2bc0`; push tag `v0.1.0`; watch `release.yml`; check the GHCR packages are public (anonymous `docker pull`; if private, the owner sets visibility in package settings); then step 11: fresh clone to working server with the README quick start, timed, under 5 minutes; record it in the ticket, mark SM-14 done in `tickets/README.md` and the README roadmap.
 - **Open for the owner:** the Dependabot npm update fails (log needs write access: repo Insights > Dependency graph > Dependabot); Dependabot PRs #1 (actions group) and #2 (caddy 2.11.6) are open, unreviewed; the Claude Desktop manual check (SM-09/SM-12); the README's 30-second GIF comes with SM-15.
 - **Gotchas:** a local Postgres volume `scholarly-mcp_postgres-data` holds the full corpus (used for the load test). Demo index copy at the session scratchpad only; rebuild with `docker/demo-index/build.sh`. Foreground `sleep` is blocked; poll GitHub runs in a background loop.
+
+## 2026-11-03 - session 21 (cont.), SM-14 done, v0.1.0 released
+
+- CI and Security green on `89b2bc0` (incl. `e2e` on both stores). Tag `v0.1.0` pushed with the owner's approval; `release.yml` passed in 28 min (demo index + smoke 15 min, multi-arch builds 13 min). Images `ghcr.io/sami3ullah/scholarly-mcp` and `-landing` (`0.1.0`, `0.1`, `latest`) pull anonymously; SBOMs on the GitHub release.
+- Step 11 exit met: README `docker run` quick start answered a tool call 104 s from no cache (mostly the pull); fresh clone + compose with the landing app + 13 smoke checks 38 s more. SM-14 marked done; SM-17 added to the README roadmap.
+- **Next:** SM-15 (needs owner decisions) or SM-17. Still open for the owner: the Dependabot npm updater error (log needs write access), Dependabot PRs #1 and #2 (and later ones), the Claude Desktop manual check, `gh attestation verify` not run here (no `gh` CLI locally).
