@@ -227,7 +227,7 @@ pnpm check        # format, lint, typecheck, layering rules, tests with coverage
 | [SM-14](tickets/SM-14-hardening-docs.md)           | Hardening, image and docs                            |   ✅   |
 | [SM-15](tickets/SM-15-demo-outreach.md)            | Demo deployment                                      |   ⬜   |
 | [SM-16](tickets/SM-16-embedding-model-eval.md)     | Embedding model evaluation (bge-m3)                  |   ✅   |
-| [SM-17](tickets/SM-17-sqlite-search-throughput.md) | SQLite search throughput                             |   ⬜   |
+| [SM-17](tickets/SM-17-sqlite-search-throughput.md) | SQLite search throughput                             |   ✅   |
 
 Full board: [tickets/README.md](tickets/README.md).
 

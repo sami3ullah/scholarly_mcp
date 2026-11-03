@@ -23,7 +23,7 @@ The ticket's options, measured on the full index (70,989 articles, 176,536 chunk
 ## Consequences
 
 - At 20 tool calls a second offered on 2 vCPUs, the full index serves 19.4 a second at p50 344 ms, p95 517 ms, p99 900 ms, with 1 `TIMEOUT` in 1,167 calls (3 workers: 19.8 a second, p95 525 ms). Before SM-17 it served 4.4 a second at p95 3,527 ms. The CPUs are now the limit: one worker serves 12.8 a second, and a cap of 1 or 2 ONNX threads did not change the result.
-- The p95 is at the plan's 500 ms line, not clearly under it. The next lever is the scan in the Linux image: a sqlite-vec built with NEON (arm64) or AVX (amd64) should bring it from 65 ms towards the 29 ms seen on macOS, but means compiling a native extension from pinned source in the image build, which needs the owner's agreement (supply chain, SM-14). Until then, give a SQLite server 3 or more vCPUs for 20 calls a second, or use Postgres.
+- The p95 is at the plan's 500 ms line, not clearly under it. The next lever is the scan in the Linux image: a sqlite-vec built with NEON (arm64) or AVX (amd64). [ADR 0042](0042-sqlite-vec-compiled-with-simd-in-the-image.md) compiles it in the image, which brings the scan from 65 to 33 ms and p95 at 20 calls a second on 2 vCPUs to about 350 ms.
 - Two workers add about 85 MiB (659 MiB when ready, against 573 MiB without them); the mapped index pages are shared. Memory after a load run: about 1.4 GiB, mostly file cache (ADR 0040).
 - The worker entry is compiled JavaScript under `dist/`; tests of the pool need the package built, which `pnpm test` does first.
 - Retrieval is unchanged: the workers run the same queries as before.

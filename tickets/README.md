@@ -22,6 +22,6 @@ Status values: `todo`, `in-progress`, `done`, `blocked`. Update the table when a
 | SM-14 | Hardening, image and docs                            | 6     | SM-12        | done                           |
 | SM-15 | Demo deployment, recording, outreach                 | 7-8   | SM-14        | todo (needs user decisions)    |
 | SM-16 | Embedding model evaluation (bge-m3)                  | 3     | SM-08        | done (e5-small kept, ADR 0029) |
-| SM-17 | SQLite search throughput                             | 6     | SM-14        | in progress, owner decision    |
+| SM-17 | SQLite search throughput                             | 6     | SM-14        | done                           |
 
 Definition of done for every ticket: see "Definition of done" in `docs/PLAN.md`.
