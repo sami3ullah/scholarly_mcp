@@ -33,6 +33,8 @@ export interface ToolDefinition<
   readonly description: string;
   readonly input: Input;
   readonly output: Output;
+  /** The MCP Apps UI resource that shows this tool's result, where the client supports it. */
+  readonly ui?: string;
   run(input: z.output<Input>, context: ToolContext): Promise<ToolReply<z.input<Output>>>;
 }
 

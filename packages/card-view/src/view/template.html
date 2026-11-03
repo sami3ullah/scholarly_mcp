@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Articles</title>
+    <style>
+      /* Host variables (MCP Apps styles) win; the fallbacks keep the view readable without them. */
+      :root {
+        --cv-bg: var(--color-background-primary, #ffffff);
+        --cv-card: var(--color-background-secondary, #f6f5f3);
+        --cv-text: var(--color-text-primary, #141413);
+        --cv-muted: var(--color-text-secondary, #5e5d59);
+        --cv-border: var(--color-border-tertiary, #e3e1dc);
+        --cv-accent: var(--color-text-info, #1f63b5);
+        --cv-ring: var(--color-ring-primary, #2a78d6);
+        --cv-radius: var(--border-radius-lg, 10px);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme='light']) {
+          --cv-bg: var(--color-background-primary, #1f1e1d);
+          --cv-card: var(--color-background-secondary, #2a2927);
+          --cv-text: var(--color-text-primary, #f0efec);
+          --cv-muted: var(--color-text-secondary, #c3c2b7);
+          --cv-border: var(--color-border-tertiary, #3d3c39);
+          --cv-accent: var(--color-text-info, #7fb2f0);
+        }
+      }
+      :root[data-theme='dark'] {
+        --cv-bg: var(--color-background-primary, #1f1e1d);
+        --cv-card: var(--color-background-secondary, #2a2927);
+        --cv-text: var(--color-text-primary, #f0efec);
+        --cv-muted: var(--color-text-secondary, #c3c2b7);
+        --cv-border: var(--color-border-tertiary, #3d3c39);
+        --cv-accent: var(--color-text-info, #7fb2f0);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        background: var(--cv-bg);
+        color: var(--cv-text);
+      }
+      body {
+        font: var(--font-text-md-size, 15px)/var(--font-text-md-line-height, 1.5)
+          var(--font-sans, system-ui, -apple-system, 'Segoe UI', sans-serif);
+      }
+      #cards {
+        padding: 4px;
+      }
+      .cards {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 8px;
+      }
+      .card {
+        background: var(--cv-card);
+        border: 1px solid var(--cv-border);
+        border-radius: var(--cv-radius);
+        padding: 12px 14px;
+      }
+      .title {
+        margin: 0;
+        font-size: var(--font-heading-xs-size, 16px);
+        line-height: 1.35;
+        font-weight: var(--font-weight-semibold, 600);
+      }
+      .title-link {
+        color: inherit;
+        text-decoration: none;
+      }
+      .title-link:hover {
+        text-decoration: underline;
+      }
+      .meta {
+        margin: 4px 0 0;
+        color: var(--cv-muted);
+        font-size: var(--font-text-sm-size, 13px);
+      }
+      .teaser {
+        margin: 8px 0 0;
+        font-size: var(--font-text-sm-size, 14px);
+      }
+      .card-footer {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      .badge {
+        font-size: var(--font-text-xs-size, 12px);
+        color: var(--cv-muted);
+        border: 1px solid var(--cv-border);
+        border-radius: var(--border-radius-full, 999px);
+        padding: 1px 8px;
+      }
+      .badge-open {
+        color: var(--color-text-success, #2e7d4f);
+        border-color: currentColor;
+      }
+      .read {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: var(--border-radius-md, 8px);
+        background: var(--cv-accent);
+        color: var(--cv-bg);
+        font-weight: var(--font-weight-medium, 500);
+        font-size: var(--font-text-sm-size, 14px);
+        text-decoration: none;
+      }
+      .read:hover {
+        filter: brightness(1.08);
+      }
+      .all {
+        display: inline-block;
+        margin: 10px 2px 2px;
+        color: var(--cv-accent);
+        font-size: var(--font-text-sm-size, 14px);
+      }
+      a:focus-visible {
+        outline: 2px solid var(--cv-ring);
+        outline-offset: 2px;
+      }
+      .empty {
+        color: var(--cv-muted);
+        margin: 8px 2px;
+      }
+    </style>
+    <script type="application/json" id="card-view-config">
+      __CARD_VIEW_CONFIG__
+    </script>
+  </head>
+  <body>
+    <main id="cards" aria-live="polite"></main>
+    <script>
+      __CARD_VIEW_SCRIPT__;
+    </script>
+  </body>
+</html>

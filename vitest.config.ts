@@ -9,6 +9,7 @@ export default defineConfig({
         'packages/core/src/**',
         'packages/search/src/**',
         'packages/cite/src/**',
+        'packages/card-view/src/**/*.ts',
         'packages/logger/src/**',
         'packages/http/src/**',
         'packages/source-*/src/**',

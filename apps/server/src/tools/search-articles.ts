@@ -1,4 +1,5 @@
 import type { SearchFilters } from '@scholarly-mcp/core';
+import { CARD_VIEW_URI } from '@scholarly-mcp/card-view';
 import { QUERY_MAX_LENGTH } from '@scholarly-mcp/search';
 import { z } from 'zod';
 import { buildCard } from '../cards/build-card.js';
@@ -59,6 +60,7 @@ export function createSearchArticlesTool(deps: ToolDeps) {
     ].join(' '),
     input,
     output,
+    ui: CARD_VIEW_URI,
     async run(args, { signal, caller }) {
       const filters = await filtersOf(deps, args, signal);
       const result = await deps.search.search(

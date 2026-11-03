@@ -4,6 +4,8 @@ import {
   type CallToolResult,
   type McpRequestContext,
 } from '@modelcontextprotocol/server';
+import { RESOURCE_MIME_TYPE, registerAppResource } from '@modelcontextprotocol/ext-apps/server';
+import { CARD_VIEW_URI, cardViewHtml } from '@scholarly-mcp/card-view';
 import type { Caller, JournalCardCount, Logger, Meter, UsageStatus } from '@scholarly-mcp/core';
 import { z } from 'zod';
 import { callerOf } from '../auth/auth-info.js';
@@ -35,11 +37,13 @@ const tracer = trace.getTracer('scholarly-mcp');
  * fresh `McpServer` with the six read-only tools. Handlers are stateless; everything they
  * share (index, sessions, caches) lives in the deps (PLAN.md: concurrent requests). The
  * caller comes from the request's verified `AuthInfo`; stdio and unauthenticated loopback
- * HTTP have the local caller.
+ * HTTP have the local caller. Each server also offers the MCP Apps card view (ADR 0033);
+ * clients without MCP Apps ignore it and show the text with links.
  */
 export function createServerFactory(
   deps: ServerFactoryDeps,
 ): (ctx?: McpRequestContext) => McpServer {
+  const cardView = cardViewHtml({ publisher: deps.publisher });
   return (ctx) => {
     const caller = callerOf(ctx?.authInfo);
     const server = new McpServer(
@@ -55,6 +59,7 @@ export function createServerFactory(
           inputSchema: documentedOnly(tool.input),
           outputSchema: tool.output.extend({ notice: z.string() }),
           annotations: { title: tool.title, readOnlyHint: true, openWorldHint: false },
+          ...(tool.ui !== undefined && { _meta: { ui: { resourceUri: tool.ui } } }),
         },
         (args: unknown, extra) =>
           runTool(deps, tool, args, {
@@ -64,6 +69,25 @@ export function createServerFactory(
           }),
       );
     }
+    registerAppResource(
+      server,
+      'Article cards',
+      CARD_VIEW_URI,
+      { description: `Search results as ${deps.publisher} article cards with a read button` },
+      () => ({
+        contents: [
+          {
+            uri: CARD_VIEW_URI,
+            mimeType: RESOURCE_MIME_TYPE,
+            text: cardView,
+            // No network access: the view only shows the result and opens links via the host.
+            _meta: {
+              ui: { csp: { connectDomains: [], resourceDomains: [] }, prefersBorder: false },
+            },
+          },
+        ],
+      }),
+    );
     return server;
   };
 }

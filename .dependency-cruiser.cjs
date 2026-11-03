@@ -59,6 +59,14 @@ module.exports = {
       to: { path: '^(packages/(source|store|embedder|search|logger|http|testkit)|apps/)' },
     },
     {
+      name: 'card-view-only-core',
+      comment:
+        'the MCP Apps card view is browser code built into one page: core types and the MCP Apps SDK only',
+      severity: 'error',
+      from: { path: '^packages/card-view/src', pathNot: '\\.test\\.ts$' },
+      to: { path: '^(packages/(source|store|embedder|search|logger|http|cite|testkit)|apps/)' },
+    },
+    {
       name: 'testkit-not-apps',
       severity: 'error',
       from: { path: '^packages/testkit' },

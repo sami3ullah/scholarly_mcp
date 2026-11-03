@@ -28,6 +28,8 @@ jobs:
         with:
           path: .cache/models
           key: models-${{ hashFiles('packages/embedder-onnx/src/model.ts') }}-q8
+      # The card view's test renders it in Chromium through the MCP Apps host bridge.
+      - run: pnpm --filter @scholarly-mcp/card-view exec playwright install --with-deps chromium
       - run: pnpm format:check
       - run: pnpm lint
       - run: pnpm typecheck

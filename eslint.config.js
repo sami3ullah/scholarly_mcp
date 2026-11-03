@@ -62,7 +62,11 @@ export default tseslint.config(
     rules: { '@typescript-eslint/no-require-imports': 'off' },
   },
   {
-    files: ['apps/landing/e2e/**/*.mjs', 'apps/landing/*.cjs'],
+    files: [
+      'apps/landing/e2e/**/*.mjs',
+      'apps/landing/*.cjs',
+      'packages/card-view/scripts/**/*.mjs',
+    ],
     languageOptions: { globals: { process: 'readonly', URL: 'readonly' } },
   },
   prettier,

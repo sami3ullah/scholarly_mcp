@@ -51,6 +51,33 @@ describe.each(['http', 'stdio'] as const)('the MCP server over %s', (transport) 
     });
     expect(harness.client.getInstructions()).toContain('not for model training');
   });
+
+  it('points search_articles at the MCP Apps card view, which any client can read', async () => {
+    harness = await startHarness({ transport });
+    const { tools } = await harness.client.listTools();
+    const withUi = tools.filter((tool) => tool._meta?.['ui'] !== undefined);
+    expect(withUi.map(({ name, _meta }) => [name, _meta?.['ui']])).toEqual([
+      ['search_articles', { resourceUri: 'ui://scholarly-mcp/cards.html' }],
+    ]);
+    const { resources } = await harness.client.listResources();
+    expect(resources).toEqual([
+      expect.objectContaining({
+        uri: 'ui://scholarly-mcp/cards.html',
+        mimeType: 'text/html;profile=mcp-app',
+      }),
+    ]);
+    const { contents } = await harness.client.readResource({
+      uri: 'ui://scholarly-mcp/cards.html',
+    });
+    const [view] = contents;
+    expect(view).toMatchObject({
+      mimeType: 'text/html;profile=mcp-app',
+      _meta: { ui: { csp: { connectDomains: [], resourceDomains: [] } } },
+    });
+    const html = view !== undefined && 'text' in view ? view.text : '';
+    expect(html).toContain('<!doctype html>');
+    expect(html).toContain('"publisher":"Thieme"');
+  });
 });
 
 describe('tool descriptions', () => {
