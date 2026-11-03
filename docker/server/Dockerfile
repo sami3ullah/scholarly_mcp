@@ -58,7 +58,11 @@ COPY --from=build --chown=nonroot:nonroot /out/state /var/lib/scholarly
 # The ingest writes builds next to the index, so /data belongs to the app user too.
 COPY --from=build --chown=nonroot:nonroot /out/data /data
 COPY --from=index --chown=nonroot:nonroot / /data/
+# API keys and a local Host allowlist by default, as the server listens beyond loopback;
+# set HTTP_ALLOWED_HOSTS to the hostname clients use in a deployment.
 ENV NODE_ENV=production \
+    AUTH_MODE=api-key \
+    HTTP_ALLOWED_HOSTS=localhost,127.0.0.1 \
     MCP_TRANSPORT=http \
     HTTP_HOST=0.0.0.0 \
     HTTP_PORT=8080 \

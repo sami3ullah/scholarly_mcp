@@ -61,6 +61,7 @@ Settings come from `presets/thieme.env` plus the compose file; put your own valu
 
 ## What the image guarantees
 
+- Defaults to `AUTH_MODE=api-key` and `HTTP_ALLOWED_HOSTS=localhost,127.0.0.1`, so a bare `docker run` starts and refuses calls without a key; set the hostname clients use in a deployment.
 - Runs as uid 65532 (`nonroot`); the root filesystem can be mounted read-only. It writes only to `/var/lib/scholarly` (runtime database) and `/data` (index).
 - The embedding model is in the image (`/models`) and `EMBEDDER_ALLOW_REMOTE=false`, so it needs no network access to start.
 - `/metrics` is served on port 9464 only (`METRICS_PORT`); port 8080 answers 404 for it. Publish 8080, keep 9464 on the internal network.
