@@ -1,8 +1,14 @@
 import { existsSync } from 'node:fs';
-import { appError, type IndexMeta, type IndexReader } from '@scholarly-mcp/core';
+import {
+  appError,
+  type ArticleSearch,
+  type IndexMeta,
+  type IndexReader,
+} from '@scholarly-mcp/core';
 import { createSqliteIndexStore, type SqliteIndexStore } from './create-sqlite-index-store.js';
 import { readIndexMeta } from './database/index-meta-row.js';
 import { openDatabase, type Db } from './database/open-database.js';
+import { createSearchPool, type SearchPool } from './search/search-pool.js';
 import { withSignal } from './with-signal.js';
 
 export type { IndexReader };
@@ -11,6 +17,14 @@ interface Opened {
   readonly db: Db;
   readonly store: SqliteIndexStore;
   readonly meta: IndexMeta;
+}
+
+export interface IndexReaderOptions {
+  /**
+   * Worker threads that run lexical and vector searches, each on its own connection
+   * (ADR 0041). 0 runs them on the calling thread.
+   */
+  readonly searchWorkers?: number;
 }
 
 /**
@@ -23,13 +37,21 @@ export function openIndexReader(
   path: string,
   modelVersion: string,
   signal: AbortSignal,
+  options: IndexReaderOptions = {},
 ): Promise<IndexReader> {
-  return withSignal(signal, () => readerOf(path, modelVersion));
+  return withSignal(signal, () => readerOf(path, modelVersion, options.searchWorkers ?? 0));
 }
 
-function readerOf(path: string, modelVersion: string): IndexReader {
+function readerOf(path: string, modelVersion: string, searchWorkers: number): IndexReader {
   let current = open(path, modelVersion);
   const store = () => current.store;
+  // Started only once the file is known to be usable; the workers open it themselves.
+  const pool: SearchPool | undefined =
+    searchWorkers > 0 ? createSearchPool(path, searchWorkers) : undefined;
+  const search: ArticleSearch = pool?.search ?? {
+    lexical: (query, signal) => store().search.lexical(query, signal),
+    vector: (query, signal) => store().search.vector(query, signal),
+  };
 
   return {
     reader: {
@@ -39,28 +61,34 @@ function readerOf(path: string, modelVersion: string): IndexReader {
       findArticleChunks: (doi, signal) => store().reader.findArticleChunks(doi, signal),
       indexMeta: (signal) => store().reader.indexMeta(signal),
     },
-    search: {
-      lexical: (query, signal) => store().search.lexical(query, signal),
-      vector: (query, signal) => store().search.vector(query, signal),
-    },
+    search,
     journals: { journals: (signal) => store().journals.journals(signal) },
     meta: () => current.meta,
-    refresh: (signal) =>
-      withSignal(signal, () => {
-        const next = open(path, modelVersion);
-        if (next.meta.version === current.meta.version) {
-          next.db.close();
-          return false;
-        }
-        // Queries run synchronously inside each call, so none is using the old handle now.
-        const previous = current;
-        current = next;
-        previous.db.close();
-        return true;
-      }),
-    close() {
+    async refresh(signal) {
+      const next = await withSignal(signal, () => open(path, modelVersion));
+      if (next.meta.version === current.meta.version) {
+        next.db.close();
+        return false;
+      }
+      // The workers move first; a search one is running finishes on the old file. Until the
+      // lookups here move too, a search may name a chunk they miss, which the search service
+      // already treats as an index changing mid-request.
+      try {
+        await pool?.reopen();
+      } catch (cause) {
+        next.db.close();
+        throw appError('INDEX_UNAVAILABLE', `Search workers could not reopen ${path}`, { cause });
+      }
+      // Queries on this thread run synchronously inside each call, so none uses the old
+      // handle now.
+      const previous = current;
+      current = next;
+      previous.db.close();
+      return true;
+    },
+    async close() {
+      await pool?.close();
       current.db.close();
-      return Promise.resolve();
     },
   };
 }

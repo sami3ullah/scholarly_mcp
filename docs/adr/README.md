@@ -46,3 +46,4 @@ Each ADR records one decision: the context, what we chose and what follows from 
 | [0038](0038-landing-image-proxy-and-secret-files.md)     | Landing image, proxy and secret files                            | accepted           |
 | [0039](0039-demo-index-from-a-cc-by-doi-list.md)         | Demo index from a CC BY DOI list                                 | accepted           |
 | [0040](0040-sqlite-vector-scan-by-euclidean-distance.md) | SQLite vector scan by Euclidean distance, on a mapped file       | accepted           |
+| [0041](0041-sqlite-search-on-worker-threads.md)          | SQLite search on worker threads                                  | accepted           |

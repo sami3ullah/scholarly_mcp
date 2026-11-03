@@ -71,11 +71,14 @@ export async function openServerStores(
   signal: AbortSignal,
 ): Promise<ServerStores> {
   if (selection.store === 'sqlite') {
-    const { INDEX_PATH, RUNTIME_DB_PATH } = selection.config;
+    const { INDEX_PATH, RUNTIME_DB_PATH, SQLITE_SEARCH_WORKERS } = selection.config;
     mkdirSync(dirname(RUNTIME_DB_PATH), { recursive: true });
     const db = openRuntimeDatabase(RUNTIME_DB_PATH);
     return {
-      openIndex: (openSignal) => openIndexReader(INDEX_PATH, modelVersion, openSignal),
+      openIndex: (openSignal) =>
+        openIndexReader(INDEX_PATH, modelVersion, openSignal, {
+          searchWorkers: SQLITE_SEARCH_WORKERS,
+        }),
       sessions: createSqliteSessionStore(db),
       outbox: createSqliteUsageOutbox(db),
       keys: createSqliteApiKeyStore(db),

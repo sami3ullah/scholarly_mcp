@@ -67,4 +67,43 @@ describe('openIndexReader', () => {
     expect(await reader.reader.findByDoi(recordNumber(1).article.doi, signal)).toBeDefined();
     await reader.close();
   });
+
+  describe('with search workers', () => {
+    const query = { terms: ['anticoagulation'], filters: {}, limit: 10 };
+
+    it('searches on the workers and moves them to a swapped-in index on refresh', async () => {
+      await build('v1', MODEL, 1);
+      const reader = await openIndexReader(indexPath, MODEL, signal, { searchWorkers: 2 });
+      const searches = () =>
+        Promise.all([1, 2, 3, 4].map(() => reader.search.lexical(query, signal)));
+      expect((await searches()).map((hits) => hits.length)).toEqual([1, 1, 1, 1]);
+
+      await build('v2', MODEL, 1, 2);
+      expect(await reader.refresh(signal)).toBe(true);
+      expect((await searches()).map((hits) => hits.length)).toEqual([2, 2, 2, 2]);
+      const embedding = recordNumber(2).chunks[0]?.embedding ?? new Float32Array();
+      const [nearest] = await reader.search.vector({ embedding, filters: {}, limit: 1 }, signal);
+      expect(nearest?.doi).toBe(recordNumber(2).article.doi);
+      await reader.close();
+    });
+
+    it('drops a search aborted while it waits for a worker', async () => {
+      await build('v1', MODEL, 1);
+      const reader = await openIndexReader(indexPath, MODEL, signal, { searchWorkers: 1 });
+      const running = reader.search.lexical(query, signal);
+      const controller = new AbortController();
+      const waiting = reader.search.lexical(query, controller.signal);
+      controller.abort(new Error('budget spent'));
+      await expect(waiting).rejects.toThrow('budget spent');
+      expect(await running).toHaveLength(1);
+      await reader.close();
+    });
+
+    it('refuses searches once closed', async () => {
+      await build('v1', MODEL, 1);
+      const reader = await openIndexReader(indexPath, MODEL, signal, { searchWorkers: 1 });
+      await reader.close();
+      await expect(reader.search.lexical(query, signal)).rejects.toThrow('closed');
+    });
+  });
 });
