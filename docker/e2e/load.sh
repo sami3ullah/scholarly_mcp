@@ -3,7 +3,8 @@
 # makes a key, runs docker/e2e/load.mjs (20 tool calls a second for 60 s by default) and
 # reports resident memory before and after. The per-key rate limit is lifted for the run.
 #   docker/e2e/load.sh <dir with index.sqlite> [image]
-# LOAD_RATE and LOAD_SECONDS change the rate and the duration.
+# LOAD_RATE and LOAD_SECONDS change the rate and the duration; LOAD_CPUS limits the server's
+# CPUs (e.g. 2, the plan's target container; unset means no limit).
 set -euo pipefail
 
 dir=${1:?usage: docker/e2e/load.sh <dir with index.sqlite> [image]}
@@ -16,6 +17,7 @@ name=scholarly-load-$$
 trap 'docker rm -f "$name" >/dev/null 2>&1 || true' EXIT
 started=$(node -e 'process.stdout.write(String(Date.now()))')
 docker run -d --name "$name" --read-only --tmpfs /tmp \
+  ${LOAD_CPUS:+--cpus "$LOAD_CPUS"} \
   --env-file presets/thieme.env \
   -e AUTH_MODE=api-key \
   -e HTTP_ALLOWED_HOSTS=localhost,127.0.0.1 \
