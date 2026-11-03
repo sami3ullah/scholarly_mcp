@@ -177,3 +177,20 @@ Append-only. Newest entry at the bottom.
   - **Metric vs funnel.** `landing_visits_total` counts accepted beacons, so a repeat adds 1. The funnel counts unique ids.
 - **Still open for the user:** the Claude Desktop manual check, now covering both links (`HTTP_ALONGSIDE_STDIO=true`) and the card view.
 - **Next:** SM-13 (Postgres adapter: the outbox as envelope plus `jsonb`, row claiming, sessions with `tool`; a live funnel view is a follow-up there), then SM-14.
+
+## 2026-11-03 - session 14, SM-13 in progress (runtime half done)
+
+- **Objective:** SM-13 Postgres adapter. Design in ADR 0034 (accepted, written this session). No owner decisions were needed; all choices are recorded in the ADR.
+- **Done (committed on `main`):**
+  - `3f5e03d` ADR 0034: one stemmer for both stores, `tsv` over TS-stemmed columns with `to_tsquery('simple')` built from tokenised terms, `pg_trgm` compound top-up, HNSW with `iterative_scan = strict_order`, schema-per-build with a `scholarly.live_index` pointer (keep previous, drop older), runtime migrations under an advisory lock, server role grants, outbox `claim`/`release`, `STORE=sqlite|postgres` + `DATABASE_URL`, async index reader.
+  - `424f924` new `packages/lexical` (folding, Snowball stems, `trigramStems`, `hasStemAtWordEdge`); `store-sqlite` imports it, FTS5 syntax stays there. Dep-cruiser rule `lexical-only-core`; coverage includes it.
+  - `67328d5` outbox port: `pending` replaced by `claim(limit, now, leaseUntil)` + `release(ids)`; `markExported` ends the lease. In-memory fake, contract (lease, release, concurrent claims), SQLite runtime migration 4 (`claimed_until`), exporter leases for 2x pass timeout and releases a refused batch. Test for two exporters sharing an outbox.
+  - `89c5d22` `packages/store-postgres`: `pg` pool helpers (`query` checks the signal first, `inTransaction`, `identifier`), runtime migration 1 in schema `scholarly` (sessions with `tool`, api_keys, usage_events envelope + `jsonb` + `claimed_until`, `live_index`, `index_build`), `assertMigrated`, `grantServerRole`, `postgresConfigSchema` (`DATABASE_URL`, `PG_POOL_MAX`, `PG_STATEMENT_TIMEOUT_MS`, `PG_SERVER_ROLE`). Session, API key and outbox stores pass the testkit contracts on Testcontainers (26 tests). Vitest `globalSetup` starts one `pgvector/pgvector:0.8.7-pg18-trixie` container; `freshPool()` makes a database per test.
+- **Next, in order:**
+  1. Index store in `store-postgres`: build schema DDL (chunks with filter columns, `text_stemmed`/`text_folded`/`title_stemmed`, generated weighted `tsv` + GIN, `pg_trgm` GIN on folded title+text, `vector(dims)` HNSW), writer/reader/search/journals/sync state, `beginIndexBuild` (full / incremental and purge copy the live schema) with commit flipping `live_index` and granting `PG_SERVER_ROLE`, verify, purge. Run `runArticleStoreContract` and `runSyncStateStoreContract`.
+  2. Make the server's index reader async (`open`/`refresh` return promises; `apps/server/src/runtime/live-index.ts`), then `STORE=sqlite|postgres` wiring in server, ingest (`ingest migrate` command) and eval; keys command on the writer URL.
+  3. `docker compose --profile postgres` (roles `scholarly_ingest` owner, `scholarly_server`), docs guide, README roadmap and docs index.
+  4. Exit: copy `data/eval-index.sqlite` into Postgres without re-embedding (a copy command like `ingest subset`), run `eval golden` on both, record the gap in ADR 0034 (within 2 points). Tune `hnsw.ef_search` if needed.
+  5. Follow-up from SM-12: live funnel view over `scholarly.usage_events` (decide shape; note events are pruned after 30 days).
+- **Gotchas:** zsh `set -e` inside a one-line chain did not stop on a failed `git commit`; commit one step per command. lint-staged fails on a test importing a workspace package that is not staged yet. `better-sqlite3` rejects `?1`-style numbered params when the same values are bound positionally; use plain `?`. Run tests from the repo root (`pnpm exec vitest run --project store-postgres`); Docker must be running.
+- **Not pushed yet** at the time of writing this entry; push follows.
