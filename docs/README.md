@@ -34,6 +34,7 @@ Everything beyond the quick start lives here. New guides are added as the featur
 | [Landing app](../apps/landing/README.md)                      | The Next.js reference landing page: layout, scripts and tests              |
 | [Citations](../packages/cite/README.md)                       | Citation styles, how records map to CSL, the vendored AMA style            |
 | [Card view](../packages/card-view/README.md)                  | The MCP Apps card list for `search_articles`: build, contents, tests       |
+| [Docker image and compose](../docker/README.md)               | Building the image, its commands, compose profiles and guarantees          |
 
 ## Guides
 
