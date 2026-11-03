@@ -1,0 +1,22 @@
+.text p {
+  margin: 0 0 var(--space-3);
+}
+
+.collapsed {
+  max-height: 12.5em;
+  overflow: hidden;
+  mask-image: linear-gradient(to bottom, #000 70%, transparent);
+}
+
+.toggle {
+  min-height: var(--tap-target);
+  padding: var(--space-2) 0;
+  border: 0;
+  background: none;
+  color: var(--color-accent);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  cursor: pointer;
+}

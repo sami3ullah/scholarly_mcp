@@ -1,0 +1,14 @@
+.section {
+  margin-top: var(--space-6);
+}
+
+.heading {
+  font-size: var(--font-size-xl);
+  margin-bottom: var(--space-2);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}

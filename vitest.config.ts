@@ -17,8 +17,16 @@ export default defineConfig({
         'apps/ingest/src/**',
         'apps/eval/src/**',
         'apps/server/src/**',
+        'apps/landing/src/**',
       ],
-      exclude: ['**/index.ts', '**/main.ts', '**/*.test.ts', '**/testing/**'],
+      exclude: [
+        '**/index.ts',
+        '**/main.ts',
+        '**/*.test.{ts,tsx}',
+        '**/testing/**',
+        // Thin Next.js route files, covered by the Playwright suite.
+        'apps/landing/src/app/**',
+      ],
       thresholds: { lines: 85 },
     },
   },

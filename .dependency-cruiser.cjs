@@ -73,8 +73,26 @@ module.exports = {
     {
       name: 'testkit-only-in-tests',
       severity: 'error',
-      from: { path: '^(apps|packages)/[^/]+/src', pathNot: '\\.test\\.ts$|^packages/testkit' },
+      from: {
+        path: '^(apps|packages)/[^/]+/src',
+        pathNot: '\\.test\\.tsx?$|^packages/testkit|^apps/landing/src/testing/',
+      },
       to: { path: '^packages/testkit' },
+    },
+    {
+      name: 'landing-only-core-and-logger',
+      comment:
+        'the landing app renders what the landing API returns: core (schemas) and the logger only, never the index, search or adapters',
+      severity: 'error',
+      from: { path: '^apps/landing/' },
+      to: { path: '^packages/', pathNot: '^packages/(core|logger|testkit)/' },
+    },
+    {
+      name: 'landing-client-not-server',
+      comment: 'client components and hooks must not import server-only code',
+      severity: 'error',
+      from: { path: '^apps/landing/src/features/[^/]+/(hooks|model)/' },
+      to: { path: '^apps/landing/src/(features/[^/]+/server|shared/lib/env)' },
     },
     { name: 'no-circular', severity: 'error', from: {}, to: { circular: true } },
   ],

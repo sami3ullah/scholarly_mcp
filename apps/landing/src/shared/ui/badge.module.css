@@ -1,0 +1,28 @@
+.badge {
+  display: inline-block;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+.neutral {
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+}
+
+.open {
+  background: var(--color-open-bg);
+  color: var(--color-open);
+}
+
+.locked {
+  background: var(--color-locked-bg);
+  color: var(--color-locked);
+}
+
+.danger {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}

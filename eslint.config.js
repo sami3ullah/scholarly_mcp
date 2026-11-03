@@ -1,6 +1,8 @@
 import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import prettier from 'eslint-config-prettier';
+import reactHooks from 'eslint-plugin-react-hooks';
+import nextPlugin from '@next/eslint-plugin-next';
 
 export default tseslint.config(
   { ignores: ['**/dist/**', '**/coverage/**', '**/.turbo/**', '**/.next/**', 'spikes/**'] },
@@ -27,13 +29,41 @@ export default tseslint.config(
     },
   },
   {
+    files: ['apps/landing/**/*.{ts,tsx}'],
+    plugins: { 'react-hooks': reactHooks, '@next/next': nextPlugin },
+    rules: {
+      ...reactHooks.configs.recommended.rules,
+      ...nextPlugin.configs.recommended.rules,
+      ...nextPlugin.configs['core-web-vitals'].rules,
+      // The App Router has no pages directory to check links against.
+      '@next/next/no-html-link-for-pages': 'off',
+    },
+  },
+  {
+    // Next.js finds route files and its config by their default export.
+    files: [
+      'apps/landing/src/app/**/{page,layout,loading,error,not-found}.tsx',
+      'apps/landing/next.config.ts',
+      'apps/landing/playwright.config.ts',
+    ],
+    rules: { 'no-restricted-syntax': 'off' },
+  },
+  {
     files: ['**/*.{js,cjs,mjs}', '**/*.config.ts'],
     ...tseslint.configs.disableTypeChecked,
     rules: { ...tseslint.configs.disableTypeChecked.rules, 'no-restricted-syntax': 'off' },
   },
   {
     files: ['**/*.cjs'],
-    languageOptions: { sourceType: 'commonjs', globals: { module: 'writable' } },
+    languageOptions: {
+      sourceType: 'commonjs',
+      globals: { module: 'writable', require: 'readonly' },
+    },
+    rules: { '@typescript-eslint/no-require-imports': 'off' },
+  },
+  {
+    files: ['apps/landing/e2e/**/*.mjs', 'apps/landing/*.cjs'],
+    languageOptions: { globals: { process: 'readonly', URL: 'readonly' } },
   },
   prettier,
 );

@@ -1,0 +1,28 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap-target);
+  padding: var(--space-2) var(--space-4);
+  border: 2px solid var(--color-accent);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+}
+
+.primary {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+.primary:hover {
+  background: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+  color: var(--color-on-accent);
+}
+
+.secondary {
+  background: transparent;
+  color: var(--color-accent);
+}
