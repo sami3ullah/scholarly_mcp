@@ -28,6 +28,9 @@ export const crossrefWorkSchema = z.object({
     .optional(),
   published: dateParts.optional(),
   issued: dateParts.optional(),
+  volume: z.string().optional(),
+  issue: z.string().optional(),
+  page: z.string().optional(),
   language: z.string().optional(),
   abstract: z.string().optional(),
   license: z

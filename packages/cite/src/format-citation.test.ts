@@ -31,6 +31,8 @@ const german: Article = articleSchema.parse({
   ],
 });
 
+const located: Article = { ...full, volume: '124', issue: 'S 01', pages: 'e12-e20' };
+
 const sparse: Article = {
   ...anArticle().withDoi('10.1055/s-0044-1').publishedIn(2024).build(),
   authors: [],
@@ -40,6 +42,7 @@ describe('formatCitation', () => {
   describe.each(citationStyleSchema.options)('%s', (style) => {
     it.each([
       ['a fully dated article', full],
+      ['an article with volume, issue and pages', located],
       ['a German article with a subtitle and seven authors', german],
       ['a year-only article without authors', sparse],
     ])('formats %s', (_case, article) => {
@@ -69,6 +72,11 @@ describe('formatCitation', () => {
   it('prints a year-only date as the year, without an invented month or day', () => {
     expect(formatCitation(sparse, 'apa')).toContain('(2024)');
     expect(formatCitation(sparse, 'ris')).not.toMatch(/DA {2}- 2024\/\d/);
+  });
+
+  it('cites volume, issue and pages where the style places them', () => {
+    expect(formatCitation(located, 'ama')).toContain('2024;124(S 01):e12-e20');
+    expect(formatCitation(located, 'ama')).not.toContain('Published online');
   });
 
   it('drops the list number of numeric styles', () => {

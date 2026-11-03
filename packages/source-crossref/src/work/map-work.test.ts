@@ -30,6 +30,12 @@ describe('mapWork', () => {
     });
   });
 
+  it('carries volume, issue and pages for citations', async () => {
+    const work = aCrossrefWork({ volume: '35', issue: '04', page: '528-537' });
+    const article = articleOf(await mapWork(work, { now }));
+    expect(article).toMatchObject({ volume: '35', issue: '04', pages: '528-537' });
+  });
+
   it('lowercases the DOI', async () => {
     const article = articleOf(
       await mapWork(aCrossrefWork({ DOI: '10.1055/A-2236-8949' }), { now }),

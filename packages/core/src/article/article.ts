@@ -12,6 +12,8 @@ import { subjectSchema } from './subject.js';
  * The canonical article record every source emits and every store holds.
  * `abstract` is plain text with section labels kept; it is absent, never invented, when the
  * source has none. `subjects` and `fullText` come from an enricher such as Europe PMC.
+ * `volume`, `issue` and `pages` are kept as the publisher deposited them (`S 01`, `e12-e20`),
+ * for citations only.
  */
 export const articleSchema = z.object({
   doi: doiSchema,
@@ -20,6 +22,9 @@ export const articleSchema = z.object({
   journal: journalSchema,
   authors: z.array(authorSchema),
   published: publishedDateSchema,
+  volume: z.string().min(1).optional(),
+  issue: z.string().min(1).optional(),
+  pages: z.string().min(1).optional(),
   language: languageSchema.optional(),
   abstract: z.string().min(1).optional(),
   subjects: z.array(subjectSchema),

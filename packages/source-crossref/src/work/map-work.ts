@@ -10,6 +10,7 @@ import {
 import { cleanJatsAbstract, cleanJatsInline } from '../jats/clean-jats.js';
 import { classifyWork } from './classify-work.js';
 import { mapAuthors, mapJournal } from './map-contributors.js';
+import { mapIssueLocator } from './map-issue-locator.js';
 import type { CrossrefWork } from './crossref-work.js';
 import { isOpenLicense, mapLicenses } from './map-licenses.js';
 import { mapPublishedDate } from './map-published-date.js';
@@ -103,6 +104,7 @@ function contentOf(work: CrossrefWork, known: Known): ArticleContent {
     journal: mapJournal(work),
     authors: mapAuthors(work),
     published: known.published,
+    ...mapIssueLocator(work),
     ...(language && /^[a-z]{2}$/.test(language) && { language }),
     ...(abstract && { abstract }),
     subjects: [],

@@ -222,11 +222,12 @@ Zirconia-based CAD-on restorations may provide satisfactory esthetic and mechani
         "given": "Tim",
       },
     ],
-    "contentHash": "c30b9f2cf5ddcade533aa6fc8a0ceef56882d50e7c0c3f72bfad59b107709fa7",
+    "contentHash": "d31c5dc385bf725a4d8e0a929f74c3fa954766590190d47314df95e251211b7e",
     "doi": "10.1055/a-2939-8928",
     "ingestedAt": 2026-11-02T10:00:00.000Z,
     "isOpenAccess": false,
     "isRetracted": false,
+    "issue": "08",
     "journal": {
       "issnElectronic": "1439-1279",
       "issnPrint": "0722-219X",
@@ -235,6 +236,7 @@ Zirconia-based CAD-on restorations may provide satisfactory esthetic and mechani
     "landingUrl": "http://www.thieme-connect.de/DOI/DOI?10.1055/a-2939-8928",
     "language": "de",
     "licenses": [],
+    "pages": "528-537",
     "published": {
       "month": 10,
       "year": 2026,
@@ -242,6 +244,7 @@ Zirconia-based CAD-on restorations may provide satisfactory esthetic and mechani
     "sourceUpdatedAt": 2026-10-11T22:31:41.000Z,
     "subjects": [],
     "title": "Aktuelle Therapieoptionen beim anaplastischen Schilddrüsenkarzinom im Kontext der S3-Leitlinie",
+    "volume": "47",
   },
   {
     "abstract": "Immuntherapeutika wie Checkpoint-Inhibitoren und T-Zell-aktivierende Therapien haben die Onkologie revolutioniert, bergen jedoch Risiken schwerer Toxizitäten. Das Management umfasst eine gradadaptierte Immunsuppression, Steroide, IL-6-/IL-1-Inhibitoren und eine interdisziplinäre Intensivtherapie. Trotz etablierter Therapie-Algorithmen bleibt die Prognose bei Multi-Organbeteiligung oder anderen höhergradigen Toxizitäten kritisch. Eine frühzeitige Diagnostik und individualisierte Risiko-Nutzen-Abwägung sind entscheidend für den Therapie-Erfolg.",
@@ -267,11 +270,12 @@ Zirconia-based CAD-on restorations may provide satisfactory esthetic and mechani
         "given": "Cäcilia",
       },
     ],
-    "contentHash": "6ac37140f66a7118f65daf5bde3bf3df459a9925a8d51949dd2d936d60ca5b85",
+    "contentHash": "82e98a73a9b610877b38382294003342c870289bbe4f120d4dc76a4a7a096151",
     "doi": "10.1055/a-2941-7027",
     "ingestedAt": 2026-11-02T10:00:00.000Z,
     "isOpenAccess": false,
     "isRetracted": false,
+    "issue": "08",
     "journal": {
       "issnElectronic": "1439-1279",
       "issnPrint": "0722-219X",
@@ -280,6 +284,7 @@ Zirconia-based CAD-on restorations may provide satisfactory esthetic and mechani
     "landingUrl": "http://www.thieme-connect.de/DOI/DOI?10.1055/a-2941-7027",
     "language": "de",
     "licenses": [],
+    "pages": "538-542",
     "published": {
       "month": 10,
       "year": 2026,
@@ -287,6 +292,7 @@ Zirconia-based CAD-on restorations may provide satisfactory esthetic and mechani
     "sourceUpdatedAt": 2026-10-11T22:31:42.000Z,
     "subjects": [],
     "title": "Immuntherapie-induzierte Nebenwirkungen: Im Brennpunkt der Intensivmedizin",
+    "volume": "47",
   },
   {
     "abstract": "Was ist neu? Die Subtypen des cholangiozellulären Karzinoms (CCC) unterscheiden sich u.a. im Vorhandensein molekularer Alterationen. Besonders das iCCC vom Small-Duct-Typ weist häufig therapeutisch relevante Veränderungen wie FGFR2-Fusionen und IDH1-Mutationen auf. Extrahepatische CCCs und Gallenblasenkarzinome zeigen häufiger HER2- und KRAS-Alterationen und gewinnen durch neue HER2-gerichtete Therapien sowie neuste Entwicklungen der KRAS-Inhibition zunehmend an Bedeutung.
@@ -308,11 +314,12 @@ Was ist neu? Präzisionsonkologie ist beim CCC klinische Realität, ihre Umsetzu
         "given": "Bertram",
       },
     ],
-    "contentHash": "2effb7a351c5f166676b418c6a1b8af9a39c2d35d623d0aa8411c9f73c2ddb25",
+    "contentHash": "1a586b9d77eff56ea7a3e4c5221e9f039cf3ec4107a028db92050e33323bc71d",
     "doi": "10.1055/a-2954-8120",
     "ingestedAt": 2026-11-02T10:00:00.000Z,
     "isOpenAccess": false,
     "isRetracted": false,
+    "issue": "08",
     "journal": {
       "issnElectronic": "1439-1279",
       "issnPrint": "0722-219X",
@@ -321,6 +328,7 @@ Was ist neu? Präzisionsonkologie ist beim CCC klinische Realität, ihre Umsetzu
     "landingUrl": "http://www.thieme-connect.de/DOI/DOI?10.1055/a-2954-8120",
     "language": "de",
     "licenses": [],
+    "pages": "543-550",
     "published": {
       "month": 10,
       "year": 2026,
@@ -328,6 +336,7 @@ Was ist neu? Präzisionsonkologie ist beim CCC klinische Realität, ihre Umsetzu
     "sourceUpdatedAt": 2026-10-11T22:31:42.000Z,
     "subjects": [],
     "title": "Cholangiozelluläres Karzinom als Modellerkrankung: Neue Wege in der personalisierten Medizin",
+    "volume": "47",
   },
 ]
 `;

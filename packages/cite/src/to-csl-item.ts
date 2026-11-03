@@ -8,6 +8,9 @@ export interface CslItem {
   readonly 'container-title': string;
   readonly ISSN?: string;
   readonly author?: readonly { readonly family: string; readonly given?: string }[];
+  readonly volume?: string;
+  readonly issue?: string;
+  readonly page?: string;
   readonly issued: { readonly 'date-parts': [[number, ...number[]]] };
   readonly DOI: string;
   readonly URL: string;
@@ -39,6 +42,9 @@ export function toCslItem(article: Article): CslItem {
         ...(given !== undefined && { given }),
       })),
     }),
+    ...(article.volume !== undefined && { volume: article.volume }),
+    ...(article.issue !== undefined && { issue: article.issue }),
+    ...(article.pages !== undefined && { page: article.pages }),
     issued: { 'date-parts': [dateParts] },
     DOI: article.doi,
     URL: article.landingUrl,
