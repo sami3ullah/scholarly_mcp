@@ -66,7 +66,7 @@ export function createLandingPages(deps: LandingPagesDeps): LandingPages {
     }
   }
 
-  async function access(article: Article, now: Date, signal: AbortSignal): Promise<LandingAccess> {
+  async function access(article: Article, signal: AbortSignal): Promise<LandingAccess> {
     try {
       const decision = await deps.entitlements.check(
         { doi: article.doi, isOpenAccess: article.isOpenAccess, caller: VISITOR },
@@ -80,7 +80,7 @@ export function createLandingPages(deps: LandingPagesDeps): LandingPages {
     } catch (error) {
       if (signal.aborted) throw error;
       logger.warn({ err: error }, 'Entitlement check failed; showing access from the record');
-      return { status: cardAccess(article, now) };
+      return { status: cardAccess(article) };
     }
   }
 
@@ -125,7 +125,7 @@ export function createLandingPages(deps: LandingPagesDeps): LandingPages {
       const now = clock.now();
       const [chunks, decision, nearby] = await Promise.all([
         chunkId === undefined ? Promise.resolve([]) : reader.findChunks([chunkId], signal),
-        access(chosen, now, signal),
+        access(chosen, signal),
         related(chosen, new Set(results.map((result) => result.doi)), signal),
       ]);
       const passage = matchedPassage(chunks[0]);
@@ -137,8 +137,8 @@ export function createLandingPages(deps: LandingPagesDeps): LandingPages {
         chosen: landingArticle(chosen, now),
         access: decision,
         ...(passage !== undefined && { matchedPassage: passage }),
-        matches: others.map((article) => landingSummary(article, now)),
-        related: nearby.map((article) => landingSummary(article, now)),
+        matches: others.map((article) => landingSummary(article)),
+        related: nearby.map((article) => landingSummary(article)),
       };
     },
   };

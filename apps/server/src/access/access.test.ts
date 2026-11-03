@@ -12,10 +12,10 @@ const tdm = {
 };
 
 describe('cardAccess', () => {
-  it('is open for open access, subscription with a closed licence in force, else unknown', () => {
-    expect(cardAccess(anArticle().openAccess().build(), now)).toBe('open');
-    expect(cardAccess({ ...anArticle().build(), licenses: [tdm] }, now)).toBe('subscription');
-    expect(cardAccess(anArticle().build(), now)).toBe('unknown');
+  it('is open for open access and subscription otherwise, with or without a licence', () => {
+    expect(cardAccess(anArticle().openAccess().build())).toBe('open');
+    expect(cardAccess({ ...anArticle().build(), licenses: [tdm] })).toBe('subscription');
+    expect(cardAccess(anArticle().build())).toBe('subscription');
   });
 
   it('treats a licence that starts in the future as not yet in force', () => {

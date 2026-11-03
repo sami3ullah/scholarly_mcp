@@ -73,9 +73,13 @@ describe('search_articles', () => {
     });
   });
 
-  it('marks a card without licence information as unknown', async () => {
+  it('marks a closed card without licence information as subscription', async () => {
     const [card] = cardsOf(await harness.call('search_articles', { query: 'hip replacement' }));
-    expect(card).toMatchObject({ doi: '10.1055/a-1004', access: 'unknown', license: 'unknown' });
+    expect(card).toMatchObject({
+      doi: '10.1055/a-1004',
+      access: 'subscription',
+      license: 'unknown',
+    });
   });
 
   it('leaves retracted articles out', async () => {

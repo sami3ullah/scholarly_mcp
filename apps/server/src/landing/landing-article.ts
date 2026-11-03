@@ -11,7 +11,7 @@ import { authorName } from '../cards/build-card.js';
 import { subjectLabels } from '../tools/get-article.js';
 
 /** An article in the match list or related reading: the same metadata and teaser as its card. */
-export function landingSummary(article: Article, now: Date): LandingArticleSummary {
+export function landingSummary(article: Article): LandingArticleSummary {
   const firstAuthor = article.authors[0];
   return {
     doi: article.doi,
@@ -20,7 +20,7 @@ export function landingSummary(article: Article, now: Date): LandingArticleSumma
     year: article.published.year,
     ...(firstAuthor !== undefined && { firstAuthor: authorName(firstAuthor) }),
     teaser: buildTeaser(article),
-    access: cardAccess(article, now),
+    access: cardAccess(article),
     retracted: article.isRetracted,
   };
 }
@@ -28,7 +28,7 @@ export function landingSummary(article: Article, now: Date): LandingArticleSumma
 /** The chosen article: its summary plus the abstract and what a reader needs to cite it. */
 export function landingArticle(article: Article, now: Date): LandingArticle {
   return {
-    ...landingSummary(article, now),
+    ...landingSummary(article),
     ...(article.subtitle !== undefined && { subtitle: article.subtitle }),
     authors: article.authors.slice(0, LANDING_AUTHOR_LIMIT).map(authorName),
     authorCount: article.authors.length,

@@ -23,7 +23,7 @@ export function buildCard(source: CardSource, url: string, now: Date): ArticleCa
     ...(firstAuthor !== undefined && { firstAuthor: authorName(firstAuthor) }),
     teaser: source.teaser,
     whyMatched: source.whyMatched,
-    access: cardAccess(article, now),
+    access: cardAccess(article),
     license: cardLicense(article, now),
     url,
   };

@@ -41,6 +41,6 @@ The plan names the six tools, their inputs and outputs, the error codes and the 
 - Postgres (SM-13) implements `JournalDirectory`, `findArticleChunks` and `journalIssns` by passing the extended store contract suite.
 - SM-10 replaces the local caller with API-key identities, lifts the loopback restriction behind an `Origin` allowlist, adds health and metrics around `isReady()`, and meters calls.
 - SM-11 builds the landing page against the link format above. It must not show the passage of a full-text `matchedChunkId`, which a session may hold.
-- Most subscription cards show `access unknown` until the records carry their licences or the entitlement adapter is asked per card.
+- Most subscription cards show `access unknown` until the records carry their licences or the entitlement adapter is asked per card. Superseded by ADR 0043: a card that is not open access shows `subscription`.
 - Teaser quality and cross-language ranking seen on the live index ("Was ist neu?" as a DMW teaser, a defibrillation article first for an atrial fibrillation query filtered to DMW) are search-tuning work for SM-08.
 - SM-14: the ISSN path `https://www.thieme-connect.de/products/ejournals/issn/{issn}` was checked in a browser on 2026-11-03 and answers "No articles available", so the Thieme preset leaves `JOURNAL_URL_TEMPLATE` unset.
