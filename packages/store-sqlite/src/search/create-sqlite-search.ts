@@ -23,6 +23,14 @@ interface TrigramRow extends HitRow {
  */
 const BM25 = 'bm25(chunks_fts, 1.0, 0.5, 2.0)';
 
+/**
+ * The Euclidean distance between unit vectors at cosine 0 is √2. Just under it, so float32
+ * rounding cannot let a chunk at cosine 0 through. Applied after the top-k cut: inside the
+ * scan, SQLite would compute every distance twice, and the nearest k past the cut-off
+ * keep the same rows.
+ */
+const MAX_VECTOR_DISTANCE = Math.SQRT2 - 1e-6;
+
 const ranked = (rows: readonly HitRow[]): RankedChunk[] =>
   rows.map((row, index) => ({ chunkId: row.id, doi: row.doi as Doi, rank: index + 1 }));
 
@@ -30,8 +38,10 @@ const ranked = (rows: readonly HitRow[]): RankedChunk[] =>
  * Lexical search over the stemmed and folded FTS table, topped up from the trigram table
  * (substrings, for German compounds) when it finds fewer than the limit; a trigram hit counts
  * only where a word starts or ends with the stem, as a compound part does. Vector search is an
- * exact cosine scan over every chunk that passes the filters, so filters never cut results
- * short; about 60 ms for the 90k chunks of the Thieme 2024+ corpus (ADR 0022).
+ * exact scan over every chunk that passes the filters, so filters never cut results short
+ * (ADR 0022). It ranks by Euclidean distance, which sqlite-vec computes with SIMD: for unit
+ * vectors that is cosine order, and cosine above 0 is a distance below √2. About 30 ms for
+ * the 177k chunks of the full Thieme index, against 170 ms for the scalar cosine (ADR 0040).
  */
 export function createSqliteSearch(db: Db): ArticleSearch {
   const lexicalRows = (
@@ -89,14 +99,15 @@ export function createSqliteSearch(db: Db): ArticleSearch {
         const rows = db
           .prepare<unknown[], HitRow>(
             `SELECT c.id, c.doi FROM (
-               SELECT rowid, vec_distance_cosine(embedding, ?) AS distance FROM vec_chunks s
-               WHERE ${where.sql} AND distance < 1
+               SELECT rowid, vec_distance_l2(embedding, ?) AS distance FROM vec_chunks s
+               WHERE ${where.sql}
                ORDER BY distance, rowid LIMIT ?
              ) v
              JOIN chunks c ON c.rowid = v.rowid
+             WHERE v.distance < ?
              ORDER BY v.distance, c.id`,
           )
-          .all(vectorBlob(embedding), ...where.params, limit);
+          .all(vectorBlob(embedding), ...where.params, limit, MAX_VECTOR_DISTANCE);
         return ranked(rows);
       }),
   };

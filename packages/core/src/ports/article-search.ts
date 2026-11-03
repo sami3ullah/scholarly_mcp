@@ -33,6 +33,7 @@ export interface LexicalQuery {
 
 /** A nearest-neighbour query over chunk embeddings. */
 export interface VectorQuery {
+  /** Unit length, like every chunk embedding (ADR 0040). */
   readonly embedding: Float32Array;
   readonly filters: SearchFilters;
   readonly limit: number;

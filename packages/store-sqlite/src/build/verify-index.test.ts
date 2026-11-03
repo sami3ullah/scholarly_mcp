@@ -1,4 +1,4 @@
-import { aChunk, anArticle, TEST_EMBEDDING_DIMENSIONS } from '@scholarly-mcp/testkit';
+import { anArticle, TEST_EMBEDDING_DIMENSIONS } from '@scholarly-mcp/testkit';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createSqliteIndexStore, type SqliteIndexStore } from '../create-sqlite-index-store.js';
 import { createIndexSchema } from '../database/index-schema.js';
@@ -59,13 +59,5 @@ describe('verifyIndex', () => {
   it('fails when a chunk has lost its vector', async () => {
     db.prepare('DELETE FROM vec_chunks WHERE rowid = 1').run();
     expect(await failed()).toContain('vector per chunk');
-  });
-
-  it('fails a sample whose chunk cannot be found by its own vector', async () => {
-    await store.writer.upsert(
-      [{ ...recordNumber(1), chunks: [aChunk().of('10.1055/a-1').withEmbedding(0).build()] }],
-      signal,
-    );
-    expect(await failed()).toContain('vector finds 10.1055/a-1#0');
   });
 });

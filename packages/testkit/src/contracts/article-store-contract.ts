@@ -281,6 +281,16 @@ export function runArticleStoreContract(
         const hits = await store.search.vector({ embedding, filters: noFilters, limit: 1 }, signal);
         expect(hits).toEqual([{ chunkId: `${DOI_A}#0`, doi: DOI_A, rank: 1 }]);
       });
+
+      it('leaves out chunks at cosine 0 or below', async () => {
+        const vector = async (...values: number[]) => {
+          const embedding = new Float32Array(TEST_EMBEDDING_DIMENSIONS);
+          embedding.set(values);
+          return store.search.vector({ embedding, filters: noFilters, limit: 10 }, signal);
+        };
+        expect(await vector(0, 1)).toEqual([{ chunkId: `${DOI_B}#0`, doi: DOI_B, rank: 1 }]);
+        expect(await vector(-1, 0)).toEqual([]);
+      });
     });
 
     describe('filters, applied the same on both sides', () => {

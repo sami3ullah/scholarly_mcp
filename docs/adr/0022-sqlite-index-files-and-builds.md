@@ -1,6 +1,6 @@
 # 0022 SQLite index files, text matching and builds
 
-- Status: accepted
+- Status: accepted, amended by ADR 0040 (the vector scan ranks by Euclidean distance on a mapped file)
 - Date: 2026-11-02
 - Fills gaps in: PLAN.md "SQLite store (default)", "Crash halfway through a run", key design decisions #3 and #4, ticket SM-05; settles the open question in ADR 0021 about article language
 

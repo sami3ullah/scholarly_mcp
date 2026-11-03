@@ -11,7 +11,7 @@ const valid = {
   tokenCount: 9,
   origin: 'abstract',
   source: 'crossref',
-  embedding: new Float32Array(384),
+  embedding: Float32Array.from({ length: 384 }, (_, index) => (index === 0 ? 1 : 0)),
   modelVersion: 'multilingual-e5-small@1',
 };
 
@@ -38,6 +38,19 @@ describe('chunkSchema', () => {
   it('rejects an empty embedding', () => {
     const result = chunkSchema.safeParse({ ...valid, embedding: new Float32Array(0) });
     expect(result.error?.issues[0]?.message).toBe('Expected a non-empty embedding');
+  });
+
+  it.each([
+    ['zero', new Float32Array(384)],
+    ['too long', Float32Array.from({ length: 384 }, () => 1)],
+  ])('rejects a %s embedding, since stores rank unit vectors (ADR 0040)', (_, embedding) => {
+    const result = chunkSchema.safeParse({ ...valid, embedding });
+    expect(result.error?.issues[0]?.message).toBe('Expected a unit-length embedding');
+  });
+
+  it('accepts float32 rounding off unit length', () => {
+    const embedding = Float32Array.from({ length: 384 }, () => Math.sqrt(1 / 384) * (1 + 1e-6));
+    expect(chunkSchema.safeParse({ ...valid, embedding }).success).toBe(true);
   });
 });
 

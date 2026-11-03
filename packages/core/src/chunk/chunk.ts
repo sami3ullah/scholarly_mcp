@@ -15,6 +15,15 @@ export const chunkSourceSchema = z.enum(['crossref', 'europepmc']);
 
 export type ChunkSource = z.infer<typeof chunkSourceSchema>;
 
+/** How far a stored vector's length may stray from 1; float32 rounding stays near 1e-6. */
+const UNIT_LENGTH_TOLERANCE = 1e-3;
+
+const isUnitLength = (vector: Float32Array): boolean => {
+  let sum = 0;
+  for (const value of vector) sum += value * value;
+  return Math.abs(Math.sqrt(sum) - 1) <= UNIT_LENGTH_TOLERANCE;
+};
+
 /**
  * A passage of an article, the unit of retrieval. Each chunk records its source and licence
  * so it can be purged by either with one query.
@@ -33,11 +42,13 @@ export const chunkSchema = z
     licenseUrl: z.url().optional(),
     /**
      * The model decides the size (ADR 0028); the embedder checks it, and an index holds
-     * one size only.
+     * one size only. Unit length, as the embedder normalises it, so stores may rank by
+     * Euclidean distance in cosine order (ADR 0040).
      */
     embedding: z
       .instanceof(Float32Array)
-      .refine((vector) => vector.length > 0, { message: 'Expected a non-empty embedding' }),
+      .refine((vector) => vector.length > 0, { message: 'Expected a non-empty embedding' })
+      .refine(isUnitLength, { message: 'Expected a unit-length embedding' }),
     modelVersion: z.string().min(1),
   })
   .refine((chunk) => chunk.origin !== 'fulltext' || chunk.licenseUrl !== undefined, {

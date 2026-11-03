@@ -8,7 +8,7 @@ export interface ChunkBuilder {
   withText(text: string): ChunkBuilder;
   inSection(section: string): ChunkBuilder;
   withLanguage(language: string): ChunkBuilder;
-  /** Sets the leading embedding values; the rest are zero. */
+  /** Sets the leading embedding values; the rest are zero. Built vectors are scaled to unit length. */
   withEmbedding(...values: number[]): ChunkBuilder;
   withModelVersion(modelVersion: string): ChunkBuilder;
   /** Marks the chunk as matching-only full text under the given licence (ADR 0003). */
@@ -44,6 +44,9 @@ export function aChunk(draft: Draft = DEFAULTS): ChunkBuilder {
     build: () => {
       const embedding = new Float32Array(TEST_EMBEDDING_DIMENSIONS);
       embedding.set(draft.embedding);
+      const norm = Math.hypot(...embedding);
+      if (norm > 0)
+        for (const [index, value] of embedding.entries()) embedding[index] = value / norm;
       const text = typeof draft['text'] === 'string' ? draft['text'] : '';
       return chunkSchema.parse({
         ...draft,

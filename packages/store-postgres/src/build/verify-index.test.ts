@@ -1,4 +1,4 @@
-import { aChunk, anArticle } from '@scholarly-mcp/testkit';
+import { anArticle } from '@scholarly-mcp/testkit';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { PostgresIndexStore } from '../create-postgres-index-store.js';
 import type { Pool } from '../database/pool.js';
@@ -66,13 +66,5 @@ describe('verifyPostgresIndex', () => {
       signal,
     );
     expect(await failed()).toContain('every article has chunks');
-  });
-
-  it('fails a sample whose chunk cannot be found by its own vector', async () => {
-    await store.writer.upsert(
-      [{ ...recordNumber(1), chunks: [aChunk().of('10.1055/a-1').withEmbedding(0).build()] }],
-      signal,
-    );
-    expect(await failed()).toContain('vector finds 10.1055/a-1#0');
   });
 });
