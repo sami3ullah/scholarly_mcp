@@ -32,17 +32,19 @@ Everything beyond the quick start lives here. New guides are added as the featur
 | [MCP server](../apps/server/README.md)                        | The six tools, their inputs and outputs, layout and configuration          |
 | [Landing app](../apps/landing/README.md)                      | The Next.js reference landing page: layout, scripts and tests              |
 | [Citations](../packages/cite/README.md)                       | Citation styles, how records map to CSL, the vendored AMA style            |
+| [Card view](../packages/card-view/README.md)                  | The MCP Apps card list for `search_articles`: build, contents, tests       |
 
 ## Guides
 
-| Guide                                                  | What's inside                                                                                    |
-| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
-| [Ingestion](guides/ingestion.md)                       | Building, refreshing and verifying the index                                                     |
-| [How ingestion works](guides/how-ingestion-works.md)   | Every step from Crossref to a swapped-in index, how full text stays hidden, and how it was built |
-| [Operating the server](guides/operating-the-server.md) | API keys, OAuth, rate limits, usage metering and webhooks, health, metrics, traces, shutdown     |
-| [Connecting clients](guides/connecting-clients.md)     | Running the MCP server and connecting Claude Desktop or MCP Inspector, over stdio or HTTP        |
-| [Evaluating search](guides/evaluating-search.md)       | The golden set, its metrics, the eval index and the regression gate for ranking changes          |
-| [The landing page](guides/landing-page.md)             | Running the landing app, the landing API contract, rebuilding the page in your own stack, tests  |
+| Guide                                                          | What's inside                                                                                    |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| [Ingestion](guides/ingestion.md)                               | Building, refreshing and verifying the index                                                     |
+| [How ingestion works](guides/how-ingestion-works.md)           | Every step from Crossref to a swapped-in index, how full text stays hidden, and how it was built |
+| [Operating the server](guides/operating-the-server.md)         | API keys, OAuth, rate limits, usage metering and webhooks, health, metrics, traces, shutdown     |
+| [Connecting clients](guides/connecting-clients.md)             | Running the MCP server and connecting Claude Desktop or MCP Inspector, over stdio or HTTP        |
+| [Evaluating search](guides/evaluating-search.md)               | The golden set, its metrics, the eval index and the regression gate for ranking changes          |
+| [The landing page](guides/landing-page.md)                     | Running the landing app, the landing API contract, rebuilding the page in your own stack, tests  |
+| [The funnel and the card view](guides/funnel-and-card-view.md) | What the funnel counts, writing the report, the beacons, the MCP Apps card view                  |
 
 Planned:
 

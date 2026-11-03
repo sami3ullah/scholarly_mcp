@@ -19,8 +19,10 @@ sequenceDiagram
   L->>S: GET /landing/v1/page?t=…&doi=… (secret, hashed visitor id)
   S-->>L: page model (or 404)
   L-->>B: page, or 307 to doi.org, or 404
-  B->>L: POST /mcp/landing/visit (beacon, once per token)
+  B->>L: POST /mcp/landing/visit (beacon, once per token and result)
   L->>S: POST /landing/v1/visits
+  B->>L: POST /mcp/landing/action (access button clicked)
+  L->>S: POST /landing/v1/actions
 ```
 
 No query text goes into any of these requests. The token holds only the result DOIs and matched chunk ids.
@@ -119,7 +121,11 @@ The page's `session` field is `active` (results rebuilt), `unavailable` (expired
 
 ### `POST /landing/v1/visits`
 
-The body is `{ "t": "<token>", "tool": "search_articles" }`, and `tool` is optional. The answer is 204, whether or not the token is live. Only a live token counts: it increments the session's `visitCount` and `landing_visits_total{tool}`. Any other field is refused with 400, so query text cannot be sent.
+The body is `{ "t": "<token>", "doi": "<opened result>", "tool": "search_articles" }`, and `tool` is optional. The answer is 204, whether or not anything was recorded. A visit is recorded only when the token is live and the DOI is one of its results. It then increments the session's `visitCount` and `landing_visits_total{tool}`, and it writes a `landing_visit` event for the funnel ([ADR 0033](../adr/0033-referral-events-funnel-and-card-view.md)). The tool comes from the session when it knows it, else from `tool`. Any other field is refused with 400, so query text cannot be sent.
+
+### `POST /landing/v1/actions`
+
+The body is `{ "t": "<token>", "doi": "<result>", "action": "read" }`. The action is one of `read`, `sign_in`, `buy`, `view_on_publisher` or `check_access`. The same checks and the same 204 answer apply as for visits. A recorded click increments `landing_actions_total{action}` and writes a `landing_action` event. See [The funnel and the card view](funnel-and-card-view.md).
 
 ## Rebuilding the page in your own stack
 
@@ -128,10 +134,11 @@ Keep these rules. They come from the hard rules in PLAN.md and are each covered 
 1. **Fetch on the server.** Call the API from your backend with the secret, never from the browser.
 2. **Never index.** Send `noindex` in the meta tag and the header, with the article page as canonical.
 3. **Fall back, never error.** No page and a DOI means a redirect to the article (doi.org or your own article page). No page and no DOI means a 404 page. API failures with a DOI also redirect.
-4. **Count visits in the browser.** Send one beacon per token and tab after the page is shown, and wait while the page is prerendered. Drop preview agents, prefetches and cross-site posts. Never count on GET.
-5. **Show no full text.** A `fullText` match shows its section label only.
-6. **Never show the query.** Use `topics`.
-7. **Lead with the chosen article.** On a phone, the access options sit in the first screen.
+4. **Count visits in the browser.** Send one beacon per token, result and tab after the page is shown, and wait while the page is prerendered. Skip moves between results on your own page. Drop preview agents, prefetches and cross-site posts. Never count on GET.
+5. **Count access button clicks.** Send one action beacon per token, result, action and tab with `sendBeacon`, so it survives the navigation.
+6. **Show no full text.** A `fullText` match shows its section label only.
+7. **Never show the query.** Use `topics`.
+8. **Lead with the chosen article.** On a phone, the access options sit in the first screen.
 
 ## Testing
 

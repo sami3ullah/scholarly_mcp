@@ -8,15 +8,15 @@ in the [landing guide](../../docs/guides/landing-page.md); the decisions are in
 
 ## Layout
 
-| Path                               | What it holds                                                               |
-| ---------------------------------- | --------------------------------------------------------------------------- |
-| `src/app/mcp/landing/`             | Thin route files: the page, its error and not-found views, the beacon route |
-| `src/features/landing/components/` | Presentational components; `landing-view.tsx` composes them                 |
-| `src/features/landing/hooks/`      | Client logic: the referral beacon, the expandable abstract                  |
-| `src/features/landing/server/`     | `server-only` calls to the landing API, with the DOI fallbacks              |
-| `src/features/landing/model/`      | Pure helpers: link parameters, links, dates, prefetch detection             |
-| `src/shared/`                      | Design tokens' UI primitives (button link, badge), messages (en, de), env   |
-| `e2e/`                             | Playwright suite, the stub landing API and the Lighthouse server script     |
+| Path                               | What it holds                                                                |
+| ---------------------------------- | ---------------------------------------------------------------------------- |
+| `src/app/mcp/landing/`             | Thin route files: the page, its error and not-found views, the beacon routes |
+| `src/features/landing/components/` | Presentational components; `landing-view.tsx` composes them                  |
+| `src/features/landing/hooks/`      | Client logic: the visit and action beacons, the expandable abstract          |
+| `src/features/landing/server/`     | `server-only` calls to the landing API, with the DOI fallbacks               |
+| `src/features/landing/model/`      | Pure helpers: link parameters, links, dates, prefetch detection              |
+| `src/shared/`                      | Design tokens' UI primitives (button link, badge), messages (en, de), env    |
+| `e2e/`                             | Playwright suite, the stub landing API and the Lighthouse server script      |
 
 ## Scripts
 

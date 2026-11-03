@@ -26,8 +26,9 @@ Every response has a `notice` and a plain-text rendering for clients without str
 | `metering/`                | Outbox meter, exporter with backoff, JSON-lines and webhook sinks                  |
 | `telemetry/`               | Prometheus metrics and OpenTelemetry tracing                                       |
 | `keys/`                    | The `keys create`, `list` and `revoke` command                                     |
+| `funnel/`                  | The `funnel` command: the funnel report from the metering export (ADR 0033)        |
 | `journals/`                | Journal catalog cached per index version, name and ISSN matching                   |
-| `landing/`                 | Landing sessions and links, the landing API and the pages it returns (ADR 0032)    |
+| `landing/`                 | Landing sessions and links, the landing API, its pages and referrals (ADR 0032/33) |
 | `access/`                  | Card access badge and licence, mock entitlements                                   |
 | `runtime/`                 | The live index (reopens swapped builds, survives a missing one), random tokens     |
 | `create-app.ts`, `main.ts` | Wiring, and the composition root that creates the real adapters                    |

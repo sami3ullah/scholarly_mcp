@@ -212,7 +212,7 @@ Read more in the [engineering plan](docs/PLAN.md#high-level-architecture) and th
 | [SM-09](tickets/SM-09-mcp-server.md)              | MCP server: six tools and transports                 |   ✅   |
 | [SM-10](tickets/SM-10-auth-telemetry-metering.md) | Auth, rate limits, telemetry, metering               |   ✅   |
 | [SM-11](tickets/SM-11-landing.md)                 | Landing sessions and Next.js landing page            |   ✅   |
-| [SM-12](tickets/SM-12-mcp-apps-funnel.md)         | MCP Apps cards and funnel dashboard                  |   ⬜   |
+| [SM-12](tickets/SM-12-mcp-apps-funnel.md)         | MCP Apps cards and funnel dashboard                  |   ✅   |
 | [SM-13](tickets/SM-13-postgres-adapter.md)        | Postgres adapter                                     |   ⬜   |
 | [SM-14](tickets/SM-14-hardening-docs.md)          | Hardening, image and docs                            |   ⬜   |
 | [SM-15](tickets/SM-15-demo-outreach.md)           | Demo deployment                                      |   ⬜   |

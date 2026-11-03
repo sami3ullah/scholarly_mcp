@@ -63,7 +63,9 @@ The landing API (`/landing/v1/page`, `/landing/v1/visits`, [landing guide](landi
 
 ## Usage metering
 
-Every tool call writes one event to the outbox (`usage_events` in the runtime database): id, key id, tool, result count, latency, status and whether it is billable. Only successful calls are billable. Events never hold query text, and writing them never fails or slows a call.
+Every tool call writes one event to the outbox (`usage_events` in the runtime database): id, key id, tool, result count, latency, status, cards shown per journal and whether it is billable. Only successful calls are billable. Landing visits and access button clicks are events too (`kind` `landing_visit` and `landing_action`, never billable), so the funnel survives session cleanup ([The funnel and the card view](funnel-and-card-view.md)). Events never hold query text or a landing token, and writing them never fails or slows a call.
+
+Every exported event carries `kind`. A billing consumer that sums `billable` events needs no change; one that assumed every line is a tool call should filter on `kind: "tool_call"`.
 
 The exporter sends pending events every `METER_EXPORT_MS` (5 s):
 
@@ -71,6 +73,8 @@ The exporter sends pending events every `METER_EXPORT_MS` (5 s):
 - **Webhook**, when `METER_WEBHOOK_URL` is set: `POST` with `{ "events": [...] }`.
 
 A batch counts as exported only when every sink took it. When one fails, the whole batch is sent again later with growing pauses (up to `METER_BACKOFF_MAX_MS`, 5 min), so delivery is at least once: **dedupe on the event `id`**. Exported events are deleted after `METER_RETENTION_DAYS` (30). `meter_outbox_pending` shows the backlog.
+
+`scholarly-mcp funnel --from data/usage.jsonl --out funnel.html` turns the JSON lines file into the funnel report.
 
 ### Verifying webhook requests
 
@@ -100,11 +104,11 @@ function verify(rawBody, timestamp, signature, secret) {
 
 ## Health, metrics and traces
 
-| Route      | Answers                                                                                                                |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `/healthz` | `200 {"status":"ok"}` while the process runs: the liveness probe                                                       |
-| `/readyz`  | `200` when the index is open, the model loaded and the server not draining, `503` otherwise                            |
-| `/metrics` | Prometheus text: tool calls, durations, HTTP requests, auth failures, metering, landing pages and visits, Node runtime |
+| Route      | Answers                                                                                                                         |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `/healthz` | `200 {"status":"ok"}` while the process runs: the liveness probe                                                                |
+| `/readyz`  | `200` when the index is open, the model loaded and the server not draining, `503` otherwise                                     |
+| `/metrics` | Prometheus text: tool calls, durations, HTTP requests, auth failures, metering, landing pages, visits and actions, Node runtime |
 
 These routes skip the `Host`, `Origin` and auth checks so probes can reach the pod by address. They hold no article data, but keep `/metrics` internal at the load balancer. No metric label carries a key id or query text.
 
