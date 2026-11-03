@@ -65,11 +65,14 @@ Full Thieme index (70,989 articles, 176,536 chunks), 60 s per run, on an Apple M
 | SQLite, one container                      |         1 |      1.0 |    283 |    470 |    690 |                                  0 |
 | SQLite, one container                      |         4 |      4.0 |    625 |  1,125 |  1,376 |                                  0 |
 | SQLite, one container                      |        20 |      4.4 |  2,413 |  3,380 |  4,350 | 8 tool errors (codes not recorded) |
+| SQLite 0.1.0; 2 vCPUs                      |        20 |      4.4 |  2,338 |  3,527 |  5,043 |                       13 `TIMEOUT` |
+| SQLite, L2 scan (ADR 0040); 2 vCPUs        |        20 |     12.5 |    786 |  1,103 |  2,585 |                        5 `TIMEOUT` |
+| SQLite, L2 scan (ADR 0040); no CPU limits  |        20 |     13.0 |    780 |  1,075 |  1,567 |                                  0 |
 
 - **Postgres meets the plan's target** (20 requests a second, p95 under 500 ms on a 2-vCPU server) when the database has 4 vCPUs. The server itself stays near 15% of one CPU at 20 calls a second; Postgres does the search work and is what to size.
-- **SQLite tops out at about 4 calls a second per container.** Under the 20/s overload, 8 of 262 calls returned tool errors; the codes were not captured in that run (the script now records them). Each search spends about 200 ms of CPU on the server's event loop, mostly the exact vector scan over every chunk, so calls queue. Fine for a trial or a pilot; use Postgres for more. [SM-17](../tickets/SM-17-sqlite-search-throughput.md) tracks raising it.
+- **SQLite tops out at about 13 calls a second per container.** A search now spends about 50 ms natively and about 100 ms in the Linux image on the server's event loop (it was 200 ms, mostly the exact vector scan; [ADR 0040](adr/0040-sqlite-vector-scan-by-euclidean-distance.md)), so past that rate calls queue and some hit the 2 s search budget (`TIMEOUT`). More CPUs do not help yet: the one event loop is the limit. Fine for a trial or a pilot; use Postgres for more. [SM-17](../tickets/SM-17-sqlite-search-throughput.md) tracks raising it. `LOAD_CPUS=2` limits the server container in `load.sh`.
 - **Cold start** to ready: 1.2 to 1.9 s on the full SQLite index, about 1.8 s on the eval index.
-- **Memory:** the server holds about 560 MiB when ready (mostly the model) and 590 to 700 MiB under load; Postgres about 250 MiB at this load. Give the server container 1 GiB.
+- **Memory:** the server holds about 560 MiB when ready (mostly the model) and 590 to 700 MiB under load on Postgres; Postgres about 250 MiB at this load. On SQLite the index file is mapped into memory (ADR 0040), and the pages it reads count as the container's file cache: about 1.3 GiB after a load run on the full index. Give a Postgres server 1 GiB and a SQLite server 1 GiB plus the index file size.
 
 The fuzz tests (`apps/server/src/http/http-edge.fuzz.test.ts`) and the E2E smoke test (`docker/e2e/smoke.sh`, in CI on both stores) cover correctness; these numbers cover load.
 

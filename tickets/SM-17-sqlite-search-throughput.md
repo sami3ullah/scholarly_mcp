@@ -10,9 +10,9 @@ Found by the SM-14 load test. On the full index (70,989 articles, 176,536 chunks
 
 ## Tasks
 
-- [ ] Profile one search on the full SQLite index by stage (query embedding, lexical, trigram, vector scan, fusion, hydration, cards, landing session and metering writes) and record where the 200 ms go
+- [x] Profile one search on the full SQLite index by stage (query embedding, lexical, trigram, vector scan, fusion, hydration, cards, landing session and metering writes) and record where the 200 ms go: 174 ms vector scan (scalar cosine, page copies, the distance computed twice), 21 ms FTS5, 2 ms embedding, under 1 ms hydration ([ADR 0040](../docs/adr/0040-sqlite-vector-scan-by-euclidean-distance.md))
 - [ ] Pick, with an ADR, among: search on a pool of worker threads each with its own read-only connection (scales with cores), an approximate vector index instead of the full scan, cheaper lexical stages; measure each on the full index
-- [ ] Reproduce the 8 tool errors seen at 20 calls/s offered and record their codes (`load.mjs` now counts them by code)
+- [x] Reproduce the 8 tool errors seen at 20 calls/s offered and record their codes (`load.mjs` now counts them by code): all `TIMEOUT` (13 of 266 on 2 vCPUs), calls queued past the 2 s search budget
 - [ ] Load test again at 20 calls/s on a 2-vCPU container, golden-set recall unchanged
 
 ## Exit
