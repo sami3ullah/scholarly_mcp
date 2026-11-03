@@ -1,12 +1,5 @@
 import { createFakeClock, createTestLogger } from '@scholarly-mcp/testkit';
-import {
-  createLocalJWKSet,
-  exportJWK,
-  generateKeyPair,
-  SignJWT,
-  type JWTPayload,
-  type JWTVerifyGetKey,
-} from 'jose';
+import { createLocalJWKSet, exportJWK, generateKeyPair, SignJWT, type JWTVerifyGetKey } from 'jose';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { callerOf } from './auth-info.js';
 import { createJwtVerifier } from './create-jwt-verifier.js';
@@ -24,7 +17,7 @@ beforeAll(async () => {
   keys = createLocalJWKSet({ keys: [{ ...(await exportJWK(pair.publicKey)), kid: 'k1' }] });
 });
 
-function sign(claims: JWTPayload, header: { alg?: string; kid?: string } = {}) {
+function sign(claims: Record<string, unknown>, header: { alg?: string; kid?: string } = {}) {
   return new SignJWT({
     iss: ISSUER,
     aud: AUDIENCE,
