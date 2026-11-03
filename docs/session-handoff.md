@@ -216,3 +216,23 @@ Append-only. Newest entry at the bottom.
   - Step 4: exit eval copy plus `eval golden` on both stores, and tuning `ts_rank` normalisation and `ef_search`.
   - Step 5: funnel view.
   - Consider creating the full-build indexes after loading if the exit copy is slow.
+
+## 2026-11-03 - session 16, SM-13 step 2 done (async reader, storage port, STORE wiring)
+
+- **Objective:** SM-13 "Next, in order" step 2 from sessions 14/15.
+- **Done (committed on `main`):**
+  - `ad80de7` code:
+    - **Core ports.** `IndexReader` (async `refresh(signal)`, `close()`), `IndexStore` (the shared shape of both stores' index stores; `SqliteIndexStore`/`PostgresIndexStore` are now aliases), `IndexStorage` (`openLive`, `beginBuild`, `verifyLive`) with `IndexBuild` (`verify`, `commit`, `close` keeps for resume, `discard`) and `LiveIndexView` (`articleCount`, `store` only on the current layout, `dois()`). `BuildKind`, `VerifyOptions`, `PurgeCounts` moved to core. `storeConfigSchema` (`STORE`).
+    - **Adapters.** `createSqliteIndexStorage(indexPath)`, async `openIndexReader(path, model, signal)`. `createPostgresIndexStorage({pool, serverRole})`, `openPostgresIndexReader(pool, model, signal)` (follows `live_index.schema_name`, refuses another model or layout). Testkit `runIndexStorageContract` (10 cases) passes on both.
+    - **Server.** `createLiveIndex(open(signal), logger, {timeoutMs})`: async, single-flight refresh, 20 s timeout per tick, `close` waits for a running refresh. `runtime/open-server-stores.ts` picks SQLite files or a Postgres pool (`assertMigrated` at boot) for index, sessions, outbox, keys. The keys command uses `DATABASE_URL` as given (must be the writer).
+    - **Ingest.** Every command goes through `IndexStorage` (`inBuild` closes on error, `verifyAndCommit`). `subset`/`reembed` take `source`/`target` storages; the CLI still wires both to SQLite files. `ingest migrate` parses only store and logging config (no Crossref vars needed); SQLite migrates the runtime file, Postgres runs `migrateDatabase` + `grantServerRole`.
+    - **Eval.** `STORE` picks the reader; Postgres uses a 2-connection pool.
+  - Docs commit: ADR 0034 decision 10 note, ticket tick, package READMEs.
+- **Verified:** lint, typecheck, depcruise green; 1,443 tests, 94.8% lines; `format:check` fails only on the local `apps/landing/next-env.d.ts`.
+  - **Live smoke** (throwaway `pgvector/pgvector:0.8.7-pg18-trixie` container, role `scholarly_server`): `ingest migrate` twice (idempotent); `verify` refuses with no index; a scratch script copied `data/eval-index.sqlite` (2,959 articles) into Postgres through `extractSubset` + both storages in 33 s, verified and committed; `ingest verify` passed; the server (`MCP_TRANSPORT=http`, server role) reported `/readyz` ready; a stdio `search_articles` via Inspector returned results and wrote a `tool_call` row to `scholarly.usage_events`; `keys create` worked as the writer and was refused (`permission denied for table api_keys`) as the server role.
+  - **Early golden (not the exit run):** overall recall 0.665 vs SQLite 0.680, MRR 0.869 vs 0.888, nDCG 0.618 vs 0.627; `de` recall 0.536 vs 0.566 (3 points), `en` and `cross` within 1. Tune in step 4 (`ts_rank` normalisation, `ef_search`).
+- **Gotchas:** run vitest and node only after `source ~/.nvm/nvm.sh && nvm use`; without it better-sqlite3 segfaults (SIGSEGV) in the worker. macOS has no `timeout`. The eval exits 1 without `--baseline` when recall is under the absolute 0.8 target, which SQLite also misses.
+- **Next, in order:**
+  - Step 3: `docker compose --profile postgres` (roles `scholarly_ingest` owner, `scholarly_server`; extensions created up front), Postgres guide, README roadmap and docs index, `migrate` in the ingestion guide.
+  - Step 4: wire a copy command (`ingest copy --from <sqlite>` or `subset`/`reembed` with a Postgres target; the port already supports it, see the smoke script shape above), run `eval golden` on both, record the gap in ADR 0034, tune.
+  - Step 5: funnel view.
