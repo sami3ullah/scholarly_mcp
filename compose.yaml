@@ -1,0 +1,33 @@
+# Local services (ADR 0034). The default profile is empty: SQLite needs no service.
+#   docker compose --profile postgres up -d --wait
+# Passwords default to local-only values; set them in .env for anything else.
+name: scholarly-mcp
+
+services:
+  postgres:
+    profiles: [postgres]
+    image: pgvector/pgvector:0.8.7-pg18-trixie
+    environment:
+      POSTGRES_PASSWORD: ${PG_SUPERUSER_PASSWORD:-scholarly-local}
+      PG_INGEST_PASSWORD: ${PG_INGEST_PASSWORD:-ingest-local}
+      PG_SERVER_PASSWORD: ${PG_SERVER_PASSWORD:-server-local}
+    command:
+      # HNSW builds of a full index need more than the 64 MB default.
+      - postgres
+      - -c
+      - maintenance_work_mem=512MB
+    shm_size: 512mb
+    ports:
+      - 127.0.0.1:${PG_PORT:-5432}:5432
+    volumes:
+      - postgres-data:/var/lib/postgresql
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      # Over TCP, which the image opens only after the init scripts have run.
+      test: [CMD, pg_isready, -h, 127.0.0.1, -U, scholarly_ingest, -d, scholarly]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  postgres-data:
