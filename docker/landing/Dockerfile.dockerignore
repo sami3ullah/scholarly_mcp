@@ -1,0 +1,16 @@
+# The landing image's build context: the root .dockerignore, but with apps/landing kept.
+# An index never belongs here (docker/README.md).
+**/node_modules
+**/dist
+**/.next
+**/.turbo
+**/coverage
+**/test-results
+**/*.tsbuildinfo
+.git
+.husky
+.env
+.env.*
+data
+spikes
+**/*.log

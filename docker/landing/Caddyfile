@@ -1,0 +1,15 @@
+# The proxy in front of the landing app (compose `landing` profile, ADR 0038). With no
+# trusted proxies configured, Caddy drops any `X-Forwarded-For` a client sends and sets the
+# client's own address, so readers cannot pick their rate-limit bucket. Behind another
+# proxy or load balancer, list its ranges under `trusted_proxies` in the global options.
+# TLS ends here in production: replace `:8080` with the landing hostname.
+{
+	admin off
+	auto_https off
+	persist_config off
+}
+
+:8080 {
+	reverse_proxy landing:3000
+	header -Server
+}

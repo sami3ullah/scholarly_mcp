@@ -2,6 +2,6 @@
   "$schema": "https://turborepo.com/schema.json",
   "extends": ["//"],
   "tasks": {
-    "build": { "outputs": [".next/**", "!.next/cache/**"] }
+    "build": { "outputs": [".next/**", "!.next/cache/**"], "env": ["LANDING_STANDALONE"] }
   }
 }

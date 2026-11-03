@@ -1,8 +1,10 @@
 # Local services (ADR 0034, SM-14). Pick one profile:
 #   docker compose --profile sqlite up -d --wait     # the server on SQLite files
 #   docker compose --profile postgres up -d --wait   # Postgres, migrated, and the server on it
+# Add `--profile landing` to either for the landing app behind its proxy (ADR 0038).
 # One-off commands run in the same image, e.g. `docker compose run --rm server keys create`.
-# Secrets default to local-only values; set them in .env for anything else.
+# Secrets default to local-only values; set them in .env for anything else. The landing API
+# secret is a compose secret read from LANDING_API_SECRET_PATH, as from a secret store.
 name: scholarly-mcp
 
 x-server: &server
@@ -16,14 +18,20 @@ x-server: &server
   env_file: [presets/thieme.env]
   environment: &server-env
     AUTH_MODE: api-key
-    HTTP_ALLOWED_HOSTS: ${HTTP_ALLOWED_HOSTS:-localhost,127.0.0.1}
-    LANDING_API_SECRET: ${LANDING_API_SECRET:-local-only-landing-secret-change-me}
+    # `server` is how the landing app names it on the landing-api network.
+    HTTP_ALLOWED_HOSTS: ${HTTP_ALLOWED_HOSTS:-localhost,127.0.0.1},server
+    # The landing API has its own port, reachable only on the landing-api network.
+    LANDING_API_HOST: 0.0.0.0
+    LANDING_API_PORT: 8081
+    LANDING_API_SECRET_FILE: /run/secrets/landing_api_secret
     LANDING_BASE_URL: ${LANDING_BASE_URL:-http://localhost:3000}
     LOG_LEVEL: ${LOG_LEVEL:-info}
+  secrets: [landing_api_secret]
   read_only: true
   tmpfs: [/tmp]
   ports:
-    # The MCP endpoint and the landing API. Metrics (9464) stay on the compose network.
+    # The MCP endpoint. Metrics (9464) stay on the compose network, the landing API (8081)
+    # on the landing-api network.
     - 127.0.0.1:${HTTP_PORT:-8080}:8080
   # Above SHUTDOWN_TIMEOUT_MS (10 s) plus 5 s, so requests in flight drain (ADR 0031).
   stop_grace_period: 20s
@@ -44,6 +52,9 @@ services:
   server:
     <<: *server
     profiles: [sqlite]
+    networks:
+      default: {}
+      landing-api: { aliases: [server] }
     volumes:
       # A baked-in index seeds the empty volume on first start; `ingest full` writes here too.
       - index:/data
@@ -104,12 +115,71 @@ services:
   server-pg:
     <<: *server
     profiles: [postgres]
+    networks:
+      default: {}
+      landing-api: { aliases: [server] }
     environment:
       <<: *server-env
       STORE: postgres
       DATABASE_URL: postgres://scholarly_server:${PG_SERVER_PASSWORD:-server-local}@postgres:5432/scholarly
     depends_on:
       migrate: { condition: service_completed_successfully }
+
+  # The reference landing app; only its proxy and the server's landing API reach it.
+  landing:
+    profiles: [landing]
+    image: ${LANDING_IMAGE:-scholarly-mcp-landing:local}
+    build:
+      context: .
+      dockerfile: docker/landing/Dockerfile
+    environment:
+      LANDING_API_URL: http://server:8081
+      LANDING_API_SECRET_FILE: /run/secrets/landing_api_secret
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    secrets: [landing_api_secret]
+    networks: [landing-api, landing-proxy]
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /app/apps/landing/.next/cache:uid=65532,gid=65532
+    stop_grace_period: 15s
+    healthcheck:
+      test:
+        [
+          CMD,
+          /nodejs/bin/node,
+          -e,
+          "fetch('http://127.0.0.1:3000/mcp/landing').then((r) => process.exit(r.status < 500 ? 0 : 1), () => process.exit(1))",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+
+  # Sets x-forwarded-for from the reader's address, which the app's per-visitor limit uses.
+  landing-proxy:
+    profiles: [landing]
+    image: caddy:2.10.2-alpine
+    user: '65532:65532'
+    volumes:
+      - ./docker/landing/Caddyfile:/etc/caddy/Caddyfile:ro
+    networks: [default, landing-proxy]
+    ports:
+      - 127.0.0.1:${LANDING_PORT:-3000}:8080
+    read_only: true
+    tmpfs: [/data, /config]
+    depends_on:
+      landing: { condition: service_healthy }
+
+networks:
+  # Internal: no route out, and nothing published. The landing app reaches the server's
+  # landing API here, and the proxy reaches the app on landing-proxy.
+  landing-api: { internal: true }
+  landing-proxy: { internal: true }
+
+secrets:
+  landing_api_secret:
+    file: ${LANDING_API_SECRET_PATH:-docker/landing/local-landing-api-secret}
 
 volumes:
   index:
