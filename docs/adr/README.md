@@ -43,3 +43,4 @@ Each ADR records one decision: the context, what we chose and what follows from 
 | [0035](0035-live-funnel-over-stored-events.md)          | Live funnel over the stored events                               | accepted           |
 | [0036](0036-shared-rate-limit-buckets.md)               | Shared rate-limit buckets                                        | accepted           |
 | [0037](0037-container-image-and-compose-profiles.md)    | Container image and compose profiles                             | accepted           |
+| [0038](0038-landing-image-proxy-and-secret-files.md)    | Landing image, proxy and secret files                            | accepted           |

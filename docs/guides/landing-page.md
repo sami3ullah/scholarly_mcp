@@ -50,13 +50,15 @@ With Claude Desktop on stdio, add `HTTP_ALONGSIDE_STDIO=true` to the server's en
 
 Server (see also [Operating the server](operating-the-server.md)):
 
-| Variable                        | Default | Meaning                                                                         |
-| ------------------------------- | ------- | ------------------------------------------------------------------------------- |
-| `LANDING_BASE_URL`              | -       | Where links point, e.g. `https://landing.example.org` (a base path is kept)     |
-| `LANDING_API_SECRET`            | -       | Bearer token the landing API requires; 32+ characters; required beyond loopback |
-| `LANDING_RATE_LIMIT_PER_MINUTE` | `120`   | Landing API requests per visitor per minute                                     |
-| `LANDING_RATE_LIMIT_BURST`      | `30`    | Burst size of that bucket                                                       |
-| `HTTP_ALONGSIDE_STDIO`          | `false` | Also serve health, metrics and the landing API while MCP runs on stdio          |
+| Variable                        | Default     | Meaning                                                                         |
+| ------------------------------- | ----------- | ------------------------------------------------------------------------------- |
+| `LANDING_BASE_URL`              | -           | Where links point, e.g. `https://landing.example.org` (a base path is kept)     |
+| `LANDING_API_SECRET`            | -           | Bearer token the landing API requires; 32+ characters; required beyond loopback |
+| `LANDING_RATE_LIMIT_PER_MINUTE` | `120`       | Landing API requests per visitor per minute                                     |
+| `LANDING_RATE_LIMIT_BURST`      | `30`        | Burst size of that bucket                                                       |
+| `HTTP_ALONGSIDE_STDIO`          | `false`     | Also serve health, metrics and the landing API while MCP runs on stdio          |
+| `LANDING_API_PORT`              | -           | Serve the landing API on its own port instead; the public port then 404s it     |
+| `LANDING_API_HOST`              | `127.0.0.1` | Address of that listener                                                        |
 
 Landing app:
 
@@ -67,7 +69,20 @@ Landing app:
 | `LANDING_API_TIMEOUT_MS` | `3000`                  | How long a page waits for the API            |
 | `LOG_LEVEL`              | `info`                  | Log level of the app's server-side JSON logs |
 
-The app's rate limit keys on the first `x-forwarded-for` hop, else `x-real-ip`, so run it behind a proxy that sets one of them. Only a salted hash of the address reaches the server.
+The app's rate limit keys on the first `x-forwarded-for` hop, else `x-real-ip`, so run it behind a proxy that sets one of them from the reader's address and drops any value the reader sent. Only a salted hash of the address reaches the server.
+
+Both sides take the secret from a mounted file as well: `LANDING_API_SECRET_FILE=/run/secrets/landing_api_secret` instead of `LANDING_API_SECRET` (not both).
+
+## Run it in containers
+
+The compose `landing` profile runs the app's image behind a Caddy proxy that sets `x-forwarded-for`, next to either server profile ([ADR 0038](../adr/0038-landing-image-proxy-and-secret-files.md)):
+
+```bash
+docker compose --profile sqlite --profile landing up -d --wait
+open http://localhost:3000/mcp/landing   # card links point here (LANDING_BASE_URL)
+```
+
+The server serves the landing API on port 8081 of an internal network that only the app joins, and the secret comes from the compose secret at `LANDING_API_SECRET_PATH`. To build the app image alone: `docker build -f docker/landing/Dockerfile -t scholarly-mcp-landing .`. A standalone build outside Docker is `LANDING_STANDALONE=true pnpm --filter @scholarly-mcp/landing build`; `next start` does not run that output, `node apps/landing/.next/standalone/apps/landing/server.js` does.
 
 ## The landing API
 

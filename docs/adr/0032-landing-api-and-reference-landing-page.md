@@ -43,4 +43,4 @@ SM-09 already stores each card-returning call's results under a random token and
 - **Several replicas.** The per-visitor limit and sessions are per process. Sessions move to Postgres in SM-13, and shared limits are an SM-14 follow-up (done in ADR 0036).
 - **Funnel data.** `visitCount` lives on the session row and is deleted with it after 24 h. The SM-12 funnel needs visit events in the metering outbox (follow-up added there).
 - **Untranslated topic labels.** Topics are MeSH labels, which are English, so a German page reads "Ihre Ergebnisse zu Atrial Fibrillation". German MeSH labels would need a source (follow-up candidate).
-- **Image build.** `output: 'standalone'` is left for the SM-14 image, because `next start` refuses it.
+- **Image build.** `output: 'standalone'` is left for the SM-14 image, because `next start` refuses it (done behind a build flag in ADR 0038).

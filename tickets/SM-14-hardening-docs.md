@@ -11,7 +11,7 @@
 - [x] Add volume, issue and pages to `Article` (Crossref mapping) at a planned full rebuild, so citations carry them (ADR 0025). Full rebuild done 2026-11-03: 70,989 articles, `verify` ok; volume on 67,529, issue on 67,377, pages on 66,102; every article has subjects (57,379 from the journal preset).
 - [x] Verify an ISSN-based journal page URL for the Thieme preset and set `JOURNAL_URL_TEMPLATE` (ADR 0025). Checked by the owner on 2026-11-03: `https://www.thieme-connect.de/products/ejournals/issn/0936-5214` answers "No articles available", so no ISSN-based URL exists and `JOURNAL_URL_TEMPLATE` stays unset in the preset; journal links are omitted as documented.
 - [ ] Image: run `keys` through the same entrypoint, keep `/metrics` internal, grace period above `SHUTDOWN_TIMEOUT_MS` + 5 s; shared rate-limit store if more than one replica (ADR 0031)
-- [ ] Landing app image: `output: 'standalone'` (left out in SM-11 because `next start` refuses it), `LANDING_API_SECRET` from the secret store, a proxy that sets `x-forwarded-for`, landing API reachable only from the app; shared landing rate limit for replicas (ADR 0032)
+- [x] Landing app image: `output: 'standalone'` (left out in SM-11 because `next start` refuses it), `LANDING_API_SECRET` from the secret store, a proxy that sets `x-forwarded-for`, landing API reachable only from the app; shared landing rate limit for replicas (ADR 0032). Done in ADR 0038; the shared limit is ADR 0036's Postgres bucket store.
 
 ## Plan (session 19)
 
