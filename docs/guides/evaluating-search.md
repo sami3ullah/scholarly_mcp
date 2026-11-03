@@ -55,7 +55,7 @@ INDEX_PATH=data/eval-index.sqlite LOG_LEVEL=warn EMBEDDER_CACHE_DIR=.cache/model
   pnpm eval golden --write-baseline packages/testkit/golden/baseline.json
 ```
 
-GitHub CI does not run the gate, since it has no index.
+GitHub CI does not run the gate, since it has no index. The `pre-push` hook runs it instead when a push touches ranking code (ADR 0030); `SKIP_EVAL_GATE=1 git push` skips it once.
 
 ## Comparing embedding models
 

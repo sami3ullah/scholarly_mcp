@@ -35,3 +35,4 @@ Each ADR records one decision: the context, what we chose and what follows from 
 | [0027](0027-measure-a-larger-embedding-model.md)        | Measure a larger embedding model before switching                | superseded by 0029 |
 | [0028](0028-selectable-embedding-model.md)              | Selectable embedding model with model-sized vectors              | accepted           |
 | [0029](0029-keep-e5-small-after-model-comparison.md)    | Keep multilingual-e5-small after the embedding model comparison  | accepted           |
+| [0030](0030-local-pre-push-eval-gate.md)                | Search regression gate runs locally before push                  | accepted           |

@@ -4,7 +4,7 @@
 
 - [x] 60-query golden set (20 DE, 20 EN, 20 cross-language/abbreviation/compound), relevance clear from title+abstract only, versioned file in testkit
 - [x] Eval script: recall@10, MRR, nDCG@10; fails on regression (`eval golden --baseline` on the eval index; GitHub CI cannot run it, as an index holds article text, ADR 0026)
-- [x] ~~Small committed index for CI eval~~ Replaced by a committed DOI list and `ingest subset`, which builds the eval index locally: a committed index would publish abstracts and full text (ADR 0026)
+- [x] ~~Small committed index for CI eval~~ Replaced by a committed DOI list and `ingest subset`, which builds the eval index locally: a committed index would publish abstracts and full text (ADR 0026). Gate runs locally in a `pre-push` hook (ADR 0030)
 - [x] Tune chunk size and candidate counts against the eval; record results (candidates kept at 50; chunk size needs a full re-embed and moves to SM-16)
 - [x] Add the eval as a command of `apps/eval` next to `bench` (ADR 0023), using `createSearchService` as the server will
 - [x] Decide with the eval: stem in the detected language only (current, per plan) or always in both (`LexicalQuery.language`); BM25 column weights (ADR 0022); `SEARCH_CANDIDATES`; abbreviation expansions in the embedded text

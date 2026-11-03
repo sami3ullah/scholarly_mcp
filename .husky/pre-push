@@ -1,0 +1,29 @@
+# Local search regression gate (ADR 0030): GitHub CI cannot hold the eval index, so a push
+# that touches ranking code runs the golden set here. Skip once with SKIP_EVAL_GATE=1.
+[ "${SKIP_EVAL_GATE:-}" = "1" ] && exit 0
+
+ranking='^(packages/(search|store-sqlite|embedder-onnx)/src/|packages/core/src/(chunk|text)/|packages/testkit/golden/)'
+zero=0000000000000000000000000000000000000000
+changed=""
+while read -r _local_ref local_sha _remote_ref remote_sha; do
+  [ "$local_sha" = "$zero" ] && continue
+  if [ "$remote_sha" = "$zero" ]; then
+    base=$(git merge-base "$local_sha" origin/main 2>/dev/null) || base=""
+  else
+    base=$remote_sha
+  fi
+  [ -z "$base" ] && continue
+  changed="$changed$(git diff --name-only "$base" "$local_sha")
+"
+done
+printf '%s' "$changed" | grep -qE "$ranking" || exit 0
+
+if [ ! -f data/eval-index.sqlite ]; then
+  echo "eval gate: ranking code changed but data/eval-index.sqlite is missing; build it (docs/guides/evaluating-search.md) or push with SKIP_EVAL_GATE=1" >&2
+  exit 1
+fi
+
+[ -s "$HOME/.nvm/nvm.sh" ] && . "$HOME/.nvm/nvm.sh" && nvm use >/dev/null
+echo "eval gate: ranking code changed, running the golden set on data/eval-index.sqlite" >&2
+INDEX_PATH=data/eval-index.sqlite LOG_LEVEL=warn EMBEDDER_CACHE_DIR=.cache/models \
+  pnpm --silent eval golden --baseline packages/testkit/golden/baseline.json >/dev/null
