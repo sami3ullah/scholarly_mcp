@@ -252,3 +252,16 @@ Append-only. Newest entry at the bottom.
 - **Gotchas:** zsh does not word-split `$VAR` env prefixes; use a bash script. Turbo's lint output shows only `build:packages`; eslint runs after it.
 - **Next, in order:**
   - Step 5: live funnel view over Postgres events (SM-12 follow-up), then close SM-13 (board, README roadmap ✅).
+
+## 2026-11-03 - session 18, SM-13 done (live funnel, step 5)
+
+- **Objective:** SM-13 step 5 from session 17 (live funnel over Postgres events), then close SM-13.
+- **Shape decided (ADR 0035, no owner decision needed):** read the outbox's stored events and count with the existing TypeScript rules (no SQL copy of `computeFunnel`); serve from a separate `funnel --serve` process on loopback, not a route on the public MCP server, which has no operator login.
+- **Done (committed on `main`):**
+  - `7d24965` store: `UsageOutbox.list({from, to, apiKeyId, after, limit})` in `(occurred_at, id)` order, ids in byte order; SQLite runtime migration 5 and Postgres runtime migration 3 add the `(occurred_at, id)` index; core `readUsageEvents` (keyset paging, 1000 per page) and `createFunnelCounter` (streaming counter behind `computeFunnel`); outbox contract cases for filters, paging and byte-order ties; fake and both stores implement it.
+  - `b867def` server: `funnel --store --out … [--json …]` and `funnel --store --serve [--host 127.0.0.1 --port 8092 --refresh 60]` (`GET /`, `GET /funnel.json`, `?since=&until=&key=`; a count is reused per filter set for the refresh time and shared between requests; 503 on a failed read, not cached; `meta refresh`, CSP `default-src 'none'`). `openFunnelStore` in `runtime/open-server-stores.ts` (SQLite file must exist; Postgres works as the server role). Shared `funnel-filters.ts`; `serveHttp` takes an optional `name` for its log. Export lines now stream through the counter.
+  - `516a248` docs: ADR 0035, funnel guide (from the store, the live view), Postgres and operating guides, ADR index (0034 was missing, added with 0035), ADR 0033 note, server and store-postgres READMEs, docs index (`ADAPTERS.md` belongs to SM-14), ticket ticked, board and README roadmap SM-13 ✅.
+- **Verified:** lint, typecheck, depcruise green; 1,479 tests, 94.74% lines; `format:check` fails only on the local `apps/landing/next-env.d.ts`. Live against the compose Postgres: `ingest migrate` applied migration 3; `EXPLAIN` uses `usage_events_by_time`; 1,502 events appended through the Postgres outbox as `scholarly_server` (two pages, many equal timestamps) counted once each by `--store`; `--serve` answered HTML and JSON, 400 on a bad day, and exited 0 on SIGINT. The smoke rows were deleted again.
+- **Gotchas:** a SIGINT listener registered up front keeps Ctrl+C from ending a one-shot command, so `untilStopped` registers its listeners only when `--serve` asks. Postgres row comparison on the `C`-collated id needs `COLLATE "C"` on the bound parameter to stay explicit.
+- **Still open for the user:** the Claude Desktop manual check (SM-09/SM-12).
+- **Next:** SM-14 (hardening, image and docs; includes `ADAPTERS.md`, `OPERATIONS.md`, `SECURITY.md`; the shared rate-limit store and citation fields from the README's known limits).
