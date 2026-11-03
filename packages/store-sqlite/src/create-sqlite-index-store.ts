@@ -1,5 +1,7 @@
 import {
+  fromJsonWithDates,
   syncStateSchema,
+  toJsonWithDates,
   type ArticleReader,
   type ArticleRecord,
   type ArticleSearch,
@@ -10,7 +12,6 @@ import {
 } from '@scholarly-mcp/core';
 import { CHUNK_COLUMNS, articleFromRecord, chunkFromRow, type ChunkRow } from './articles/rows.js';
 import { createRecordWriter, type PurgeCounts } from './articles/write-records.js';
-import { fromJsonWithDates, toJsonWithDates } from './database/json-with-dates.js';
 import { readIndexMeta, writeIndexMeta } from './database/index-meta-row.js';
 import type { Db } from './database/open-database.js';
 import { createJournalDirectory } from './journals/create-journal-directory.js';

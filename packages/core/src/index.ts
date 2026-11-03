@@ -69,6 +69,13 @@ export { appError, isAppError, type AppError, type AppErrorDetails } from './err
 export { errorCodeSchema, type ErrorCode } from './errors/error-code.js';
 export { indexMetaSchema, type IndexMeta } from './indexing/index-meta.js';
 export {
+  sampleQueryChecks,
+  verifyResult,
+  type VerifyCheck,
+  type VerifyReport,
+} from './indexing/verify-report.js';
+export { fromJsonWithDates, toJsonWithDates } from './json/json-with-dates.js';
+export {
   LANDING_SESSION_TTL_MS,
   landingSessionSchema,
   type LandingSession,

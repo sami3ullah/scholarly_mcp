@@ -1,5 +1,10 @@
-import { articleSchema, chunkSchema, type Article, type Chunk } from '@scholarly-mcp/core';
-import { fromJsonWithDates } from '../database/json-with-dates.js';
+import {
+  articleSchema,
+  chunkSchema,
+  fromJsonWithDates,
+  type Article,
+  type Chunk,
+} from '@scholarly-mcp/core';
 
 /** A `chunks` row joined with its vector. */
 export interface ChunkRow {

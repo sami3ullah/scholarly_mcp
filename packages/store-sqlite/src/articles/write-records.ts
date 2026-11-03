@@ -5,8 +5,8 @@ import {
   type Chunk,
   type Doi,
   foldText,
+  toJsonWithDates,
 } from '@scholarly-mcp/core';
-import { toJsonWithDates } from '../database/json-with-dates.js';
 import type { Db } from '../database/open-database.js';
 import { stemmedText } from '@scholarly-mcp/lexical';
 import { vectorBlob } from './rows.js';
