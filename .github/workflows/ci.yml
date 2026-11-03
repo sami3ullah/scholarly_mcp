@@ -16,15 +16,15 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       # The embedder tests load the real model; key on the pinned revisions in model.ts.
-      - uses: actions/cache@v4
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: .cache/models
           key: models-${{ hashFiles('packages/embedder-onnx/src/model.ts') }}-q8
@@ -41,9 +41,9 @@ jobs:
   landing:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -54,10 +54,33 @@ jobs:
       - run: pnpm --filter @scholarly-mcp/landing e2e
       - run: pnpm --filter @scholarly-mcp/landing lhci
       - if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: landing-reports
           path: |
             apps/landing/playwright-report
             apps/landing/test-results
             apps/landing/.lighthouseci
+
+  # End to end (SM-14): both images with the demo index (ADR 0039) baked in, the compose stack
+  # on SQLite and then on Postgres, each with the landing app, and every tool over HTTP.
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version-file: .nvmrc
+      - name: Demo index
+        run: |
+          docker build -q -f docker/server/Dockerfile -t scholarly-mcp:local .
+          docker/demo-index/build.sh "$RUNNER_TEMP/demo-index"
+        env:
+          CROSSREF_MAILTO: ${{ vars.CROSSREF_MAILTO }}
+      - run: docker/e2e/smoke.sh sqlite
+        env:
+          SMOKE_INDEX_DIR: ${{ runner.temp }}/demo-index
+      - run: docker/e2e/smoke.sh postgres
+        env:
+          SMOKE_INDEX_DIR: ${{ runner.temp }}/demo-index

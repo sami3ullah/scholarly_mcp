@@ -69,7 +69,13 @@ export default tseslint.config(
       'docker/**/*.mjs',
     ],
     languageOptions: {
-      globals: { process: 'readonly', URL: 'readonly', AbortSignal: 'readonly' },
+      globals: {
+        process: 'readonly',
+        URL: 'readonly',
+        AbortSignal: 'readonly',
+        fetch: 'readonly',
+        performance: 'readonly',
+      },
     },
   },
   prettier,
