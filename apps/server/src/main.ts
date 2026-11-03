@@ -5,7 +5,7 @@ import { createMcpHandler } from '@modelcontextprotocol/server';
 import { serveStdio } from '@modelcontextprotocol/server/stdio';
 import { parseConfig, storeConfigSchema, type Clock, type Env } from '@scholarly-mcp/core';
 import { loadOnnxEmbedder } from '@scholarly-mcp/embedder-onnx';
-import { createLogger } from '@scholarly-mcp/logger';
+import { createLogger, loggingConfigSchema } from '@scholarly-mcp/logger';
 import { searchOptionsFrom } from '@scholarly-mcp/search';
 import { postgresConfigSchema } from '@scholarly-mcp/store-postgres';
 import { sqliteConfigSchema, type SqliteConfig } from '@scholarly-mcp/store-sqlite';
@@ -15,6 +15,7 @@ import {
   serverOwnConfigSchema,
   type ServerConfig,
 } from './config/server-config.js';
+import { meteringConfigSchema } from './config/metering-config.js';
 import { createApp } from './create-app.js';
 import { createHttpHandler, type HttpHandlerDeps } from './http/create-http-handler.js';
 import { runFunnelCommand } from './funnel/run-funnel-command.js';
@@ -29,6 +30,7 @@ import type { UsageSink } from './metering/usage-sink.js';
 import { createLiveIndex } from './runtime/live-index.js';
 import { createNodeRandomToken } from './runtime/node-random-token.js';
 import {
+  openFunnelStore,
   openKeyStore,
   openServerStores,
   storeSelectionFrom,
@@ -44,7 +46,8 @@ const clock: Clock = { now: () => new Date() };
 /**
  * The composition root (PLAN.md "Backend conventions"): reads config, creates the real
  * adapters, wires the app and serves it over stdio or Streamable HTTP. `keys …` manages
- * API keys and `funnel …` writes the funnel report from the metering export instead.
+ * API keys and `funnel …` writes the funnel report from the metering export or the store,
+ * or serves it live (ADR 0035), instead.
  * `STORE` picks SQLite files or Postgres (ADR 0034). The model and the index are opened at
  * boot; a missing index is retried on every refresh tick, and tools answer
  * `INDEX_UNAVAILABLE` meanwhile.
@@ -75,6 +78,22 @@ async function main(): Promise<void> {
       publisher: PUBLISHER_NAME,
       clock,
       out: (line) => process.stdout.write(`${line}\n`),
+      openStore: (signal) =>
+        openFunnelStore(
+          storeSelectionOf(process.env, parseConfig(sqliteConfigSchema, process.env)),
+          parseConfig(meteringConfigSchema, process.env).METER_RETENTION_DAYS,
+          signal,
+        ),
+      logger: createLogger({
+        name: 'funnel',
+        level: parseConfig(loggingConfigSchema, process.env).LOG_LEVEL,
+        destination: process.stderr,
+      }),
+      untilStopped: () =>
+        new Promise((resolve) => {
+          process.once('SIGINT', resolve);
+          process.once('SIGTERM', resolve);
+        }),
     });
     return;
   }

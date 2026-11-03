@@ -1,4 +1,4 @@
-import { mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import type {
   ApiKeyStore,
@@ -7,6 +7,7 @@ import type {
   StoreConfig,
   UsageOutbox,
 } from '@scholarly-mcp/core';
+import type { FunnelStore } from '../funnel/run-funnel-command.js';
 import {
   assertMigrated,
   createPool,
@@ -109,6 +110,38 @@ export async function openKeyStore(
   }
   const pool = await migratedPool(selection.config, 'scholarly-mcp-keys', 1, signal);
   return { keys: createPostgresApiKeyStore(pool), close: () => pool.end() };
+}
+
+/**
+ * The funnel's view of the store's events (ADR 0035). It only reads them, so on Postgres
+ * the server's role is enough. The SQLite file must exist; it is migrated as the server
+ * would at boot.
+ */
+export async function openFunnelStore(
+  selection: StoreSelection,
+  retentionDays: number,
+  signal: AbortSignal,
+): Promise<FunnelStore> {
+  const kept = `exported events kept ${String(retentionDays)} days`;
+  if (selection.store === 'sqlite') {
+    const { RUNTIME_DB_PATH } = selection.config;
+    if (!existsSync(RUNTIME_DB_PATH)) throw new Error(`${RUNTIME_DB_PATH} does not exist`);
+    const db = openRuntimeDatabase(RUNTIME_DB_PATH);
+    return {
+      outbox: createSqliteUsageOutbox(db),
+      source: `the runtime database ${RUNTIME_DB_PATH} (${kept})`,
+      close() {
+        db.close();
+        return Promise.resolve();
+      },
+    };
+  }
+  const pool = await migratedPool(selection.config, 'scholarly-mcp-funnel', 2, signal);
+  return {
+    outbox: createPostgresUsageOutbox(pool),
+    source: `Postgres scholarly.usage_events (${kept})`,
+    close: () => pool.end(),
+  };
 }
 
 /** A pool on a database `ingest migrate` has brought up to this code's schema. */

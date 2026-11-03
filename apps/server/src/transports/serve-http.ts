@@ -11,6 +11,8 @@ export interface HttpServerOptions {
   readonly host: string;
   readonly port: number;
   readonly logger: Logger;
+  /** What the log calls this server; the MCP server unless set. */
+  readonly name?: string;
   /** Told when requests start and finish, for the in-flight gauge. */
   readonly onInFlight?: (count: number) => void;
 }
@@ -78,7 +80,11 @@ export async function serveHttp(options: HttpServerOptions): Promise<HttpServer>
   });
   const address = server.address();
   const port = typeof address === 'object' && address !== null ? address.port : options.port;
-  options.logger.info({ host: options.host, port, path: MCP_PATH }, 'MCP server listening');
+  if (options.name === undefined) {
+    options.logger.info({ host: options.host, port, path: MCP_PATH }, 'MCP server listening');
+  } else {
+    options.logger.info({ host: options.host, port }, `${options.name} listening`);
+  }
 
   return {
     port,

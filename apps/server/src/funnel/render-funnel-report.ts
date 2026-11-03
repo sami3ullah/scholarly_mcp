@@ -7,6 +7,10 @@ export interface FunnelReportContext {
   readonly filters: FunnelOptions;
   /** Export lines that were not events and were skipped. */
   readonly skippedLines: number;
+  /** Where the events came from, such as "the metering export usage.jsonl". */
+  readonly source: string;
+  /** Set when the page is served live: it reloads itself this often. */
+  readonly refreshSeconds?: number;
 }
 
 const ACTION_LABELS: Record<string, string> = {
@@ -154,7 +158,11 @@ export function renderFunnelReport(funnel: Funnel, context: FunnelReportContext)
         count(row.actions),
       ]),
     ),
-    `<footer>Counts come from the metering export (ADR 0033). Events hold no query text and no landing token.</footer>`,
+    `<footer>Counts (ADR 0033) come from ${escape(context.source)}.${
+      context.refreshSeconds === undefined
+        ? ''
+        : ` The page reloads every ${String(context.refreshSeconds)} s.`
+    } Events hold no query text and no landing token.</footer>`,
   ].join('\n');
 
   return `<!doctype html>
@@ -162,7 +170,11 @@ export function renderFunnelReport(funnel: Funnel, context: FunnelReportContext)
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex">
+<meta name="robots" content="noindex">${
+    context.refreshSeconds === undefined
+      ? ''
+      : `\n<meta http-equiv="refresh" content="${String(context.refreshSeconds)}">`
+  }
 <title>Referral funnel</title>
 <style>${STYLES}</style>
 </head>
