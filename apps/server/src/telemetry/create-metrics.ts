@@ -17,6 +17,8 @@ export interface ServerMetrics {
   readonly meterPending: Gauge;
   readonly indexReady: Gauge;
   readonly inFlight: Gauge;
+  readonly landingPages: Counter<'session'>;
+  readonly landingVisits: Counter<'tool'>;
 }
 
 /** Creates a fresh registry, so tests and several apps in one process never collide. */
@@ -79,6 +81,18 @@ export function createMetrics(options: { readonly defaults?: boolean } = {}): Se
     inFlight: new Gauge({
       name: 'http_requests_in_flight',
       help: 'HTTP requests being served',
+      registers,
+    }),
+    landingPages: new Counter({
+      name: 'landing_pages_total',
+      help: 'Landing pages served, by session state (active, unavailable, none, not_found)',
+      labelNames: ['session'],
+      registers,
+    }),
+    landingVisits: new Counter({
+      name: 'landing_visits_total',
+      help: 'Landing visits confirmed by the browser beacon, by the tool that made the link',
+      labelNames: ['tool'],
       registers,
     }),
   };

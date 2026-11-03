@@ -10,6 +10,7 @@ import type {
 import { createSearchService, type SearchOptions } from '@scholarly-mcp/search';
 import { createMockEntitlements } from './access/create-mock-entitlements.js';
 import { createJournalCatalog } from './journals/journal-catalog.js';
+import { createLandingPages, type LandingPages } from './landing/create-landing-pages.js';
 import { createLinkMaker } from './landing/create-link-maker.js';
 import type { RateLimiter } from './limits/create-rate-limiter.js';
 import type { LiveIndex } from './runtime/live-index.js';
@@ -39,11 +40,17 @@ export interface AppDeps {
   readonly entitlements?: Entitlements;
 }
 
+/** The wired app: the MCP server factory and the landing pages its links open. */
+export interface App {
+  readonly factory: ReturnType<typeof createServerFactory>;
+  readonly landingPages: LandingPages;
+}
+
 /**
- * Wires the search service and the six tools into a server factory for the transports.
- * Kept apart from `main.ts` so protocol tests run the real wiring on in-memory adapters.
+ * Wires the search service into the six tools and the landing pages. Kept apart from
+ * `main.ts` so protocol tests run the real wiring on in-memory adapters.
  */
-export function createApp(deps: AppDeps) {
+export function createApp(deps: AppDeps): App {
   const { index, clock, logger, publisher } = deps;
   const notice = noticeFor(publisher);
   const search = createSearchService({
@@ -54,6 +61,7 @@ export function createApp(deps: AppDeps) {
     logger: logger.child({ component: 'search' }),
     ...(deps.searchOptions !== undefined && { options: deps.searchOptions }),
   });
+  const entitlements = deps.entitlements ?? createMockEntitlements();
   const template = deps.journalUrlTemplate;
   const tools = createTools({
     search,
@@ -66,7 +74,7 @@ export function createApp(deps: AppDeps) {
       clock,
       logger: logger.child({ component: 'landing' }),
     }),
-    entitlements: deps.entitlements ?? createMockEntitlements(),
+    entitlements,
     clock,
     publisher,
     notice,
@@ -74,7 +82,7 @@ export function createApp(deps: AppDeps) {
       journalUrl: (issn: string) => template.replaceAll('{issn}', encodeURIComponent(issn)),
     }),
   });
-  return createServerFactory({
+  const factory = createServerFactory({
     tools,
     version: deps.version,
     notice,
@@ -86,4 +94,15 @@ export function createApp(deps: AppDeps) {
     eventId: deps.eventId,
     ...(deps.metrics !== undefined && { metrics: deps.metrics }),
   });
+  return {
+    factory,
+    landingPages: createLandingPages({
+      reader: index.reader,
+      search,
+      sessions: deps.sessions,
+      entitlements,
+      clock,
+      logger: logger.child({ component: 'landing' }),
+    }),
+  };
 }

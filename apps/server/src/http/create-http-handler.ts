@@ -10,6 +10,11 @@ import {
   type OAuthTokenVerifier,
 } from '@modelcontextprotocol/server';
 import type { Logger } from '@scholarly-mcp/core';
+import {
+  LANDING_PAGE_PATH,
+  LANDING_VISITS_PATH,
+  type LandingApi,
+} from '../landing/create-landing-api.js';
 import type { ServerMetrics } from '../telemetry/create-metrics.js';
 
 /** The MCP endpoint's path. */
@@ -37,10 +42,16 @@ export type HttpAuth =
 /** What `/readyz` reports; ready only when every check is true. */
 export type Readiness = () => Readonly<Record<string, boolean>>;
 
+/** Where the landing API's routes start. */
+const LANDING_PREFIX = '/landing/v1/';
+
 export interface HttpHandlerDeps {
-  readonly mcp: { fetch(request: Request, options?: McpHandlerRequestOptions): Promise<Response> };
+  /** The MCP endpoint; absent when MCP runs on stdio and HTTP serves the rest alone. */
+  readonly mcp?: { fetch(request: Request, options?: McpHandlerRequestOptions): Promise<Response> };
+  /** The landing API the landing page calls from its server (ADR 0032). */
+  readonly landing?: LandingApi;
   readonly auth: HttpAuth;
-  /** Hostnames the `Host` header may name on `/mcp`. */
+  /** Hostnames the `Host` header may name on `/mcp` and the landing API. */
   readonly allowedHosts: readonly string[];
   /** Hostnames a browser `Origin` may have on `/mcp`; requests without `Origin` pass. */
   readonly allowedOrigins: readonly string[];
@@ -59,9 +70,11 @@ const tracer = trace.getTracer('scholarly-mcp');
 /**
  * Routes the HTTP transport (ADR 0031): `/healthz` (the process answers), `/readyz` (index
  * and model loaded, not draining), `/metrics` (Prometheus), the OAuth Protected Resource
- * Metadata, and `/mcp`. Only `/mcp` checks `Host` (DNS rebinding) and `Origin` against the allowlists and
- * authenticates, since probes and scrapers reach the pod by address and get no data. No
- * route sends CORS headers, so browsers on other sites cannot read any answer.
+ * Metadata, `/mcp`, and the landing API below `/landing/v1/` (ADR 0032). Only `/mcp` and
+ * the landing API check `Host` (DNS rebinding) against the allowlist, since probes and
+ * scrapers reach the pod by address and get no data. `/mcp` also checks `Origin` and
+ * authenticates; the landing API checks its own secret. No route sends CORS headers, so
+ * browsers on other sites cannot read any answer.
  */
 export function createHttpHandler(deps: HttpHandlerDeps): HttpHandler {
   const { auth, metrics } = deps;
@@ -69,7 +82,12 @@ export function createHttpHandler(deps: HttpHandlerDeps): HttpHandler {
 
   const route = async (request: Request, path: string): Promise<Response> => {
     if (request.url.length > MAX_URL_LENGTH) return plain(414, 'URI too long');
-    if (path === MCP_PATH) return mcp(request);
+    if (path === MCP_PATH && deps.mcp !== undefined) return mcp(request, deps.mcp);
+    if (path.startsWith(LANDING_PREFIX) && deps.landing !== undefined) {
+      return hostAllowed(request)
+        ? deps.landing.fetch(request, path)
+        : json(403, { error: 'forbidden', message: 'Host not allowed' });
+    }
     if (request.method !== 'GET' && request.method !== 'HEAD') {
       return path === '/healthz' || path === '/readyz' || path === '/metrics' || path === prmPath
         ? plain(405, 'Method not allowed', { allow: 'GET, HEAD' })
@@ -92,10 +110,16 @@ export function createHttpHandler(deps: HttpHandlerDeps): HttpHandler {
     return plain(404, 'Not found');
   };
 
-  const mcp = async (request: Request): Promise<Response> => {
-    // Web requests drop the `Host` header; the Node adapter puts it in the URL instead.
-    const host = validateHostHeader(new URL(request.url).host, [...deps.allowedHosts]);
-    if (!host.ok) return json(403, { error: 'forbidden', message: 'Host not allowed' });
+  // Web requests drop the `Host` header; the Node adapter puts it in the URL instead.
+  const hostAllowed = (request: Request) =>
+    validateHostHeader(new URL(request.url).host, [...deps.allowedHosts]).ok;
+
+  const mcp = async (
+    request: Request,
+    endpoint: NonNullable<HttpHandlerDeps['mcp']>,
+  ): Promise<Response> => {
+    if (!hostAllowed(request))
+      return json(403, { error: 'forbidden', message: 'Host not allowed' });
     const refused = originValidationResponse(request, [...deps.allowedOrigins]);
     if (refused !== undefined) return refused;
     let authInfo: AuthInfo | undefined;
@@ -115,7 +139,7 @@ export function createHttpHandler(deps: HttpHandlerDeps): HttpHandler {
         return bearerAuthChallengeResponse(error, options);
       }
     }
-    return deps.mcp.fetch(request, authInfo === undefined ? {} : { authInfo });
+    return endpoint.fetch(request, authInfo === undefined ? {} : { authInfo });
   };
 
   return {
@@ -148,7 +172,14 @@ export function createHttpHandler(deps: HttpHandlerDeps): HttpHandler {
 
 /** A fixed route name for metrics and spans, so unknown paths cannot grow label sets. */
 function routeLabel(path: string, prmPath: string | undefined): string {
-  if (path === MCP_PATH || path === '/healthz' || path === '/readyz' || path === '/metrics') {
+  if (
+    path === MCP_PATH ||
+    path === '/healthz' ||
+    path === '/readyz' ||
+    path === '/metrics' ||
+    path === LANDING_PAGE_PATH ||
+    path === LANDING_VISITS_PATH
+  ) {
     return path;
   }
   return path === prmPath ? '/.well-known/oauth-protected-resource' : 'other';

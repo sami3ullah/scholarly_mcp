@@ -19,8 +19,9 @@ import {
 import { httpAuthFromConfig } from './auth/http-auth-from-config.js';
 import { serverConfigSchema, type ServerConfig } from './config/server-config.js';
 import { createApp } from './create-app.js';
-import { createHttpHandler } from './http/create-http-handler.js';
+import { createHttpHandler, type HttpHandlerDeps } from './http/create-http-handler.js';
 import { runKeysCommand } from './keys/run-keys-command.js';
+import { createLandingApi } from './landing/create-landing-api.js';
 import { createRateLimiter } from './limits/create-rate-limiter.js';
 import { createJsonlSink } from './metering/create-jsonl-sink.js';
 import { createOutboxMeter } from './metering/create-outbox-meter.js';
@@ -31,7 +32,7 @@ import { createLiveIndex } from './runtime/live-index.js';
 import { createNodeRandomToken } from './runtime/node-random-token.js';
 import { createMetrics } from './telemetry/create-metrics.js';
 import { startTracing } from './telemetry/create-tracing.js';
-import { MAX_BODY_BYTES, serveHttp } from './transports/serve-http.js';
+import { MAX_BODY_BYTES, serveHttp, type HttpServer } from './transports/serve-http.js';
 
 const LOCAL_HOSTS = ['localhost', '127.0.0.1', '[::1]'];
 const clock: Clock = { now: () => new Date() };
@@ -125,7 +126,7 @@ async function serve(config: ServerConfig): Promise<void> {
     },
   });
 
-  const factory = createApp({
+  const { factory, landingPages } = createApp({
     index,
     embedder,
     sessions,
@@ -170,26 +171,23 @@ async function serve(config: ServerConfig): Promise<void> {
   exporter.start();
 
   let stopping = false;
-  let stopTransport: () => Promise<unknown>;
-  if (config.MCP_TRANSPORT === 'stdio') {
-    const handle = serveStdio(factory, {
-      onerror: (error) => {
-        logger.warn({ reason: error.message }, 'stdio transport error');
-      },
-    });
-    stopTransport = () => handle.close();
-  } else {
-    const mcp = createMcpHandler(factory, {
-      maxRequestBodySize: MAX_BODY_BYTES,
-      onerror: (error) => {
-        logger.warn({ reason: error.message }, 'MCP request rejected');
-      },
-    });
-    const allowedHosts =
-      config.HTTP_ALLOWED_HOSTS.length > 0 ? config.HTTP_ALLOWED_HOSTS : LOCAL_HOSTS;
-    const http = await serveHttp({
+  const landing = createLandingApi({
+    pages: landingPages,
+    limiter: createRateLimiter({
+      perMinute: config.LANDING_RATE_LIMIT_PER_MINUTE,
+      burst: config.LANDING_RATE_LIMIT_BURST,
+      clock,
+    }),
+    ...(config.LANDING_API_SECRET !== undefined && { secret: config.LANDING_API_SECRET }),
+    metrics,
+  });
+  const allowedHosts =
+    config.HTTP_ALLOWED_HOSTS.length > 0 ? config.HTTP_ALLOWED_HOSTS : LOCAL_HOSTS;
+  const startHttp = (mcp?: HttpHandlerDeps['mcp']): Promise<HttpServer> =>
+    serveHttp({
       handler: createHttpHandler({
-        mcp,
+        ...(mcp !== undefined && { mcp }),
+        landing,
         auth: httpAuthFromConfig(config, {
           keys: createSqliteApiKeyStore(runtimeDb),
           clock,
@@ -210,6 +208,33 @@ async function serve(config: ServerConfig): Promise<void> {
         metrics.inFlight.set(count);
       },
     });
+
+  let stopTransport: () => Promise<unknown>;
+  if (config.MCP_TRANSPORT === 'stdio') {
+    const handle = serveStdio(factory, {
+      onerror: (error) => {
+        logger.warn({ reason: error.message }, 'stdio transport error');
+      },
+    });
+    // A second local client may already hold the port; stdio keeps working without HTTP.
+    const http = config.HTTP_ALONGSIDE_STDIO
+      ? await startHttp().catch((error: unknown) => {
+          logger.warn({ err: error }, 'HTTP alongside stdio not started; landing links fail');
+          return undefined;
+        })
+      : undefined;
+    stopTransport = async () => {
+      await http?.close(config.SHUTDOWN_TIMEOUT_MS);
+      await handle.close();
+    };
+  } else {
+    const mcp = createMcpHandler(factory, {
+      maxRequestBodySize: MAX_BODY_BYTES,
+      onerror: (error) => {
+        logger.warn({ reason: error.message }, 'MCP request rejected');
+      },
+    });
+    const http = await startHttp(mcp);
     stopTransport = async () => {
       await http.close(config.SHUTDOWN_TIMEOUT_MS);
       await mcp.close();

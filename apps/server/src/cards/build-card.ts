@@ -29,6 +29,7 @@ export function buildCard(source: CardSource, url: string, now: Date): ArticleCa
   };
 }
 
-function authorName({ given, family }: Author): string {
+/** An author as a reader writes the name: given name first when known. */
+export function authorName({ given, family }: Author): string {
   return given === undefined ? family : `${given} ${family}`;
 }

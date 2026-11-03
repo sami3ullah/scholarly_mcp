@@ -30,6 +30,7 @@ describe('serverConfigSchema', () => {
       parseConfig(serverConfigSchema, {
         ...exposed,
         AUTH_MODE: 'api-key',
+        LANDING_API_SECRET: 's'.repeat(32),
         HTTP_ALLOWED_HOSTS: 'mcp.example.org, ',
         HTTP_ALLOWED_ORIGINS: 'app.example.org',
       }),
@@ -37,6 +38,39 @@ describe('serverConfigSchema', () => {
       HTTP_ALLOWED_HOSTS: ['mcp.example.org'],
       HTTP_ALLOWED_ORIGINS: ['app.example.org'],
     });
+  });
+
+  it('refuses the landing API beyond loopback without its secret', () => {
+    const exposed = {
+      ...base,
+      MCP_TRANSPORT: 'http',
+      HTTP_HOST: '0.0.0.0',
+      AUTH_MODE: 'api-key',
+      HTTP_ALLOWED_HOSTS: 'mcp.example.org',
+    };
+    expect(() => parseConfig(serverConfigSchema, exposed)).toThrow(/LANDING_API_SECRET/);
+    expect(() =>
+      parseConfig(serverConfigSchema, { ...exposed, LANDING_API_SECRET: 'short' }),
+    ).toThrow(/at least 32 characters/);
+  });
+
+  it('serves HTTP alongside stdio on request, with the same guards but no MCP auth', () => {
+    expect(parseConfig(serverConfigSchema, base)).toMatchObject({
+      HTTP_ALONGSIDE_STDIO: false,
+      LANDING_RATE_LIMIT_PER_MINUTE: 120,
+      LANDING_RATE_LIMIT_BURST: 30,
+    });
+    const alongside = { ...base, HTTP_ALONGSIDE_STDIO: 'true', HTTP_HOST: '0.0.0.0' };
+    expect(() => parseConfig(serverConfigSchema, alongside)).toThrow(
+      /HTTP_ALLOWED_HOSTS[\s\S]*LANDING_API_SECRET/,
+    );
+    expect(
+      parseConfig(serverConfigSchema, {
+        ...alongside,
+        HTTP_ALLOWED_HOSTS: 'landing-api.internal',
+        LANDING_API_SECRET: 's'.repeat(32),
+      }).HTTP_ALONGSIDE_STDIO,
+    ).toBe(true);
   });
 
   it('allows stdio with any HTTP_HOST, since nothing listens', () => {

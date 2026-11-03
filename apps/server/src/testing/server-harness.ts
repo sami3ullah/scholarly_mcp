@@ -24,6 +24,7 @@ import {
 } from '@scholarly-mcp/testkit';
 import { createMcpHandler, type AuthInfo, type McpHttpHandler } from '@modelcontextprotocol/server';
 import { createApp, type AppDeps } from '../create-app.js';
+import type { LandingPages } from '../landing/create-landing-pages.js';
 import type { HttpHandler } from '../http/create-http-handler.js';
 import { createRateLimiter } from '../limits/create-rate-limiter.js';
 import { createOutboxMeter } from '../metering/create-outbox-meter.js';
@@ -144,6 +145,8 @@ export interface Harness {
   readonly client: Client;
   readonly store: InMemoryArticleStore;
   readonly sessions: SessionStore;
+  /** The landing pages wired to the same index and sessions as the tools. */
+  readonly landingPages: LandingPages;
   readonly logs: CapturedLine[];
   /** Every usage event the tool calls recorded. */
   readonly outbox: InMemoryUsageOutbox;
@@ -192,7 +195,7 @@ export async function startHarness(options: HarnessOptions = {}): Promise<Harnes
     logger: createTestLogger(logs),
   });
   let events = 0;
-  const factory = createApp({
+  const { factory, landingPages } = createApp({
     index: { reader: store, search: store, journals: store, version: () => 'v1' },
     embedder,
     sessions,
@@ -240,6 +243,7 @@ export async function startHarness(options: HarnessOptions = {}): Promise<Harnes
     client,
     store,
     sessions,
+    landingPages,
     logs,
     outbox,
     flushMeter: () => meter.flush(signal),

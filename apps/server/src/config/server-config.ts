@@ -19,6 +19,11 @@ const LOOPBACK = new Set(['127.0.0.1', '::1', 'localhost']);
  * `Origin` may have; both default to localhost. `PUBLISHER_NAME` names the publisher in the
  * notice and tool descriptions (ADR 0015). `JOURNAL_URL_TEMPLATE` turns an ISSN into a
  * journal page link, with `{issn}` as the placeholder; without it no journal link is shown.
+ * `HTTP_ALONGSIDE_STDIO` also serves the HTTP routes other than `/mcp` (health, metrics,
+ * landing API) while MCP runs on stdio, so a local client's links open a working landing
+ * page. The landing API (ADR 0032) takes `LANDING_API_SECRET` as a bearer token and allows
+ * `LANDING_RATE_LIMIT_PER_MINUTE` requests a minute per visitor, in bursts of
+ * `LANDING_RATE_LIMIT_BURST`.
  */
 export const serverOwnConfigSchema = z.object({
   MCP_TRANSPORT: z.enum(['stdio', 'http']).default('stdio'),
@@ -26,6 +31,7 @@ export const serverOwnConfigSchema = z.object({
   HTTP_PORT: z.coerce.number().int().min(0).max(65_535).default(8080),
   HTTP_ALLOWED_HOSTS: csv(),
   HTTP_ALLOWED_ORIGINS: csv(),
+  HTTP_ALONGSIDE_STDIO: z.stringbool().default(false),
   SHUTDOWN_TIMEOUT_MS: z.coerce.number().int().min(100).max(120_000).default(10_000),
   PUBLISHER_NAME: z.string().min(1).max(60).default('the publisher'),
   JOURNAL_URL_TEMPLATE: z
@@ -36,6 +42,12 @@ export const serverOwnConfigSchema = z.object({
     .optional(),
   INDEX_REFRESH_MS: z.coerce.number().int().min(1000).max(3_600_000).default(30_000),
   SESSION_CLEANUP_MS: z.coerce.number().int().min(60_000).max(86_400_000).default(3_600_000),
+  LANDING_API_SECRET: z
+    .string()
+    .min(32, 'LANDING_API_SECRET must be at least 32 characters')
+    .optional(),
+  LANDING_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().min(1).max(1_000_000).default(120),
+  LANDING_RATE_LIMIT_BURST: z.coerce.number().int().min(1).max(100_000).default(30),
 });
 
 /** Everything the server reads from the environment, validated at boot. */
@@ -49,8 +61,9 @@ export const serverConfigSchema = serverOwnConfigSchema
   .extend(embedderConfigSchema.shape)
   .extend(loggingConfigSchema.shape)
   .superRefine((config, ctx) => {
-    const exposed = config.MCP_TRANSPORT === 'http' && !LOOPBACK.has(config.HTTP_HOST);
-    if (exposed && config.AUTH_MODE === 'none') {
+    const http = config.MCP_TRANSPORT === 'http' || config.HTTP_ALONGSIDE_STDIO;
+    const exposed = http && !LOOPBACK.has(config.HTTP_HOST);
+    if (exposed && config.MCP_TRANSPORT === 'http' && config.AUTH_MODE === 'none') {
       ctx.addIssue({
         code: 'custom',
         path: ['AUTH_MODE'],
@@ -62,6 +75,13 @@ export const serverConfigSchema = serverOwnConfigSchema
         code: 'custom',
         path: ['HTTP_ALLOWED_HOSTS'],
         message: 'HTTP beyond loopback needs HTTP_ALLOWED_HOSTS, the public hostnames',
+      });
+    }
+    if (exposed && config.LANDING_API_SECRET === undefined) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['LANDING_API_SECRET'],
+        message: 'HTTP beyond loopback needs LANDING_API_SECRET for the landing API',
       });
     }
     if (config.AUTH_MODE === 'oauth') {
