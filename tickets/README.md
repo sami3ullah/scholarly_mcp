@@ -20,7 +20,7 @@ Status values: `todo`, `in-progress`, `done`, `blocked`. Update the table when a
 | SM-12 | MCP Apps cards and funnel dashboard                  | 4b    | SM-10, SM-11 | done                           |
 | SM-13 | Postgres adapter                                     | 5     | SM-07        | done                           |
 | SM-14 | Hardening, image and docs                            | 6     | SM-12        | done                           |
-| SM-15 | Demo deployment, recording, outreach                 | 7-8   | SM-14        | todo (needs user decisions)    |
+| SM-15 | Demo, self-hosting guide, recording, outreach        | 7-8   | SM-14        | todo (decisions recorded)      |
 | SM-16 | Embedding model evaluation (bge-m3)                  | 3     | SM-08        | done (e5-small kept, ADR 0029) |
 | SM-17 | SQLite search throughput                             | 6     | SM-14        | done                           |
 

@@ -225,7 +225,7 @@ pnpm check        # format, lint, typecheck, layering rules, tests with coverage
 | [SM-12](tickets/SM-12-mcp-apps-funnel.md)          | MCP Apps cards and funnel dashboard                  |   ✅   |
 | [SM-13](tickets/SM-13-postgres-adapter.md)         | Postgres adapter                                     |   ✅   |
 | [SM-14](tickets/SM-14-hardening-docs.md)           | Hardening, image and docs                            |   ✅   |
-| [SM-15](tickets/SM-15-demo-outreach.md)            | Demo deployment                                      |   ⬜   |
+| [SM-15](tickets/SM-15-demo-outreach.md)            | Demo and self-hosting guide                          |   ⬜   |
 | [SM-16](tickets/SM-16-embedding-model-eval.md)     | Embedding model evaluation (bge-m3)                  |   ✅   |
 | [SM-17](tickets/SM-17-sqlite-search-throughput.md) | SQLite search throughput                             |   ✅   |
 
