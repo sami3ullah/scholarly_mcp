@@ -30,6 +30,7 @@ Everything beyond the quick start lives here. New guides are added as the featur
 | [Search service](../packages/search/README.md)                | Query pipeline, fusion, teasers, cursors and search settings               |
 | [Eval CLI](../apps/eval/README.md)                            | Search latency bench and golden-set relevance eval                         |
 | [MCP server](../apps/server/README.md)                        | The six tools, their inputs and outputs, layout and configuration          |
+| [Landing app](../apps/landing/README.md)                      | The Next.js reference landing page: layout, scripts and tests              |
 | [Citations](../packages/cite/README.md)                       | Citation styles, how records map to CSL, the vendored AMA style            |
 
 ## Guides
@@ -41,6 +42,7 @@ Everything beyond the quick start lives here. New guides are added as the featur
 | [Operating the server](guides/operating-the-server.md) | API keys, OAuth, rate limits, usage metering and webhooks, health, metrics, traces, shutdown     |
 | [Connecting clients](guides/connecting-clients.md)     | Running the MCP server and connecting Claude Desktop or MCP Inspector, over stdio or HTTP        |
 | [Evaluating search](guides/evaluating-search.md)       | The golden set, its metrics, the eval index and the regression gate for ranking changes          |
+| [The landing page](guides/landing-page.md)             | Running the landing app, the landing API contract, rebuilding the page in your own stack, tests  |
 
 Planned:
 
@@ -48,7 +50,6 @@ Planned:
 | ------------------------------------------------------------------- | ---------- |
 | `guides/development.md` - local setup, scripts, testing conventions | SM-02      |
 | `ADAPTERS.md` - plugging in your own content API or store           | SM-13      |
-| `LANDING.md` - rebuilding the landing page in your own stack        | SM-11      |
 | `OPERATIONS.md` - deploying, scaling, monitoring                    | SM-14      |
 | `SECURITY.md` - auth, privacy, threat model                         | SM-14      |
 

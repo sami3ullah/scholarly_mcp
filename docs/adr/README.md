@@ -37,3 +37,4 @@ Each ADR records one decision: the context, what we chose and what follows from 
 | [0029](0029-keep-e5-small-after-model-comparison.md)    | Keep multilingual-e5-small after the embedding model comparison  | accepted           |
 | [0030](0030-local-pre-push-eval-gate.md)                | Search regression gate runs locally before push                  | accepted           |
 | [0031](0031-auth-limits-metering-and-telemetry.md)      | Auth, rate limits, metering and telemetry                        | accepted           |
+| [0032](0032-landing-api-and-reference-landing-page.md)  | Landing API and reference landing page                           | accepted           |

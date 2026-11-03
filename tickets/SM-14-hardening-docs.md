@@ -11,6 +11,7 @@
 - [ ] Add volume, issue and pages to `Article` (Crossref mapping) at a planned full rebuild, so citations carry them (ADR 0025)
 - [ ] Verify an ISSN-based journal page URL for the Thieme preset and set `JOURNAL_URL_TEMPLATE` (ADR 0025)
 - [ ] Image: run `keys` through the same entrypoint, keep `/metrics` internal, grace period above `SHUTDOWN_TIMEOUT_MS` + 5 s; shared rate-limit store if more than one replica (ADR 0031)
+- [ ] Landing app image: `output: 'standalone'` (left out in SM-11 because `next start` refuses it), `LANDING_API_SECRET` from the secret store, a proxy that sets `x-forwarded-for`, landing API reachable only from the app; shared landing rate limit for replicas (ADR 0032)
 
 ## Exit
 

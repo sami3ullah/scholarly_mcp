@@ -27,14 +27,14 @@ Every response has a `notice` and a plain-text rendering for clients without str
 | `telemetry/`               | Prometheus metrics and OpenTelemetry tracing                                       |
 | `keys/`                    | The `keys create`, `list` and `revoke` command                                     |
 | `journals/`                | Journal catalog cached per index version, name and ISSN matching                   |
-| `landing/`                 | Landing sessions and links                                                         |
+| `landing/`                 | Landing sessions and links, the landing API and the pages it returns (ADR 0032)    |
 | `access/`                  | Card access badge and licence, mock entitlements                                   |
 | `runtime/`                 | The live index (reopens swapped builds, survives a missing one), random tokens     |
 | `create-app.ts`, `main.ts` | Wiring, and the composition root that creates the real adapters                    |
 
 ## Configuration
 
-`MCP_TRANSPORT`, `HTTP_HOST`, `HTTP_PORT`, `HTTP_ALLOWED_HOSTS`, `HTTP_ALLOWED_ORIGINS`, `SHUTDOWN_TIMEOUT_MS`, `PUBLISHER_NAME`, `JOURNAL_URL_TEMPLATE`, `INDEX_REFRESH_MS` (30 s), `SESSION_CLEANUP_MS` (1 h), plus everything from the [embedder](../../packages/embedder-onnx/README.md), the [SQLite store](../../packages/store-sqlite/README.md), the [search service](../../packages/search/README.md), `LANDING_BASE_URL` and `LOG_LEVEL`. Auth (`AUTH_MODE`, `AUTH_CACHE_MS`, `OAUTH_*`), rate limits (`RATE_LIMIT_*`), metering (`METER_*`) and tracing (`OTEL_*`) are in the [operating guide](../../docs/guides/operating-the-server.md) ([ADR 0031](../../docs/adr/0031-auth-limits-metering-and-telemetry.md)). See the [client guide](../../docs/guides/connecting-clients.md#configuration) for defaults.
+`MCP_TRANSPORT`, `HTTP_HOST`, `HTTP_PORT`, `HTTP_ALLOWED_HOSTS`, `HTTP_ALLOWED_ORIGINS`, `SHUTDOWN_TIMEOUT_MS`, `PUBLISHER_NAME`, `JOURNAL_URL_TEMPLATE`, `INDEX_REFRESH_MS` (30 s), `SESSION_CLEANUP_MS` (1 h), `HTTP_ALONGSIDE_STDIO`, the landing API's `LANDING_API_SECRET` and `LANDING_RATE_LIMIT_*` ([landing guide](../../docs/guides/landing-page.md)), plus everything from the [embedder](../../packages/embedder-onnx/README.md), the [SQLite store](../../packages/store-sqlite/README.md), the [search service](../../packages/search/README.md), `LANDING_BASE_URL` and `LOG_LEVEL`. Auth (`AUTH_MODE`, `AUTH_CACHE_MS`, `OAUTH_*`), rate limits (`RATE_LIMIT_*`), metering (`METER_*`) and tracing (`OTEL_*`) are in the [operating guide](../../docs/guides/operating-the-server.md) ([ADR 0031](../../docs/adr/0031-auth-limits-metering-and-telemetry.md)). See the [client guide](../../docs/guides/connecting-clients.md#configuration) for defaults.
 
 ## Tests
 

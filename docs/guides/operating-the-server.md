@@ -57,6 +57,10 @@ The server publishes Protected Resource Metadata at `/.well-known/oauth-protecte
 
 Each caller (key id or OAuth client) has a token bucket: `RATE_LIMIT_PER_MINUTE` tool calls a minute (default 60), in bursts of up to `RATE_LIMIT_BURST` (default 20). When it is empty, the tool answers `RATE_LIMITED` with `retryAfter` in seconds. The bucket is per process; with several replicas each allows the full rate.
 
+### Landing API
+
+The landing API (`/landing/v1/page`, `/landing/v1/visits`, [landing guide](landing-page.md)) has its own bucket per landing visitor: `LANDING_RATE_LIMIT_PER_MINUTE` (default 120) in bursts of `LANDING_RATE_LIMIT_BURST` (default 30). It takes `LANDING_API_SECRET` as a bearer token instead of API keys, and the server refuses to start with HTTP beyond loopback without it. Give the landing app the same secret, and keep the API on the internal network: only the landing app's server calls it.
+
 ## Usage metering
 
 Every tool call writes one event to the outbox (`usage_events` in the runtime database): id, key id, tool, result count, latency, status and whether it is billable. Only successful calls are billable. Events never hold query text, and writing them never fails or slows a call.
@@ -96,11 +100,11 @@ function verify(rawBody, timestamp, signature, secret) {
 
 ## Health, metrics and traces
 
-| Route      | Answers                                                                                      |
-| ---------- | -------------------------------------------------------------------------------------------- |
-| `/healthz` | `200 {"status":"ok"}` while the process runs: the liveness probe                             |
-| `/readyz`  | `200` when the index is open, the model loaded and the server not draining, `503` otherwise  |
-| `/metrics` | Prometheus text: tool calls, durations, HTTP requests, auth failures, metering, Node runtime |
+| Route      | Answers                                                                                                                |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `/healthz` | `200 {"status":"ok"}` while the process runs: the liveness probe                                                       |
+| `/readyz`  | `200` when the index is open, the model loaded and the server not draining, `503` otherwise                            |
+| `/metrics` | Prometheus text: tool calls, durations, HTTP requests, auth failures, metering, landing pages and visits, Node runtime |
 
 These routes skip the `Host`, `Origin` and auth checks so probes can reach the pod by address. They hold no article data, but keep `/metrics` internal at the load balancer. No metric label carries a key id or query text.
 
