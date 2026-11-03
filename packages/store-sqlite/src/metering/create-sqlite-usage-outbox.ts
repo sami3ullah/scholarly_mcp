@@ -8,6 +8,7 @@ interface UsageRow {
   readonly api_key_id: string;
   readonly occurred_at: string;
   readonly exported_at: string | null;
+  readonly claimed_until: string | null;
   readonly payload: string;
 }
 
@@ -15,17 +16,27 @@ interface UsageRow {
  * The metering outbox on the runtime database's `usage_events` table (ADR 0022, ADR 0033).
  * A row is an envelope (id, kind, key id, times) plus the kind's fields as JSON; none of
  * them holds query text or a landing token. Several server processes may share the file;
- * each insert is one small WAL write.
+ * each insert is one small WAL write, and a claim leases its rows (ADR 0034).
  */
 export function createSqliteUsageOutbox(db: Db): UsageOutbox {
   const insert = db.prepare(
     `INSERT OR IGNORE INTO usage_events (id, kind, api_key_id, occurred_at, payload)
      VALUES (?, ?, ?, ?, ?)`,
   );
-  const pending = db.prepare<[number], UsageRow>(
-    `SELECT * FROM usage_events WHERE exported_at IS NULL ORDER BY occurred_at, id LIMIT ?`,
+  // One statement, so the write lock makes the claim atomic across processes sharing the file.
+  const claim = db.prepare<[string, string, number], UsageRow>(
+    `UPDATE usage_events SET claimed_until = ?
+     WHERE id IN (
+       SELECT id FROM usage_events
+       WHERE exported_at IS NULL AND (claimed_until IS NULL OR claimed_until <= ?)
+       ORDER BY occurred_at, id LIMIT ?
+     )
+     RETURNING *`,
   );
-  const mark = db.prepare('UPDATE usage_events SET exported_at = ? WHERE id = ?');
+  const release = db.prepare('UPDATE usage_events SET claimed_until = NULL WHERE id = ?');
+  const mark = db.prepare(
+    'UPDATE usage_events SET exported_at = ?, claimed_until = NULL WHERE id = ?',
+  );
   const count = db.prepare<[], { n: number }>(
     'SELECT count(*) AS n FROM usage_events WHERE exported_at IS NULL',
   );
@@ -35,6 +46,9 @@ export function createSqliteUsageOutbox(db: Db): UsageOutbox {
   const markAll = db.transaction((ids: readonly string[], at: string) => {
     for (const id of ids) mark.run(at, id);
   });
+  const releaseAll = db.transaction((ids: readonly string[]) => {
+    for (const id of ids) release.run(id);
+  });
 
   return {
     append: (event, signal) =>
@@ -43,7 +57,14 @@ export function createSqliteUsageOutbox(db: Db): UsageOutbox {
         delete payload.exportedAt;
         insert.run(id, kind, apiKeyId, occurredAt.toISOString(), JSON.stringify(payload));
       }),
-    pending: (limit, signal) => withSignal(signal, () => pending.all(limit).map(eventFromRow)),
+    claim: (limit, now, leaseUntil, signal) =>
+      withSignal(signal, () =>
+        claim.all(leaseUntil.toISOString(), now.toISOString(), limit).sort(byAge).map(eventFromRow),
+      ),
+    release: (ids, signal) =>
+      withSignal(signal, () => {
+        releaseAll(ids);
+      }),
     markExported: (ids, at, signal) =>
       withSignal(signal, () => {
         markAll(ids, at.toISOString());
@@ -52,6 +73,11 @@ export function createSqliteUsageOutbox(db: Db): UsageOutbox {
     deleteExported: (before, signal) =>
       withSignal(signal, () => prune.run(before.toISOString()).changes),
   };
+}
+
+/** `RETURNING` gives no order; claims hand out events oldest first, ties by id. */
+function byAge(a: UsageRow, b: UsageRow): number {
+  return a.occurred_at.localeCompare(b.occurred_at) || a.id.localeCompare(b.id);
 }
 
 function eventFromRow(row: UsageRow): UsageEvent {

@@ -62,6 +62,8 @@ const MIGRATIONS: readonly string[] = [
    ALTER TABLE usage_events_v3 RENAME TO usage_events;
    CREATE INDEX usage_events_pending ON usage_events (occurred_at) WHERE exported_at IS NULL;
    CREATE INDEX usage_events_exported ON usage_events (exported_at) WHERE exported_at IS NOT NULL;`,
+  // SM-13 (ADR 0034): exporters claim events for a lease, so two never send the same batch.
+  `ALTER TABLE usage_events ADD COLUMN claimed_until TEXT;`,
 ];
 
 /** Brings a runtime database up to the latest schema; safe to call on every start. */

@@ -21,10 +21,12 @@ describe('runtime database migrations', () => {
     first.close();
 
     const db = openRuntimeDatabase(path);
-    expect(db.pragma('user_version', { simple: true })).toBe(3);
+    expect(db.pragma('user_version', { simple: true })).toBe(4);
     expect(db.prepare('SELECT count(*) AS n FROM api_keys').get()).toEqual({ n: 0 });
     const signal = new AbortController().signal;
-    expect(await createSqliteUsageOutbox(db).pending(10, signal)).toEqual([
+    const now = new Date('2026-11-03T12:00:00Z');
+    const outbox = createSqliteUsageOutbox(db);
+    expect(await outbox.claim(10, now, new Date(now.getTime() + 60_000), signal)).toEqual([
       {
         kind: 'tool_call',
         id: 'e1',
@@ -39,6 +41,6 @@ describe('runtime database migrations', () => {
       },
     ]);
     db.close();
-    expect(openRuntimeDatabase(path).pragma('user_version', { simple: true })).toBe(3);
+    expect(openRuntimeDatabase(path).pragma('user_version', { simple: true })).toBe(4);
   });
 });

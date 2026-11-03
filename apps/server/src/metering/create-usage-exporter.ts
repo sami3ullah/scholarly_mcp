@@ -3,6 +3,8 @@ import type { UsageSink } from './usage-sink.js';
 
 const DAY_MS = 86_400_000;
 const PRUNE_EVERY_MS = 3_600_000;
+/** The longest a timed pass may run. */
+const MIN_PASS_TIMEOUT_MS = 60_000;
 
 export interface UsageExporterDeps {
   readonly outbox: UsageOutbox;
@@ -37,6 +39,8 @@ export interface UsageExporter {
  * delivery is at least once and receivers dedupe on the event id. Failures back off
  * exponentially with full jitter up to `backoffMaxMs`; nothing here ever blocks a request.
  * Exported events older than the retention are deleted, at most once an hour.
+ * Each batch is claimed for twice the pass timeout, so exporters in other processes skip it;
+ * a batch a sink refused is released for the next try (ADR 0034).
  */
 export function createUsageExporter(deps: UsageExporterDeps): UsageExporter {
   const random = deps.random ?? Math.random;
@@ -45,19 +49,29 @@ export function createUsageExporter(deps: UsageExporterDeps): UsageExporter {
   let running: Promise<number> | undefined;
   let stopped = true;
   let lastPrune = 0;
+  const passTimeoutMs = Math.max(deps.backoffMaxMs, MIN_PASS_TIMEOUT_MS);
 
   const pass = async (signal: AbortSignal): Promise<number> => {
     let exported = 0;
     for (;;) {
       signal.throwIfAborted();
-      const batch = await deps.outbox.pending(deps.batchSize, signal);
-      if (batch.length === 0) break;
-      for (const sink of deps.sinks) await sink.send(batch, signal);
-      await deps.outbox.markExported(
-        batch.map(({ id }) => id),
-        deps.clock.now(),
+      const now = deps.clock.now();
+      const batch = await deps.outbox.claim(
+        deps.batchSize,
+        now,
+        new Date(now.getTime() + 2 * passTimeoutMs),
         signal,
       );
+      if (batch.length === 0) break;
+      const ids = batch.map(({ id }) => id);
+      try {
+        for (const sink of deps.sinks) await sink.send(batch, signal);
+      } catch (error) {
+        // When even the release fails, the lease runs out and a later pass takes the batch.
+        await deps.outbox.release(ids, signal).catch(() => undefined);
+        throw error;
+      }
+      await deps.outbox.markExported(ids, deps.clock.now(), signal);
       exported += batch.length;
       if (batch.length < deps.batchSize) break;
     }
@@ -93,7 +107,7 @@ export function createUsageExporter(deps: UsageExporterDeps): UsageExporter {
   };
 
   const tick = async () => {
-    const signal = AbortSignal.timeout(Math.max(deps.backoffMaxMs, 60_000));
+    const signal = AbortSignal.timeout(passTimeoutMs);
     let exported = 0;
     let failed = false;
     try {

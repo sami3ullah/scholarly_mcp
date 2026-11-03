@@ -141,6 +141,27 @@ describe('createUsageExporter', () => {
     expect(sent).toEqual([['a']]);
   });
 
+  it('lets two exporters share an outbox without sending a batch twice', async () => {
+    const first = recordingSink('first');
+    const second = recordingSink('second');
+    const { outbox, clock, exporter } = exporterWith([first], { batchSize: 10 });
+    const other = createUsageExporter({
+      outbox,
+      sinks: [second],
+      clock,
+      logger: createTestLogger(),
+      batchSize: 10,
+      intervalMs: 1000,
+      backoffMaxMs: 60_000,
+      retentionDays: 30,
+    });
+    for (const [index, id] of ['a', 'b', 'c'].entries())
+      await outbox.append(anEvent(id, index), signal);
+    const counts = await Promise.all([exporter.exportPending(signal), other.exportPending(signal)]);
+    expect(counts.reduce((sum, n) => sum + n, 0)).toBe(3);
+    expect([...first.batches.flat(), ...second.batches.flat()].sort()).toEqual(['a', 'b', 'c']);
+  });
+
   it('deletes exported events past the retention, never pending ones', async () => {
     const { outbox, clock, exporter } = exporterWith([recordingSink()], { retentionDays: 1 });
     await outbox.append(anEvent('old'), signal);
