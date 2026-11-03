@@ -3,7 +3,7 @@
 The reference landing page (Next.js 16, App Router). It turns a card link
 (`/mcp/landing?t=<token>&doi=<doi>&utm_*`) into a page built for that search, from the server's
 landing API. Setup, configuration, the API contract and the rules for rebuilding it elsewhere are
-in the [landing guide](../../docs/guides/landing-page.md); the decisions are in
+in the [landing guide](../../docs/LANDING.md); the decisions are in
 [ADR 0032](../../docs/adr/0032-landing-api-and-reference-landing-page.md).
 
 ## Layout

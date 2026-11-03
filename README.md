@@ -8,12 +8,12 @@ An MCP server that answers research questions with a short list of relevant arti
 each linking to a personalised landing page on the publisher's own site, never the article itself.
 
 [![CI](https://github.com/sami3ullah/scholarly_mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/sami3ullah/scholarly_mcp/actions/workflows/ci.yml)
+[![Security](https://github.com/sami3ullah/scholarly_mcp/actions/workflows/security.yml/badge.svg)](https://github.com/sami3ullah/scholarly_mcp/actions/workflows/security.yml)
 ![Node](https://img.shields.io/badge/node-24%20LTS-339933?logo=nodedotjs&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
 ![MCP](https://img.shields.io/badge/MCP-Streamable%20HTTP%20%2B%20stdio-6E56CF)
-![Status](https://img.shields.io/badge/status-early%20development-orange)
 
-[Why](#why) · [How it works](#how-it-works) · [Tools](#tools) · [Quick start](#quick-start) · [Architecture](#architecture) · [Limitations](#limitations) · [Roadmap](#roadmap) · [Docs](#documentation)
+[Quick start](#quick-start) · [Tools](#tools) · [Your own content](#your-own-content-api) · [Architecture](#architecture) · [Limitations](#limitations) · [Docs](#documentation)
 
 </div>
 
@@ -23,43 +23,36 @@ each linking to a personalised landing page on the publisher's own site, never t
 
 ---
 
-## Why
+## Quick start
 
-Clinicians and researchers increasingly ask AI assistants instead of visiting publisher sites. Several large
-publishers already make their content reachable from these assistants. **scholarly-mcp** gives any publisher the
-same reach while keeping readers, and the reading itself, on the publisher's site.
+Requirements: Docker. The image carries a small demo index of open access (CC BY 4.0) articles, the embedding model and the Thieme preset, so it needs no other setup.
 
-| Goal                         | What it means                                                                                                 |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| 🔗 **Link-first results**    | Title, journal, year, a teaser of at most 280 characters and a link. No full text or whole abstracts in chat. |
-| 🎯 **Personalised landing**  | Every click opens a page built for that search: the chosen article, other matches, the matched passage.       |
-| 🌍 **Cross-language search** | A German query finds English papers, and the reverse.                                                         |
-| 📦 **Zero-setup trial**      | One `docker run` with a prebuilt index. No database or API keys to set up.                                    |
-| 🏭 **Production path**       | Postgres store adapter, plus a source adapter you point at your own content API.                              |
-| 📈 **Measurable referrals**  | UTM tags plus a landing token tie every visit to the search that produced it, without storing query text.     |
-
-## How it works
-
-```mermaid
-flowchart LR
-    subgraph Build["Build path (offline)"]
-        CR[Crossref API] --> ING[Ingestion worker]
-        EP[Europe PMC<br/>open access full text] --> ING
-        ING -->|chunk, embed, verify, swap| IDX[(Search index<br/>FTS + vectors)]
-    end
-    subgraph Serve["Serve path (online, read-only)"]
-        AI[AI assistant] -->|MCP| SRV[MCP server]
-        SRV --> IDX
-        SRV -->|article cards + token links| AI
-    end
-    AI -.->|reader clicks| LP[Landing page<br/>on the publisher's site]
-    LP -->|resolve token| SRV
+```bash
+docker run -d --name scholarly-mcp -p 127.0.0.1:8080:8080 ghcr.io/sami3ullah/scholarly-mcp:latest
+docker exec scholarly-mcp /nodejs/bin/node /app/scholarly-mcp.mjs keys create --label me   # prints smk_…
 ```
 
-1. **Ask.** A reader asks their assistant a question, in German or English.
-2. **Search.** The server runs lexical and semantic search in parallel and fuses them with Reciprocal Rank Fusion.
-3. **Answer.** The assistant gets a few article cards: title, journal, year, a short teaser, why it matched, and a link.
-4. **Click.** The link opens a landing page rebuilt from a short-lived token: no query text ever appears in the URL.
+Connect Claude Code (or any MCP client that speaks Streamable HTTP) with the printed key:
+
+```bash
+claude mcp add --transport http scholarly http://localhost:8080/mcp --header "Authorization: Bearer smk_…"
+```
+
+Then ask, for example, _"Find recent articles on stroke thrombolysis"_ or _"Welche Artikel gibt es zur Sepsis bei Kindern?"_. Claude Desktop, MCP Inspector and stdio are in the [client guide](docs/guides/connecting-clients.md).
+
+<details>
+<summary><b>The full stack from a clone: server, landing page, Postgres</b></summary>
+
+```bash
+git clone https://github.com/sami3ullah/scholarly_mcp.git && cd scholarly_mcp
+export SCHOLARLY_IMAGE=ghcr.io/sami3ullah/scholarly-mcp:latest LANDING_IMAGE=ghcr.io/sami3ullah/scholarly-mcp-landing:latest
+docker compose --profile sqlite --profile landing up -d --wait     # MCP on :8080, landing page on :3000
+docker compose run --rm server keys create --label me
+```
+
+Swap `sqlite` for `postgres` to run on Postgres. The demo index has about 200 articles; for the whole Thieme corpus build the full index with `ingest full` ([ingestion guide](docs/guides/ingestion.md), a few hours). Deploying for others: [operations](docs/OPERATIONS.md).
+
+</details>
 
 ## Tools
 
@@ -96,50 +89,36 @@ Every response also carries `"notice": "Evidence pointers, not clinical advice. 
 
 </details>
 
-> [!NOTE]
-> All six tools work over stdio and Streamable HTTP, with API keys or OAuth, rate limits, usage metering, health checks, Prometheus metrics and traces. Connect Claude Desktop or MCP Inspector with the [client guide](docs/guides/connecting-clients.md); run it for others with the [operating guide](docs/guides/operating-the-server.md).
+All six tools work over stdio and Streamable HTTP, with API keys or OAuth, rate limits, usage metering, health checks, Prometheus metrics and traces ([operating guide](docs/guides/operating-the-server.md)).
 
-## Quick start
+## Your own content API
 
-### Try it (coming in SM-14)
-
-```bash
-docker run -p 3000:3000 ghcr.io/sami3ullah/scholarly_mcp   # prebuilt index, demo API key
-```
-
-### Develop
-
-Requirements: **Node 24 LTS** (via [nvm](https://github.com/nvm-sh/nvm)), **pnpm 10** (via corepack), Docker for the image and Postgres tests.
-
-```bash
-git clone https://github.com/sami3ullah/scholarly_mcp.git
-cd scholarly_mcp
-nvm use && corepack enable
-pnpm install
-pnpm check        # format, lint, typecheck, layering rules, tests with coverage
-```
-
-<details>
-<summary><b>All scripts</b></summary>
-
-| Script                                      | What it does                                                                            |
-| ------------------------------------------- | --------------------------------------------------------------------------------------- |
-| `pnpm check`                                | Everything CI runs, in order                                                            |
-| `pnpm test`                                 | Unit and contract tests (Vitest)                                                        |
-| `pnpm test:coverage`                        | Tests with the 85% coverage gate                                                        |
-| `pnpm lint`                                 | ESLint, strict and type-aware                                                           |
-| `pnpm typecheck`                            | `tsc` across all packages (Turborepo)                                                   |
-| `pnpm depcruise`                            | Enforces the layering rules between packages                                            |
-| `pnpm format`                               | Prettier                                                                                |
-| `pnpm ingest <full\|incremental\|verify>`   | Build, refresh or check the index ([guide](docs/guides/ingestion.md))                   |
-| `pnpm ingest <migrate\|copy --from <file>>` | Prepare Postgres, load an existing index into it ([guide](docs/guides/postgres.md))     |
-| `docker compose --profile postgres up -d`   | A local Postgres with pgvector, roles and extensions ([guide](docs/guides/postgres.md)) |
-| `pnpm eval bench`                           | Times every search end to end on the live index                                         |
-| `node apps/server/dist/main.js`             | The MCP server, after `pnpm build` ([guide](docs/guides/connecting-clients.md))         |
-
-</details>
+The demo indexes Crossref and Europe PMC. A publisher points it at its own catalogue by writing one `Source` adapter: a function that pages through the API and returns canonical articles. A shared contract suite checks it against recorded responses, and one line in the ingest's composition root wires it in. Access rules (`Entitlements`), the store (SQLite or Postgres), the embedding model and the billing export plug in the same way. The [adapters guide](docs/ADAPTERS.md) walks through each.
 
 ## Architecture
+
+Clinicians and researchers increasingly ask AI assistants instead of visiting publisher sites. **scholarly-mcp** gives a publisher that reach while keeping readers, and the reading itself, on the publisher's site.
+
+```mermaid
+flowchart LR
+    subgraph Build["Build path (offline)"]
+        CR[Crossref API] --> ING[Ingestion worker]
+        EP[Europe PMC<br/>open access full text] --> ING
+        ING -->|chunk, embed, verify, swap| IDX[(Search index<br/>FTS + vectors)]
+    end
+    subgraph Serve["Serve path (online, read-only)"]
+        AI[AI assistant] -->|MCP| SRV[MCP server]
+        SRV --> IDX
+        SRV -->|article cards + token links| AI
+    end
+    AI -.->|reader clicks| LP[Landing page<br/>on the publisher's site]
+    LP -->|resolve token| SRV
+```
+
+1. **Ask.** A reader asks their assistant a question, in German or English.
+2. **Search.** The server runs lexical and semantic search in parallel and fuses them with Reciprocal Rank Fusion.
+3. **Answer.** The assistant gets a few article cards: title, journal, year, a short teaser, why it matched, and a link.
+4. **Click.** The link opens a landing page rebuilt from a short-lived token: no query text ever appears in the URL.
 
 Ports and adapters: the core knows nothing about Crossref, SQLite or Postgres, so each can be swapped without
 touching search or the tools.
@@ -162,19 +141,49 @@ scholarly-mcp/
 │   ├── eval/              CLI: search latency bench and golden-set eval
 │   ├── server/            MCP server: six tools, stdio and Streamable HTTP
 │   └── landing/           Next.js reference landing page
-└── docs/                  plan, ADRs, guides
+├── docker/                images, compose services, demo index, smoke and load tests
+└── docs/                  operations, adapters, landing, security, plan, ADRs, guides
 ```
 
 | Layer            | Swappable via  | Default                           | Production                                                                          |
 | ---------------- | -------------- | --------------------------------- | ----------------------------------------------------------------------------------- |
-| Content source   | `Source`       | Crossref + Europe PMC             | Your content API                                                                    |
+| Content source   | `Source`       | Crossref + Europe PMC             | Your content API ([adapters](docs/ADAPTERS.md#your-own-content-api))                |
 | Search index     | `Store`        | SQLite (FTS5 + sqlite-vec)        | Postgres (tsvector + pgvector), `STORE=postgres` ([guide](docs/guides/postgres.md)) |
-| Embeddings       | `Embedder`     | multilingual-e5-small, in-process | Any 384-dim model                                                                   |
+| Embeddings       | `Embedder`     | multilingual-e5-small, in-process | Any ONNX model ([ADR 0028](docs/adr/0028-selectable-embedding-model.md))            |
 | Landing sessions | `SessionStore` | SQLite                            | Postgres                                                                            |
 | Access status    | `Entitlements` | Mock                              | Your entitlement service                                                            |
-| Usage events     | `Meter`        | JSON lines + webhook              | Your billing pipeline                                                               |
+| Usage events     | `Meter`        | Outbox + signed webhook           | Your billing pipeline                                                               |
 
 Read more in the [engineering plan](docs/PLAN.md#high-level-architecture) and the [ADRs](docs/adr/README.md).
+
+<details>
+<summary><b>Develop</b></summary>
+
+Requirements: **Node 24 LTS** (via [nvm](https://github.com/nvm-sh/nvm)), **pnpm 10** (via corepack), Docker for the images and Postgres tests.
+
+```bash
+git clone https://github.com/sami3ullah/scholarly_mcp.git && cd scholarly_mcp
+nvm use && corepack enable
+pnpm install
+pnpm check        # format, lint, typecheck, layering rules, tests with coverage
+```
+
+| Script                                      | What it does                                                                        |
+| ------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `pnpm check`                                | Everything CI runs, in order                                                        |
+| `pnpm test`                                 | Unit, contract and fuzz tests (Vitest)                                              |
+| `pnpm test:coverage`                        | Tests with the 85% coverage gate                                                    |
+| `pnpm lint`                                 | ESLint, strict and type-aware                                                       |
+| `pnpm typecheck`                            | `tsc` across all packages (Turborepo)                                               |
+| `pnpm depcruise`                            | Enforces the layering rules between packages                                        |
+| `pnpm format`                               | Prettier                                                                            |
+| `pnpm ingest <full\|incremental\|verify>`   | Build, refresh or check the index ([guide](docs/guides/ingestion.md))               |
+| `pnpm ingest <migrate\|copy --from <file>>` | Prepare Postgres, load an existing index into it ([guide](docs/guides/postgres.md)) |
+| `pnpm eval bench`                           | Times every search end to end on the live index                                     |
+| `docker/e2e/smoke.sh [sqlite\|postgres]`    | The compose stack on the demo index, every tool over HTTP                           |
+| `docker/e2e/load.sh <index dir>`            | Load test: cold start, latency at 20 calls a second, memory                         |
+
+</details>
 
 ## Guardrails
 
@@ -189,6 +198,7 @@ Read more in the [engineering plan](docs/PLAN.md#high-level-architecture) and th
 
 | Limitation                                                                                                                                                                                                                                                                                                                                                                    | Impact                                                                                                                                                                                          | Fix                                                                                                                   |
 | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| **The public image has a demo index.** It carries about 200 CC BY 4.0 articles, two per journal, because the full index holds content that may not be redistributed ([ADR 0039](docs/adr/0039-demo-index-from-a-cc-by-doi-list.md)).                                                                                                                                          | Many questions find little or nothing.                                                                                                                                                          | Build the full index with `ingest full` and mount or bake it in ([operations](docs/OPERATIONS.md#deploy)).            |
 | **Crossref public pool.** No contact email is configured, so ingestion uses Crossref's slower public pool instead of the polite pool ([ADR 0005](docs/adr/0005-crossref-public-pool.md)).                                                                                                                                                                                     | The first full ingestion is slower and sees more rate limiting. Incremental syncs are barely affected.                                                                                          | Set `CROSSREF_MAILTO`.                                                                                                |
 | **Thin abstracts.** About half of recent Thieme articles have no abstract in Crossref.                                                                                                                                                                                                                                                                                        | Those articles match on title, journal and subjects, plus their full text when they are open access in Europe PMC (used for matching only, [ADR 0024](docs/adr/0024-europe-pmc-enrichment.md)). | A publisher's own content API removes it.                                                                             |
 | **Coarse subjects for some articles.** Crossref has no subjects; Europe PMC covers only part of the corpus ([ADR 0004](docs/adr/0004-subjects-from-europe-pmc.md)).                                                                                                                                                                                                           | Articles outside Europe PMC get journal-level subjects.                                                                                                                                         | A publisher's own taxonomy via a source adapter.                                                                      |
@@ -230,6 +240,10 @@ Everything lives in [`docs/`](docs/README.md):
 | [Engineering plan](docs/PLAN.md)             | The full design: goals, architecture, edge cases, standards |
 | [Architecture decisions](docs/adr/README.md) | Why things are the way they are                             |
 | [Phase 0 results](docs/spike-results.md)     | Data coverage and model checks                              |
+| [Operations](docs/OPERATIONS.md)             | Deploying, refreshing, scaling, capacity, monitoring        |
+| [Adapters](docs/ADAPTERS.md)                 | Plugging in your own content API, access rules or store     |
+| [The landing page](docs/LANDING.md)          | The landing API and building the page in your own stack     |
+| [Security](docs/SECURITY.md)                 | Reporting issues, threat model, controls, supply chain      |
 
 ## Contributing
 

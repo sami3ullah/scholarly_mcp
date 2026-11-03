@@ -59,7 +59,7 @@ Each caller (key id or OAuth client) has a token bucket: `RATE_LIMIT_PER_MINUTE`
 
 ### Landing API
 
-The landing API (`/landing/v1/page`, `/landing/v1/visits`, [landing guide](landing-page.md)) has its own bucket per landing visitor: `LANDING_RATE_LIMIT_PER_MINUTE` (default 120) in bursts of `LANDING_RATE_LIMIT_BURST` (default 30). It takes `LANDING_API_SECRET` as a bearer token instead of API keys, and the server refuses to start with HTTP beyond loopback without it. Give the landing app the same secret, and keep the API on the internal network: only the landing app's server calls it. `LANDING_API_PORT` moves it to its own listener on `LANDING_API_HOST`, so the public port answers 404 for it.
+The landing API (`/landing/v1/page`, `/landing/v1/visits`, [landing guide](../LANDING.md)) has its own bucket per landing visitor: `LANDING_RATE_LIMIT_PER_MINUTE` (default 120) in bursts of `LANDING_RATE_LIMIT_BURST` (default 30). It takes `LANDING_API_SECRET` as a bearer token instead of API keys, and the server refuses to start with HTTP beyond loopback without it. Give the landing app the same secret, and keep the API on the internal network: only the landing app's server calls it. `LANDING_API_PORT` moves it to its own listener on `LANDING_API_HOST`, so the public port answers 404 for it.
 
 Secrets can come from mounted files instead of the environment: `LANDING_API_SECRET_FILE`, `METER_WEBHOOK_SECRET_FILE` and `DATABASE_URL_FILE` name a file whose contents (one trailing newline dropped) become the variable. Set one form, not both ([ADR 0038](../adr/0038-landing-image-proxy-and-secret-files.md)).
 

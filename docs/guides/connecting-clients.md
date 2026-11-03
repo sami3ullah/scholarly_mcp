@@ -16,19 +16,19 @@ pnpm build
 
 The server reads environment variables, validated at boot ([server README](../../apps/server/README.md#configuration)). The minimum is `LANDING_BASE_URL`. The Thieme preset (`presets/thieme.env`) sets it to the reference landing app, `http://localhost:3000`, and sets `PUBLISHER_NAME=Thieme`.
 
-| Variable               | Default               | Meaning                                                                                                    |
-| ---------------------- | --------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `MCP_TRANSPORT`        | `stdio`               | `stdio` for a local client, `http` for Streamable HTTP                                                     |
-| `HTTP_HOST`            | `127.0.0.1`           | Beyond loopback needs `AUTH_MODE` and `HTTP_ALLOWED_HOSTS` ([operating guide](operating-the-server.md))    |
-| `HTTP_PORT`            | `8080`                | HTTP port; the endpoint is `/mcp`                                                                          |
-| `INDEX_PATH`           | `data/index.sqlite`   | The index the ingest builds; reopened when a new build lands                                               |
-| `RUNTIME_DB_PATH`      | `data/runtime.sqlite` | Landing sessions, API keys and the usage outbox; created when missing                                      |
-| `AUTH_MODE`            | `none`                | `none`, `api-key` or `oauth` for HTTP ([operating guide](operating-the-server.md))                         |
-| `EMBEDDER_CACHE_DIR`   | the library default   | Where the model is cached, e.g. `.cache/models`                                                            |
-| `LANDING_BASE_URL`     | required              | Where card links point                                                                                     |
-| `PUBLISHER_NAME`       | `the publisher`       | Named in descriptions and the notice                                                                       |
-| `JOURNAL_URL_TEMPLATE` | unset                 | Journal page link with `{issn}`; no journal links without it                                               |
-| `HTTP_ALONGSIDE_STDIO` | `false`               | On stdio, also serve the landing API on `HTTP_PORT`, so card links open ([landing guide](landing-page.md)) |
+| Variable               | Default               | Meaning                                                                                                  |
+| ---------------------- | --------------------- | -------------------------------------------------------------------------------------------------------- |
+| `MCP_TRANSPORT`        | `stdio`               | `stdio` for a local client, `http` for Streamable HTTP                                                   |
+| `HTTP_HOST`            | `127.0.0.1`           | Beyond loopback needs `AUTH_MODE` and `HTTP_ALLOWED_HOSTS` ([operating guide](operating-the-server.md))  |
+| `HTTP_PORT`            | `8080`                | HTTP port; the endpoint is `/mcp`                                                                        |
+| `INDEX_PATH`           | `data/index.sqlite`   | The index the ingest builds; reopened when a new build lands                                             |
+| `RUNTIME_DB_PATH`      | `data/runtime.sqlite` | Landing sessions, API keys and the usage outbox; created when missing                                    |
+| `AUTH_MODE`            | `none`                | `none`, `api-key` or `oauth` for HTTP ([operating guide](operating-the-server.md))                       |
+| `EMBEDDER_CACHE_DIR`   | the library default   | Where the model is cached, e.g. `.cache/models`                                                          |
+| `LANDING_BASE_URL`     | required              | Where card links point                                                                                   |
+| `PUBLISHER_NAME`       | `the publisher`       | Named in descriptions and the notice                                                                     |
+| `JOURNAL_URL_TEMPLATE` | unset                 | Journal page link with `{issn}`; no journal links without it                                             |
+| `HTTP_ALONGSIDE_STDIO` | `false`               | On stdio, also serve the landing API on `HTTP_PORT`, so card links open ([landing guide](../LANDING.md)) |
 
 ## Claude Desktop (stdio)
 
@@ -55,7 +55,7 @@ Add the server to `claude_desktop_config.json` (on macOS in `~/Library/Applicati
 }
 ```
 
-`which node` after `nvm use` gives the Node 24 path. `HTTP_ALONGSIDE_STDIO` lets the landing app at `localhost:3000` call the server's landing API on port 8080, so the card links open a page; start the app as the [landing guide](landing-page.md#run-it-locally) shows. Restart Claude Desktop, then ask for example "Find recent Thieme articles on anticoagulation for atrial fibrillation in older patients". Logs go to Claude Desktop's MCP log for the server (stderr).
+`which node` after `nvm use` gives the Node 24 path. `HTTP_ALONGSIDE_STDIO` lets the landing app at `localhost:3000` call the server's landing API on port 8080, so the card links open a page; start the app as the [landing guide](../LANDING.md#run-it-locally) shows. Restart Claude Desktop, then ask for example "Find recent Thieme articles on anticoagulation for atrial fibrillation in older patients". Logs go to Claude Desktop's MCP log for the server (stderr).
 
 ## MCP Inspector
 

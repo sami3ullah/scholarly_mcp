@@ -2,15 +2,15 @@
 
 ## Tasks
 
-- [ ] Load test (autocannon, 20 rps, p50/p95, memory, cold start), fuzzing
-- [ ] osv-scanner, Trivy, Semgrep, gitleaks in CI; SBOM; Dependabot
-- [ ] Non-root distroless image, read-only FS, image size checked; compose with sqlite/postgres profiles; prebuilt index in image
-- [ ] E2E smoke script: compose up, call every tool over HTTP
-- [ ] README (order per plan), `ADAPTERS.md`, `LANDING.md`, `OPERATIONS.md`, `SECURITY.md`; `presets/thieme.env`, `presets/thieme.subjects.json` (journal-level subjects by ISSN)
-- [ ] Release workflow: tag -> GHCR image + SBOM
+- [x] Load test (autocannon, 20 rps, p50/p95, memory, cold start), fuzzing. `docker/e2e/load.sh`; results in OPERATIONS.md: Postgres meets 20/s at p95 299 ms (server 2 vCPUs, Postgres 4); SQLite tops out near 4/s, follow-up SM-17. Fuzzing of the HTTP edge and tool inputs with fast-check.
+- [x] osv-scanner, Trivy, Semgrep, gitleaks in CI; SBOM; Dependabot (`security.yml`, `dependabot.yml`; actions pinned by commit; pnpm release-age and trust policies)
+- [x] Non-root distroless image, read-only FS, image size checked; compose with sqlite/postgres profiles; prebuilt index in image (the CC BY demo index, ADR 0039)
+- [x] E2E smoke script: compose up, call every tool over HTTP (`docker/e2e/smoke.sh`, CI job `e2e` on SQLite and Postgres)
+- [x] README (order per plan), `ADAPTERS.md`, `LANDING.md`, `OPERATIONS.md`, `SECURITY.md`; `presets/thieme.env`, `presets/thieme.subjects.json` (journal-level subjects by ISSN). No 30-second GIF yet: it comes with the SM-15 recording.
+- [x] Release workflow: tag -> GHCR image + SBOM (`release.yml`: demo index, smoke test, multi-arch push, provenance, SBOM on the release)
 - [x] Add volume, issue and pages to `Article` (Crossref mapping) at a planned full rebuild, so citations carry them (ADR 0025). Full rebuild done 2026-11-03: 70,989 articles, `verify` ok; volume on 67,529, issue on 67,377, pages on 66,102; every article has subjects (57,379 from the journal preset).
 - [x] Verify an ISSN-based journal page URL for the Thieme preset and set `JOURNAL_URL_TEMPLATE` (ADR 0025). Checked by the owner on 2026-11-03: `https://www.thieme-connect.de/products/ejournals/issn/0936-5214` answers "No articles available", so no ISSN-based URL exists and `JOURNAL_URL_TEMPLATE` stays unset in the preset; journal links are omitted as documented.
-- [ ] Image: run `keys` through the same entrypoint, keep `/metrics` internal, grace period above `SHUTDOWN_TIMEOUT_MS` + 5 s; shared rate-limit store if more than one replica (ADR 0031)
+- [x] Image: run `keys` through the same entrypoint, keep `/metrics` internal, grace period above `SHUTDOWN_TIMEOUT_MS` + 5 s; shared rate-limit store if more than one replica (ADR 0031; ADR 0036, ADR 0037)
 - [x] Landing app image: `output: 'standalone'` (left out in SM-11 because `next start` refuses it), `LANDING_API_SECRET` from the secret store, a proxy that sets `x-forwarded-for`, landing API reachable only from the app; shared landing rate limit for replicas (ADR 0032). Done in ADR 0038; the shared limit is ADR 0036's Postgres bucket store.
 
 ## Plan (session 19)

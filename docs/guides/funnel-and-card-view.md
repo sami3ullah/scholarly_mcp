@@ -118,7 +118,7 @@ STORE=postgres DATABASE_URL=postgres://scholarly_server:server-local@127.0.0.1:5
 
 ## The landing page side
 
-The reference landing page sends both beacons. If you rebuild the page in your own stack, send them too ([The landing page](landing-page.md#rebuilding-the-page-in-your-own-stack)):
+The reference landing page sends both beacons. If you rebuild the page in your own stack, send them too ([The landing page](../LANDING.md#rebuilding-the-page-in-your-own-stack)):
 
 - **Visits.** `POST /landing/v1/visits` with `{ "t", "doi", "tool" }`, once per token, result and tab, after the page is shown.
 - **Actions.** `POST /landing/v1/actions` with `{ "t", "doi", "action" }`, when an access button is clicked. The action is one of `read`, `sign_in`, `buy`, `view_on_publisher` or `check_access`. Use `sendBeacon`, so the request survives the navigation the click starts.

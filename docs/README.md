@@ -12,6 +12,15 @@ Everything beyond the quick start lives here. New guides are added as the featur
 | [Phase 0 results](spike-results.md)  | Crossref and Europe PMC coverage, embedding model and vector store checks                                 |
 | [Ticket board](../tickets/README.md) | Work broken into tickets SM-00 to SM-16, with status                                                      |
 
+## Run it and build on it
+
+| Document                       | What's inside                                                                                   |
+| ------------------------------ | ----------------------------------------------------------------------------------------------- |
+| [Operations](OPERATIONS.md)    | Deploying the image, keeping the index fresh, scaling, capacity, monitoring, backups, upgrades  |
+| [Adapters](ADAPTERS.md)        | The ports, plugging in your own content API, access rules, store, embedding model or billing    |
+| [The landing page](LANDING.md) | Running the landing app, the landing API contract, rebuilding the page in your own stack, tests |
+| [Security](SECURITY.md)        | Reporting vulnerabilities, threat model, controls, supply chain checks, known limits            |
+
 ## Design
 
 | Document                                                      | What's inside                                                              |
@@ -45,7 +54,6 @@ Everything beyond the quick start lives here. New guides are added as the featur
 | [Operating the server](guides/operating-the-server.md)         | API keys, OAuth, rate limits, usage metering and webhooks, health, metrics, traces, shutdown     |
 | [Connecting clients](guides/connecting-clients.md)             | Running the MCP server and connecting Claude Desktop or MCP Inspector, over stdio or HTTP        |
 | [Evaluating search](guides/evaluating-search.md)               | The golden set, its metrics, the eval index and the regression gate for ranking changes          |
-| [The landing page](guides/landing-page.md)                     | Running the landing app, the landing API contract, rebuilding the page in your own stack, tests  |
 | [The funnel and the card view](guides/funnel-and-card-view.md) | What the funnel counts, the report and the live view, the beacons, the MCP Apps card view        |
 | [Running on Postgres](guides/postgres.md)                      | The compose profile, roles, migrating, copying an index in, running the server, search parity    |
 
@@ -54,9 +62,6 @@ Planned:
 | Guide                                                               | Ships with |
 | ------------------------------------------------------------------- | ---------- |
 | `guides/development.md` - local setup, scripts, testing conventions | SM-02      |
-| `ADAPTERS.md` - plugging in your own content API or store           | SM-14      |
-| `OPERATIONS.md` - deploying, scaling, monitoring                    | SM-14      |
-| `SECURITY.md` - auth, privacy, threat model                         | SM-14      |
 
 ## Project process
 

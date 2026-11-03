@@ -59,6 +59,29 @@ Settings come from `presets/thieme.env` plus the compose file; put your own valu
 | `SCHOLARLY_IMAGE`          | `scholarly-mcp:local`         | Use a published image instead of building one                                             |
 | `PG_PORT`, `PG_*_PASSWORD` | `5432`, local-only values     | Postgres, as in the [Postgres guide](../docs/guides/postgres.md)                          |
 
+## Demo index
+
+The published image carries a small index of CC BY 4.0 articles, never the full index ([ADR 0039](../docs/adr/0039-demo-index-from-a-cc-by-doi-list.md)). Build it with the image (a few minutes, needs the internet), then bake it in:
+
+```bash
+docker build -f docker/server/Dockerfile -t scholarly-mcp:local .
+docker/demo-index/build.sh /tmp/demo-index          # ingest of presets/thieme.demo-dois.txt, then a licence check
+INDEX_DIR=/tmp/demo-index docker compose --profile sqlite build
+```
+
+## Tests
+
+| Script                                       | What it does                                                                                                            |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `docker/e2e/smoke.sh [sqlite\|postgres]`     | Both images with the demo index, the stack with the landing app, a key, every tool over HTTP, a card link via the proxy |
+| `docker/e2e/load.sh <dir with index.sqlite>` | Cold start, then tool calls at `LOAD_RATE` (20) a second for `LOAD_SECONDS` (60): p50/p95/p99, errors, memory           |
+
+The smoke test builds the demo index first unless `SMOKE_INDEX_DIR` names one; `SMOKE_KEEP=1` leaves the stack up. CI runs it on both stores. Load results are in [OPERATIONS.md](../docs/OPERATIONS.md#capacity).
+
+## Releases
+
+Pushing a tag `v1.2.3` runs `.github/workflows/release.yml`: it builds the demo index, smoke-tests it on SQLite and Postgres, then pushes both images for amd64 and arm64 to `ghcr.io/<owner>/scholarly-mcp` and `ghcr.io/<owner>/scholarly-mcp-landing` (tags `1.2.3`, `1.2`, `latest`) with build provenance, and attaches an SPDX SBOM of each to the GitHub release.
+
 ## What the image guarantees
 
 - Defaults to `AUTH_MODE=api-key`, `HTTP_ALLOWED_HOSTS=localhost,127.0.0.1` and the landing API on port 8081 on loopback, so a bare `docker run` starts and refuses calls without a key; set the hostname clients use in a deployment, and `LANDING_API_HOST` with `LANDING_API_SECRET` to serve a landing app.

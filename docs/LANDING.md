@@ -1,8 +1,8 @@
 # The landing page
 
-[← Back to the docs index](../README.md)
+[← Back to the docs index](README.md)
 
-Every article link the MCP server returns opens a landing page built for that search. It shows the chosen article on top, then the search's other results, where the search matched, how to read the article and related reading. This guide covers running the reference page, the landing API behind it, and what to keep if you rebuild the page in your own stack. Design decisions are in [ADR 0032](../adr/0032-landing-api-and-reference-landing-page.md).
+Every article link the MCP server returns opens a landing page built for that search. It shows the chosen article on top, then the search's other results, where the search matched, how to read the article and related reading. This guide covers running the reference page, the landing API behind it, and what to keep if you rebuild the page in your own stack. Design decisions are in [ADR 0032](adr/0032-landing-api-and-reference-landing-page.md).
 
 ## How a click becomes a page
 
@@ -48,7 +48,7 @@ With Claude Desktop on stdio, add `HTTP_ALONGSIDE_STDIO=true` to the server's en
 
 ## Configuration
 
-Server (see also [Operating the server](operating-the-server.md)):
+Server (see also [Operating the server](guides/operating-the-server.md)):
 
 | Variable                        | Default     | Meaning                                                                         |
 | ------------------------------- | ----------- | ------------------------------------------------------------------------------- |
@@ -75,7 +75,7 @@ Both sides take the secret from a mounted file as well: `LANDING_API_SECRET_FILE
 
 ## Run it in containers
 
-The compose `landing` profile runs the app's image behind a Caddy proxy that sets `x-forwarded-for`, next to either server profile ([ADR 0038](../adr/0038-landing-image-proxy-and-secret-files.md)):
+The compose `landing` profile runs the app's image behind a Caddy proxy that sets `x-forwarded-for`, next to either server profile ([ADR 0038](adr/0038-landing-image-proxy-and-secret-files.md)):
 
 ```bash
 docker compose --profile sqlite --profile landing up -d --wait
@@ -136,11 +136,11 @@ The page's `session` field is `active` (results rebuilt), `unavailable` (expired
 
 ### `POST /landing/v1/visits`
 
-The body is `{ "t": "<token>", "doi": "<opened result>", "tool": "search_articles" }`, and `tool` is optional. The answer is 204, whether or not anything was recorded. A visit is recorded only when the token is live and the DOI is one of its results. It then increments the session's `visitCount` and `landing_visits_total{tool}`, and it writes a `landing_visit` event for the funnel ([ADR 0033](../adr/0033-referral-events-funnel-and-card-view.md)). The tool comes from the session when it knows it, else from `tool`. Any other field is refused with 400, so query text cannot be sent.
+The body is `{ "t": "<token>", "doi": "<opened result>", "tool": "search_articles" }`, and `tool` is optional. The answer is 204, whether or not anything was recorded. A visit is recorded only when the token is live and the DOI is one of its results. It then increments the session's `visitCount` and `landing_visits_total{tool}`, and it writes a `landing_visit` event for the funnel ([ADR 0033](adr/0033-referral-events-funnel-and-card-view.md)). The tool comes from the session when it knows it, else from `tool`. Any other field is refused with 400, so query text cannot be sent.
 
 ### `POST /landing/v1/actions`
 
-The body is `{ "t": "<token>", "doi": "<result>", "action": "read" }`. The action is one of `read`, `sign_in`, `buy`, `view_on_publisher` or `check_access`. The same checks and the same 204 answer apply as for visits. A recorded click increments `landing_actions_total{action}` and writes a `landing_action` event. See [The funnel and the card view](funnel-and-card-view.md).
+The body is `{ "t": "<token>", "doi": "<result>", "action": "read" }`. The action is one of `read`, `sign_in`, `buy`, `view_on_publisher` or `check_access`. The same checks and the same 204 answer apply as for visits. A recorded click increments `landing_actions_total{action}` and writes a `landing_action` event. See [The funnel and the card view](guides/funnel-and-card-view.md).
 
 ## Rebuilding the page in your own stack
 
