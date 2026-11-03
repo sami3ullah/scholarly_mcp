@@ -1,14 +1,14 @@
 {
-  "golden": 1,
+  "golden": 2,
   "corpus": {
     "articleCount": 2959,
     "chunkCount": 15946
   },
   "overall": {
     "queries": 60,
-    "recall": 0.69,
+    "recall": 0.68,
     "mrr": 0.888,
-    "ndcg": 0.63
+    "ndcg": 0.627
   },
   "byGroup": {
     "de": {
@@ -19,9 +19,9 @@
     },
     "en": {
       "queries": 20,
-      "recall": 0.905,
+      "recall": 0.873,
       "mrr": 0.95,
-      "ndcg": 0.817
+      "ndcg": 0.807
     },
     "cross": {
       "queries": 20,
