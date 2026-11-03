@@ -2,7 +2,7 @@ import type { ArticleSearch, Doi, RankedChunk } from '@scholarly-mcp/core';
 import { hasStemAtWordEdge, trigramStems } from '@scholarly-mcp/lexical';
 import { vectorText } from '../articles/rows.js';
 import { inTransaction, query, type Pool } from '../database/pool.js';
-import { containsPatterns, tsQueryText } from '../text/ts-query.js';
+import { containsPatterns, queryWords, weighWords } from '../text/ts-query.js';
 import { filterSql } from './filter-sql.js';
 
 interface HitRow {
@@ -15,19 +15,26 @@ interface TrigramRow extends HitRow {
 }
 
 /*
- * `ts_rank` weights in {D, C, B, A} order, in SQLite's BM25 column ratio of title 2.0,
- * stemmed text 1.0, folded text 0.5 (ADR 0034), halved because `ts_rank` takes weights up to
- * 1. Normalisation 1 divides by 1 + log(length), damping long chunks as BM25 does. Starting
- * values; the golden set tunes them.
+ * Lexical rank, BM25-like (ADR 0034): each query word's `ts_rank` times its inverse document
+ * frequency (`weighWords`, from the build's `term_stats`), summed. `ts_rank` alone has no IDF, so a common word repeated outranked a rare
+ * one and German queries lost 3 recall points on the golden set. Weights in {D, C, B, A}
+ * order keep SQLite's column ratio of title 2.0, stemmed text 1.0, folded text 0.5, halved
+ * because `ts_rank` takes weights up to 1; normalisation 0 (no length damping) measured best.
  */
-const TS_RANK = `ts_rank('{0.05, 0.25, 0.5, 1.0}', c.tsv, q, 1)`;
+const TS_RANK = `ts_rank('{0.05, 0.25, 0.5, 1.0}', c.tsv, w.q, 0)`;
+
+interface TermCountRow {
+  readonly lexeme: string;
+  readonly chunks: number;
+}
 
 /*
  * HNSW settings per vector query (ADR 0034). `strict_order` keeps scanning the graph until
  * enough rows pass the filters, in exact distance order; `max_scan_tuples` is raised so a
- * strict filter on the 90k-chunk corpus still fills its list.
+ * strict filter on the 90k-chunk corpus still fills its list. `ef_search` 400 gave the exact
+ * scan's golden-set scores, 200 cost 0.8 recall points.
  */
-const EF_SEARCH = 200;
+const EF_SEARCH = 400;
 const MAX_EF_SEARCH = 1000;
 const MAX_SCAN_TUPLES = 1_000_000;
 
@@ -35,25 +42,47 @@ const ranked = (rows: readonly HitRow[]): RankedChunk[] =>
   rows.map((row, index) => ({ chunkId: row.id, doi: row.doi as Doi, rank: index + 1 }));
 
 /**
- * Lexical search over the weighted `tsv`, topped up from the trigram index on the folded
- * title and text (substrings, for German compounds) when it finds fewer than the limit; a
- * trigram hit counts only where a word starts or ends with the stem, as in SQLite. Vector
+ * Lexical search over the weighted `tsv`, each word weighed by its rarity, topped up from
+ * the trigram index on the folded title and text (substrings, for German compounds) when it
+ * finds fewer than the limit; a trigram hit counts only where a word starts or ends with the
+ * stem, as in SQLite. Vector
  * search walks the HNSW index on cosine distance with the filters applied during the scan.
  */
 export function createPostgresSearch(pool: Pool, s: string): ArticleSearch {
   return {
     lexical: async ({ terms, language, filters, limit }, signal) => {
       signal.throwIfAborted();
-      const text = tsQueryText(terms, language);
-      if (text === undefined || limit <= 0) return [];
-      const where = filterSql(filters, 3);
+      const words = queryWords(terms, language);
+      if (words.length === 0 || limit <= 0) return [];
+      const [counts, total] = await Promise.all([
+        termCounts(
+          words.flatMap(({ lexemes }) => lexemes),
+          signal,
+        ),
+        chunkTotal(signal),
+      ]);
+      const weighted = weighWords(words, counts, total);
+      const where = filterSql(filters, 5);
       const { rows: hits } = await query<HitRow>(
         pool,
         signal,
-        `SELECT c.id, c.doi FROM ${s}.chunks c, to_tsquery('simple', $1) q
-         WHERE c.tsv @@ q AND ${where.sql}
-         ORDER BY ${TS_RANK} DESC, c.id LIMIT $2`,
-        [text, limit, ...where.params],
+        `WITH weighted AS MATERIALIZED (
+           SELECT to_tsquery('simple', w.query) AS q, w.idf
+           FROM unnest($3::text[], $4::float8[]) AS w(query, idf)
+         )
+         SELECT c.id, c.doi FROM ${s}.chunks c
+         WHERE c.tsv @@ to_tsquery('simple', $1) AND ${where.sql}
+         ORDER BY (SELECT sum(w.idf * ${TS_RANK}) FROM weighted w) DESC, c.id LIMIT $2`,
+        [
+          weighted
+            .filter(({ matches }) => matches)
+            .map(({ query: text }) => text)
+            .join(' | '),
+          limit,
+          weighted.map(({ query: text }) => text),
+          weighted.map(({ idf }) => idf),
+          ...where.params,
+        ],
       );
       const stems = trigramStems(terms, language);
       if (hits.length < limit && stems.length > 0) {
@@ -90,6 +119,30 @@ export function createPostgresSearch(pool: Pool, s: string): ArticleSearch {
       return ranked(rows);
     },
   };
+
+  async function termCounts(
+    lexemes: readonly string[],
+    signal: AbortSignal,
+  ): Promise<Map<string, number>> {
+    const { rows } = await query<TermCountRow>(
+      pool,
+      signal,
+      `SELECT lexeme, chunks FROM ${s}.term_stats WHERE lexeme = ANY($1::text[])`,
+      [lexemes],
+    );
+    return new Map(rows.map((row) => [row.lexeme, row.chunks]));
+  }
+
+  /** The planner's row count, set by the ANALYZE at commit. */
+  async function chunkTotal(signal: AbortSignal): Promise<number> {
+    const { rows } = await query<{ n: number }>(
+      pool,
+      signal,
+      `SELECT greatest(reltuples, 0)::float8 AS n FROM pg_class WHERE oid = $1::regclass`,
+      [`${s}.chunks`],
+    );
+    return rows[0]?.n ?? 0;
+  }
 
   async function trigramRows(
     stems: readonly string[],

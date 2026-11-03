@@ -48,6 +48,10 @@ describe('Postgres index builds', () => {
     const store = createPostgresIndexStore(pool, build.schema);
     expect(await store.reader.indexMeta(signal)).toEqual(metaFor('v1', 1));
     expect(await store.reader.findByDoi(recordNumber(1).article.doi, signal)).toBeDefined();
+    const { rows } = await pool.query<{ chunks: number }>(
+      `SELECT chunks FROM "${build.schema}".term_stats WHERE lexeme = 'anticoagul'`,
+    );
+    expect(rows, 'word counts for the lexical weights').toEqual([{ chunks: 1 }]);
     expect(
       (await pool.query('SELECT 1 FROM scholarly.index_build')).rowCount,
       'no build in progress',

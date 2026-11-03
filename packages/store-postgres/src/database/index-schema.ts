@@ -6,7 +6,7 @@ import { identifier, type Queryable } from './pool.js';
  * tables or the way text is stemmed change: an incremental run then refuses to build on the
  * old schema and a full run is needed (ADR 0034). Index schemas are never migrated.
  */
-export const INDEX_LAYOUT_VERSION = 1;
+export const INDEX_LAYOUT_VERSION = 2;
 
 /*
  * One schema per build. Each chunk row carries what both searches need, so neither joins
@@ -15,6 +15,8 @@ export const INDEX_LAYOUT_VERSION = 1;
  * over them (title A, stemmed text B, folded text C), the folded title and text for the
  * trigram top-up, and the embedding. `sync_state` lives in the build on purpose: a page's
  * articles and the checkpoint after it commit together, as in the SQLite index file.
+ * `term_stats` counts the chunks holding each lexeme, for the lexical search's word weights;
+ * it is filled at commit (layout 2).
  */
 const tables = (s: string, dimensions: number) => `
 CREATE TABLE ${s}.layout (
@@ -79,6 +81,11 @@ CREATE TABLE ${s}.sync_state (
   record jsonb NOT NULL
 );
 
+CREATE TABLE ${s}.term_stats (
+  lexeme text COLLATE "C" PRIMARY KEY,
+  chunks integer NOT NULL
+);
+
 INSERT INTO ${s}.layout (id, version, dimensions)
 VALUES (1, ${String(INDEX_LAYOUT_VERSION)}, ${String(dimensions)});
 `;
@@ -132,6 +139,20 @@ export async function createIndexSchema(
       INSERT INTO ${s}.sync_state SELECT * FROM ${from}.sync_state;`);
   }
   await db.query(indexes(s));
+}
+
+/**
+ * Counts again the chunks holding each lexeme, for the word weights of the lexical search.
+ * Runs at commit, after the build's last write; about 4 s for the 176k-chunk corpus.
+ */
+export async function refreshTermStats(db: Queryable, schema: string): Promise<void> {
+  const s = identifier(schema);
+  await db.query(`TRUNCATE ${s}.term_stats`);
+  await db.query(
+    `INSERT INTO ${s}.term_stats (lexeme, chunks)
+     SELECT word, ndoc FROM ts_stat(format('SELECT tsv FROM %I.chunks', $1::text))`,
+    [schema],
+  );
 }
 
 /** Reads a schema's layout; undefined when the schema or its layout table is missing. */

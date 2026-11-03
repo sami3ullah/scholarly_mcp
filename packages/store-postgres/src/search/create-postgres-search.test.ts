@@ -2,6 +2,7 @@ import type { Doi } from '@scholarly-mcp/core';
 import { aChunk, anArticle, TEST_EMBEDDING_DIMENSIONS } from '@scholarly-mcp/testkit';
 import { beforeAll, describe, expect, it } from 'vitest';
 import type { PostgresIndexStore } from '../create-postgres-index-store.js';
+import { refreshTermStats } from '../database/index-schema.js';
 import { freshIndexStore } from '../testing/index-schemas.js';
 
 const signal = new AbortController().signal;
@@ -92,6 +93,37 @@ describe('Postgres lexical search with German text', () => {
       signal,
     );
     expect(hits.map((hit) => hit.rank)).toEqual([1, 2]);
+  });
+});
+
+describe('Postgres lexical ranking', () => {
+  it('ranks a rare word above a common one repeated, as BM25 does', async () => {
+    const { pool, schema, store } = await freshIndexStore();
+    const texts = [
+      'Studie Studie Studie zur Studie',
+      'Eine Studie',
+      'Noch eine Studie',
+      'Die Studie',
+      'Borreliose nach Zeckenstich',
+    ];
+    await store.writer.upsert(
+      texts.map((text, n) => {
+        const doi = `10.1055/r-${String(n)}`;
+        return {
+          article: anArticle().withDoi(doi).withTitle('Bericht').withLanguage('de').build(),
+          chunks: [aChunk().of(doi).withText(text).withLanguage('de').build()],
+        };
+      }),
+      signal,
+    );
+    // As a commit does: the word counts, and the row count the weights are taken against.
+    await refreshTermStats(pool, schema);
+    await pool.query(`ANALYZE "${schema}".chunks`);
+    const hits = await store.search.lexical(
+      { terms: ['Studie', 'Borreliose'], language: 'de', filters, limit: 10 },
+      signal,
+    );
+    expect(hits[0]?.doi).toBe('10.1055/r-4');
   });
 });
 

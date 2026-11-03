@@ -8,6 +8,7 @@ import {
   INDEX_LAYOUT_VERSION,
   assertIndexLayout,
   createIndexSchema,
+  refreshTermStats,
 } from '../database/index-schema.js';
 import { writeIndexMeta } from '../database/index-meta-row.js';
 import { identifier, inTransaction, type Pool, type PoolClient } from '../database/pool.js';
@@ -24,8 +25,8 @@ export interface PostgresIndexBuild {
   readonly schema: string;
   readonly store: PostgresIndexStore;
   /**
-   * Records `meta`, grants the server role read access and points `live_index` at this
-   * build, in one transaction. The schema before the previous one is dropped then.
+   * Counts the build's lexemes, records `meta`, grants the server role read access and
+   * points `live_index` at this build, in one transaction. The schema before the previous one is dropped then.
    */
   commit(meta: IndexMeta, signal: AbortSignal): Promise<void>;
   /** Drops the build, e.g. when it failed verification, so the next run starts over. */
@@ -101,6 +102,7 @@ export async function beginPostgresIndexBuild(
     async commit(meta, commitSignal) {
       await inTransaction(pool, commitSignal, async (client) => {
         await lockBuilds(client);
+        await refreshTermStats(client, schema);
         await client.query(`ANALYZE ${identifier(schema)}.chunks, ${identifier(schema)}.articles`);
         await writeIndexMeta(client, identifier(schema), meta);
         if (options.serverRole !== undefined) {
