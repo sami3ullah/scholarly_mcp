@@ -7,6 +7,7 @@ export function matchesFilters(article: Article, chunk: Chunk, filters: SearchFi
   if (article.isRetracted && filters.includeRetracted !== true) return false;
   if (filters.openAccessOnly === true && !article.isOpenAccess) return false;
   if (filters.language !== undefined && language !== filters.language) return false;
+  if (filters.excludeLanguage !== undefined && language === filters.excludeLanguage) return false;
   if (filters.yearFrom !== undefined && published.year < filters.yearFrom) return false;
   if (filters.yearTo !== undefined && published.year > filters.yearTo) return false;
   if (

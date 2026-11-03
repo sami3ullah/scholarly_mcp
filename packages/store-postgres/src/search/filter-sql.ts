@@ -22,6 +22,9 @@ export function filterSql(filters: SearchFilters, first: number): SqlCondition {
   if (filters.includeRetracted !== true) clauses.push('NOT c.is_retracted');
   if (filters.openAccessOnly === true) clauses.push('c.is_open_access');
   if (filters.language !== undefined) clauses.push(`c.search_language = ${bind(filters.language)}`);
+  if (filters.excludeLanguage !== undefined) {
+    clauses.push(`c.search_language IS DISTINCT FROM ${bind(filters.excludeLanguage)}`);
+  }
   if (filters.yearFrom !== undefined) clauses.push(`c.year >= ${bind(filters.yearFrom)}`);
   if (filters.yearTo !== undefined) clauses.push(`c.year <= ${bind(filters.yearTo)}`);
   if (filters.journalIssns !== undefined) {

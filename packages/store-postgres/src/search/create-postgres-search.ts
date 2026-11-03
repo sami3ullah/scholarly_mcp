@@ -105,8 +105,8 @@ export function createPostgresSearch(pool: Pool, s: string): ArticleSearch {
              set_config('hnsw.max_scan_tuples', $2, true)`,
           [String(Math.min(MAX_EF_SEARCH, Math.max(EF_SEARCH, limit))), String(MAX_SCAN_TUPLES)],
         );
-        const result = await client.query<HitRow>(
-          `SELECT id, doi FROM (
+        const result = await client.query<HitRow & { distance: number }>(
+          `SELECT id, doi, distance FROM (
              SELECT c.id, c.doi, c.embedding <=> $1::vector AS distance FROM ${s}.chunks c
              WHERE ${where.sql} AND c.embedding <=> $1::vector < 1
              ORDER BY c.embedding <=> $1::vector LIMIT $2
@@ -116,7 +116,13 @@ export function createPostgresSearch(pool: Pool, s: string): ArticleSearch {
         );
         return result.rows;
       });
-      return ranked(rows);
+      // `<=>` is the cosine distance, 1 - cos.
+      return rows.map((row, index) => ({
+        chunkId: row.id,
+        doi: row.doi as Doi,
+        rank: index + 1,
+        similarity: 1 - row.distance,
+      }));
     },
   };
 

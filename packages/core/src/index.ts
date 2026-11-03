@@ -159,6 +159,7 @@ export type {
   LexicalQuery,
   RankedChunk,
   SearchFilters,
+  VectorChunk,
   VectorQuery,
 } from './ports/article-search.js';
 export type { ArticleRecord, ArticleWriter } from './ports/article-writer.js';

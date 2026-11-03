@@ -3,7 +3,13 @@ import type { Language } from '../article/language.js';
 
 /** Filters applied identically to the lexical and the vector side of a search. */
 export interface SearchFilters {
+  /** Only passages in this language: the chunk's own, else the article's declared one. */
   readonly language?: string;
+  /**
+   * Only passages not in this language, including those without one. The search service
+   * splits an "any language" search into a German and a non-German lane with it (ADR 0044).
+   */
+  readonly excludeLanguage?: string;
   /**
    * A journal's ISSNs: an article matches when it carries any of them, because records of one
    * journal carry its print ISSN, its electronic ISSN or both. Empty matches nothing.
@@ -46,8 +52,13 @@ export interface RankedChunk {
   readonly rank: number;
 }
 
+/** A vector hit, with the cosine similarity of the chunk to the query embedding. */
+export interface VectorChunk extends RankedChunk {
+  readonly similarity: number;
+}
+
 /** The two retrieval primitives the search service fuses with RRF. */
 export interface ArticleSearch {
   lexical(query: LexicalQuery, signal: AbortSignal): Promise<RankedChunk[]>;
-  vector(query: VectorQuery, signal: AbortSignal): Promise<RankedChunk[]>;
+  vector(query: VectorQuery, signal: AbortSignal): Promise<VectorChunk[]>;
 }

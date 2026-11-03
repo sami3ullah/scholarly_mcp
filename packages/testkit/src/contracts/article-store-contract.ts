@@ -279,7 +279,21 @@ export function runArticleStoreContract(
         const embedding = new Float32Array(TEST_EMBEDDING_DIMENSIONS);
         embedding.set([1, 0]);
         const hits = await store.search.vector({ embedding, filters: noFilters, limit: 1 }, signal);
-        expect(hits).toEqual([{ chunkId: `${DOI_A}#0`, doi: DOI_A, rank: 1 }]);
+        expect(hits.map(({ chunkId, doi, rank }) => ({ chunkId, doi, rank }))).toEqual([
+          { chunkId: `${DOI_A}#0`, doi: DOI_A, rank: 1 },
+        ]);
+      });
+
+      it('gives each hit its cosine similarity to the query', async () => {
+        const embedding = new Float32Array(TEST_EMBEDDING_DIMENSIONS);
+        embedding.set([1, 0]);
+        const hits = await store.search.vector(
+          { embedding, filters: noFilters, limit: 10 },
+          signal,
+        );
+        expect(hits.map(({ doi }) => doi)).toEqual([DOI_A, DOI_B]);
+        expect(hits[0]?.similarity).toBeCloseTo(1, 5);
+        expect(hits[1]?.similarity).toBeCloseTo(0.6, 5);
       });
 
       it('leaves out chunks at cosine 0 or below', async () => {
@@ -288,7 +302,11 @@ export function runArticleStoreContract(
           embedding.set(values);
           return store.search.vector({ embedding, filters: noFilters, limit: 10 }, signal);
         };
-        expect(await vector(0, 1)).toEqual([{ chunkId: `${DOI_B}#0`, doi: DOI_B, rank: 1 }]);
+        const hits = await vector(0, 1);
+        expect(hits.map(({ chunkId, doi, rank }) => ({ chunkId, doi, rank }))).toEqual([
+          { chunkId: `${DOI_B}#0`, doi: DOI_B, rank: 1 },
+        ]);
+        expect(hits[0]?.similarity).toBeCloseTo(0.8, 5);
         expect(await vector(-1, 0)).toEqual([]);
       });
     });
@@ -359,6 +377,8 @@ export function runArticleStoreContract(
         ],
         ['matches nothing for no ISSNs', { journalIssns: [] }, []],
         ['matches the language', { language: 'de' }, [DOI_B]],
+        ['excludes a language', { excludeLanguage: 'de' }, [DOI_A]],
+        ['excludes a language no passage has', { excludeLanguage: 'pt' }, [DOI_A, DOI_B]],
       ])('%s', async (_case, filters, expected) => {
         expect(await run(filters)).toEqual(expected);
       });

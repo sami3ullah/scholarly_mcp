@@ -36,3 +36,4 @@ The plan lists the query pipeline's steps but leaves open where the service live
 - The latency target holds with a wide margin, so SM-08 can raise the candidate counts if recall needs it.
 - The abbreviation map and the stopword list are data; adding an entry needs only a test.
 - `whyMatched` can name a query term for a chunk that only shares its stem prefix; it is a label, not evidence, and never quotes the article.
+- Amended by ADR 0044: without a language filter the vector side runs in a German and a non-German lane, vector hits more than 0.055 below the best are dropped, and the other language's best related result is moved into the first five.

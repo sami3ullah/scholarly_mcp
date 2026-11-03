@@ -11,6 +11,10 @@ interface HitRow {
   readonly doi: string;
 }
 
+interface VectorRow extends HitRow {
+  readonly distance: number;
+}
+
 interface TrigramRow extends HitRow {
   readonly title: string;
   readonly text: string;
@@ -97,8 +101,8 @@ export function createSqliteSearch(db: Db): ArticleSearch {
       withSignal(signal, () => {
         const where = filterSql(filters);
         const rows = db
-          .prepare<unknown[], HitRow>(
-            `SELECT c.id, c.doi FROM (
+          .prepare<unknown[], VectorRow>(
+            `SELECT c.id, c.doi, v.distance FROM (
                SELECT rowid, vec_distance_l2(embedding, ?) AS distance FROM vec_chunks s
                WHERE ${where.sql}
                ORDER BY distance, rowid LIMIT ?
@@ -108,7 +112,13 @@ export function createSqliteSearch(db: Db): ArticleSearch {
              ORDER BY v.distance, c.id`,
           )
           .all(vectorBlob(embedding), ...where.params, limit, MAX_VECTOR_DISTANCE);
-        return ranked(rows);
+        // For unit vectors, the squared Euclidean distance is 2 - 2 cos.
+        return rows.map((row, index) => ({
+          chunkId: row.id,
+          doi: row.doi as Doi,
+          rank: index + 1,
+          similarity: 1 - (row.distance * row.distance) / 2,
+        }));
       }),
   };
 }

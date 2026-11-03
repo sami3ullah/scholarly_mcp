@@ -1,5 +1,5 @@
 import { Worker } from 'node:worker_threads';
-import type { ArticleSearch, RankedChunk } from '@scholarly-mcp/core';
+import type { ArticleSearch, RankedChunk, VectorChunk } from '@scholarly-mcp/core';
 import type { SearchWorkerReply, SearchWorkerRequest } from './search-worker-state.js';
 
 /**
@@ -110,7 +110,8 @@ export function createSearchPool(indexPath: string, size: number): SearchPool {
     }
   }
 
-  function run(request: Request, signal: AbortSignal): Promise<RankedChunk[]> {
+  /** Hits cross the thread boundary untyped; a worker answers each kind as its store does. */
+  function run<Hit extends RankedChunk>(request: Request, signal: AbortSignal): Promise<Hit[]> {
     return new Promise<SearchWorkerReply>((resolve, reject) => {
       signal.throwIfAborted();
       if (closed) throw new Error('The search pool is closed');
@@ -128,13 +129,13 @@ export function createSearchPool(indexPath: string, size: number): SearchPool {
       signal.addEventListener('abort', queued.onAbort, { once: true });
       queue.push(queued);
       drain();
-    }).then(hitsOf);
+    }).then((reply) => hitsOf(reply) as Hit[]);
   }
 
   return {
     search: {
       lexical: (query, signal) => run({ kind: 'lexical', query }, signal),
-      vector: (query, signal) => run({ kind: 'vector', query }, signal),
+      vector: (query, signal) => run<VectorChunk>({ kind: 'vector', query }, signal),
     },
     async reopen() {
       const replies = await Promise.all(

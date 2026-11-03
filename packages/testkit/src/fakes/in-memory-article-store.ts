@@ -33,19 +33,30 @@ export function createInMemoryArticleStore(): InMemoryArticleStore {
   const allChunks = () => [...entries.values()].flatMap((entry) => entry.chunks);
   const modelVersion = () => allChunks()[0]?.modelVersion;
 
-  function rank(
+  function top(
     scored: { chunk: Chunk; score: number }[],
     filters: Parameters<typeof matchesFilters>[2],
     limit: number,
-  ): RankedChunk[] {
+  ): { chunk: Chunk; score: number }[] {
     return scored
       .filter(({ chunk, score }) => {
         const entry = entries.get(chunk.doi);
         return score > 0 && entry !== undefined && matchesFilters(entry.article, chunk, filters);
       })
       .sort((a, b) => b.score - a.score || a.chunk.id.localeCompare(b.chunk.id))
-      .slice(0, limit)
-      .map(({ chunk }, index) => ({ chunkId: chunk.id, doi: chunk.doi, rank: index + 1 }));
+      .slice(0, limit);
+  }
+
+  function rank(
+    scored: { chunk: Chunk; score: number }[],
+    filters: Parameters<typeof matchesFilters>[2],
+    limit: number,
+  ): RankedChunk[] {
+    return top(scored, filters, limit).map(({ chunk }, index) => ({
+      chunkId: chunk.id,
+      doi: chunk.doi,
+      rank: index + 1,
+    }));
   }
 
   function checkUpsert(records: Parameters<ArticleWriter['upsert']>[0]): void {
@@ -128,7 +139,12 @@ export function createInMemoryArticleStore(): InMemoryArticleStore {
           chunk,
           score: cosine(embedding, chunk.embedding),
         }));
-        return rank(scored, filters, limit);
+        return top(scored, filters, limit).map(({ chunk, score }, index) => ({
+          chunkId: chunk.id,
+          doi: chunk.doi,
+          rank: index + 1,
+          similarity: score,
+        }));
       }),
   };
 }

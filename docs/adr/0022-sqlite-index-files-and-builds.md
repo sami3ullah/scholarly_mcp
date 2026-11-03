@@ -35,3 +35,4 @@ The plan lists the SQLite tables and says the index is built into a new file, ve
 - The exact scan grows linearly with chunks: through the store port it measured 95 ms p95 unfiltered and 51 ms filtered at 90k chunks (layout 2, 551 MB file), so roughly 0.7 s at 1M. Past that, sqlite-vec KNN with metadata columns (and a second query per ISSN column) or the Postgres adapter with HNSW is the way out.
 - sqlite-vec is used only for its distance function, which removes the pre-1.0 vec0 storage format from the risk list in ADR 0009.
 - A language filter of `de` excludes an article declared German whose matching passage is English; the card still shows the declared language.
+- Amended by ADR 0044: `vec_chunks_by_language` indexes the passage language without a layout bump; every build commit adds it to a file that lacks it.

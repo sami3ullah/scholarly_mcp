@@ -71,6 +71,8 @@ export interface SearchOptions {
    * word match beats a neighbour by meaning at the same rank (SM-08).
    */
   readonly lexicalWeight: number;
+  /** Vector hits less similar than the best one of any lane by more than this are left out. */
+  readonly vectorMargin: number;
 }
 
 /** What the search service is built from. */

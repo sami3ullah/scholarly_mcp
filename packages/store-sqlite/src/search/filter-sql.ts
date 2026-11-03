@@ -20,6 +20,10 @@ export function filterSql(filters: SearchFilters): SqlCondition {
     clauses.push('s.language = ?');
     params.push(filters.language);
   }
+  if (filters.excludeLanguage !== undefined) {
+    clauses.push('s.language IS NOT ?');
+    params.push(filters.excludeLanguage);
+  }
   if (filters.yearFrom !== undefined) {
     clauses.push('s.year >= ?');
     params.push(filters.yearFrom);

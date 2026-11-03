@@ -3,13 +3,13 @@ import type { Article } from '../article/article.js';
 import type { Doi } from '../article/doi.js';
 import type { Chunk } from '../chunk/chunk.js';
 import type { ArticleReader } from '../ports/article-reader.js';
-import type { ArticleSearch, RankedChunk } from '../ports/article-search.js';
+import type { ArticleSearch, VectorChunk } from '../ports/article-search.js';
 import { sampleQueryChecks } from './verify-report.js';
 
 const signal = new AbortController().signal;
 const doi = '10.1055/a-1' as Doi;
 const chunk = { id: `${doi}#0`, doi, embedding: new Float32Array([1]) } as Chunk;
-const hit: RankedChunk = { chunkId: chunk.id, doi, rank: 1 };
+const hit: VectorChunk = { chunkId: chunk.id, doi, rank: 1, similarity: 1 };
 
 const reader = {
   findByDoi: () => Promise.resolve({ doi, title: 'Stroke prevention' } as Article),

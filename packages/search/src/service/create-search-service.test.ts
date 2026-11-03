@@ -197,13 +197,140 @@ describe('createSearchService', () => {
     });
 
     it('ranks an exact word match above a neighbour by meaning at the same rank', async () => {
-      const hit = (doi: string) => [{ chunkId: `${doi}#0`, doi: doi as Doi, rank: 1 }];
+      const hit = (doi: string) => [
+        { chunkId: `${doi}#0`, doi: doi as Doi, rank: 1, similarity: 0.9 },
+      ];
       const search: ArticleSearch = {
         lexical: () => Promise.resolve(hit('10.1055/a-3')),
-        vector: () => Promise.resolve(hit('10.1055/a-1')),
+        vector: ({ filters }) =>
+          Promise.resolve(filters.language === 'de' ? [] : hit('10.1055/a-1')),
       };
       const { hits } = await service({ search }).search(request('duodenography'), signal);
       expect(hits.map(({ article }) => article.doi)).toEqual(['10.1055/a-3', '10.1055/a-1']);
+    });
+
+    describe('language lanes', () => {
+      const hits = (...entries: [doi: string, similarity: number][]) =>
+        entries.map(([doi, similarity], index) => ({
+          chunkId: `${doi}#0`,
+          doi: doi as Doi,
+          rank: index + 1,
+          similarity,
+        }));
+      /** a-2 matches by word; the vector side answers per lane. */
+      const byLane = (filters: SearchFilters) => (filters.language === 'de' ? 'de' : 'other');
+      const laneSearch = (vector: Record<'de' | 'other', ReturnType<typeof hits>>) => ({
+        lexical: vi.fn<ArticleSearch['lexical']>(() => Promise.resolve(hits(['10.1055/a-2', 0]))),
+        vector: vi.fn<ArticleSearch['vector']>(({ filters }) =>
+          Promise.resolve(vector[byLane(filters)]),
+        ),
+      });
+
+      it('searches German passages and all others apart by meaning, by word once', async () => {
+        const search = laneSearch({ de: [], other: [] });
+        await service({ search }).search(request('Vorhofflimmern'), signal);
+        expect(search.lexical.mock.calls.map(([query]) => query.filters)).toEqual([{}]);
+        expect(search.vector.mock.calls.map(([query]) => query.filters)).toEqual([
+          { language: 'de' },
+          { excludeLanguage: 'de' },
+        ]);
+      });
+
+      it('searches once when a language is asked for', async () => {
+        const search = laneSearch({ de: [], other: [] });
+        await service({ search }).search(
+          request('Vorhofflimmern', { filters: { language: 'en' } }),
+          signal,
+        );
+        expect(search.vector.mock.calls.map(([query]) => query.filters)).toEqual([
+          { language: 'en' },
+        ]);
+      });
+
+      it("puts the other language's nearest article on the page", async () => {
+        const search = laneSearch({
+          de: hits(['10.1055/a-2', 0.9]),
+          other: hits(['10.1055/a-1', 0.88], ['10.1055/a-3', 0.87]),
+        });
+        const { hits: found } = await service({ search }).search(request('Vorhofflimmern'), signal);
+        expect(found.map(({ article }) => article.doi)).toEqual([
+          '10.1055/a-2',
+          '10.1055/a-1',
+          '10.1055/a-3',
+        ]);
+      });
+
+      it('moves the other language up into the first five results', async () => {
+        const german = Array.from({ length: 6 }, (_, index) => `10.1055/de-${String(index)}`);
+        await store.upsert(
+          german.map((doi) => ({
+            article: anArticle().withDoi(doi).withLanguage('de').build(),
+            chunks: [],
+          })),
+          signal,
+        );
+        /** Every German article matches by word and by meaning, the English one by meaning. */
+        const germanHits = hits(...german.map((doi): [string, number] => [doi, 0.9]));
+        const search: ArticleSearch = {
+          lexical: () => Promise.resolve(germanHits),
+          vector: ({ filters }) =>
+            Promise.resolve(byLane(filters) === 'de' ? germanHits : hits(['10.1055/a-1', 0.88])),
+        };
+        const order = async (limit: number) =>
+          (await service({ search }).search(request('Vorhofflimmern', { limit }), signal)).hits.map(
+            ({ article }) => article.doi,
+          );
+        expect(await order(10)).toEqual([...german.slice(0, 4), '10.1055/a-1', ...german.slice(4)]);
+      });
+
+      it('gives a word-only match the lane of its passage language', async () => {
+        const english = Array.from({ length: 6 }, (_, index) => `10.1055/en-${String(index)}`);
+        await store.upsert(
+          english.map((doi) => ({
+            article: anArticle().withDoi(doi).build(),
+            chunks: [
+              aChunk()
+                .of(doi as Doi)
+                .withLanguage('en')
+                .withModelVersion(embedder.modelVersion)
+                .build(),
+            ],
+          })),
+          signal,
+        );
+        /**
+         * Five English articles match by word only, a sixth by meaning in the window too; the
+         * German one is related in meaning but ranks tenth in its lane, below the window.
+         */
+        const unrelated = Array.from({ length: 9 }, (_, index): [string, number] => [
+          `10.1055/x-${String(index)}`,
+          0.5,
+        ]);
+        const search: ArticleSearch = {
+          lexical: () =>
+            Promise.resolve(hits(...english.slice(0, 5).map((doi): [string, number] => [doi, 0]))),
+          vector: ({ filters }) =>
+            Promise.resolve(
+              filters.language === 'de'
+                ? hits(...unrelated, ['10.1055/a-2', 0.86])
+                : hits(['10.1055/x-9', 0.5], ['10.1055/x-10', 0.5], [english[5] ?? '', 0.88]),
+            ),
+        };
+        const { hits: found } = await service({ search }).search(
+          request('anticoagulation', { limit: 10 }),
+          signal,
+        );
+        expect(found.map(({ article }) => article.doi).indexOf('10.1055/a-2' as Doi)).toBe(4);
+      });
+
+      it('leaves out vector hits far less similar than the best one', async () => {
+        const search = laneSearch({
+          de: hits(['10.1055/a-2', 0.9]),
+          other: hits(['10.1055/a-1', 0.86], ['10.1055/a-3', 0.84]),
+        });
+        const { hits: found } = await service({ search }).search(request('Vorhofflimmern'), signal);
+        expect(found.map(({ article }) => article.doi)).toEqual(['10.1055/a-2', '10.1055/a-1']);
+      });
     });
 
     it('returns an empty page, not an error, when nothing matches', async () => {

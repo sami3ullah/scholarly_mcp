@@ -8,6 +8,21 @@ import type { Db } from './open-database.js';
 export const INDEX_SCHEMA_VERSION = 2;
 
 /*
+ * Indexes that speed up reads without changing the layout, so a file of this version
+ * without them is still valid: every build commit adds the missing ones (`addIndexes`).
+ * `vec_chunks_by_language` lets the German lane of a search read only German rows
+ * (ADR 0044).
+ */
+const INDEXES = `
+CREATE INDEX IF NOT EXISTS vec_chunks_by_language ON vec_chunks (language);
+`;
+
+/** Adds the read indexes an index file of this version may lack. */
+export function addIndexes(db: Db): void {
+  db.exec(INDEXES);
+}
+
+/*
  * `chunks.rowid` links each chunk to its rows in the two FTS tables and the vector table.
  * The FTS tables are contentless (the text lives in `chunks`), with deletes enabled.
  * `vec_chunks` is a plain table, not a vec0 one: it repeats the filter columns of the
@@ -69,6 +84,8 @@ CREATE TABLE vec_chunks (
   is_open_access INTEGER NOT NULL,
   is_retracted INTEGER NOT NULL
 ) STRICT;
+
+${INDEXES}
 
 CREATE TABLE index_meta (
   id INTEGER PRIMARY KEY CHECK (id = 1),

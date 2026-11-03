@@ -1,4 +1,11 @@
-import { appError, isAppError, type Doi, type SearchFilters } from '@scholarly-mcp/core';
+import {
+  appError,
+  isAppError,
+  type Article,
+  type Doi,
+  type SearchFilters,
+  type VectorChunk,
+} from '@scholarly-mcp/core';
 import { createCachedQueryEmbedder } from '../embedding/cached-query-embedder.js';
 import { decodeCursor, encodeCursor } from '../paging/cursor.js';
 import { buildTeaser } from '../present/build-teaser.js';
@@ -6,7 +13,9 @@ import { whyMatched } from '../present/why-matched.js';
 import { normalizeQuery } from '../query/normalize-query.js';
 import { planQuery, type QueryPlan } from '../query/plan-query.js';
 import { collapseToArticles } from '../rank/collapse-to-articles.js';
-import { orderResults } from '../rank/order-results.js';
+import { laneOfLanguage, languageLanes, relatedHits } from '../rank/language-lanes.js';
+import { mixLanes } from '../rank/mix-lanes.js';
+import { orderResults, type Candidate } from '../rank/order-results.js';
 import { RRF_K, fuseRankings } from '../rank/rrf.js';
 import type {
   SearchHit,
@@ -26,6 +35,19 @@ import { withBudget } from './with-budget.js';
  */
 export const LEXICAL_WEIGHT = 1.01;
 
+/**
+ * How much less similar to the query than the best vector hit a vector hit may be and still
+ * count. Each language lane brings its own nearest neighbours, related or not; this keeps the
+ * ones that are. Best on the golden set at 0.05 to 0.055, worse from 0.06 (ADR 0044).
+ */
+export const VECTOR_MARGIN = 0.055;
+
+/**
+ * The first results that hold both language lanes when both have related passages: the
+ * tool's default page (ADR 0044).
+ */
+export const MIXED_WITHIN = 5;
+
 /** The most results one page may hold (PLAN.md tool contracts). */
 export const MAX_SEARCH_LIMIT = 10;
 
@@ -35,6 +57,7 @@ export const DEFAULT_SEARCH_OPTIONS: SearchOptions = {
   cacheSize: 1000,
   rrfK: RRF_K,
   lexicalWeight: LEXICAL_WEIGHT,
+  vectorMargin: VECTOR_MARGIN,
 };
 
 /** Facts about one search for its log line. Never the query text (PLAN.md hard rules). */
@@ -50,9 +73,10 @@ type TextPlan = Extract<QueryPlan, { kind: 'text' }>;
 
 /**
  * Creates the search service: validates the query, looks a DOI up directly, otherwise runs
- * lexical and vector retrieval in parallel with the same filters, fuses them with RRF,
- * collapses chunks to articles and returns one page with teasers and match labels, all
- * within the time budget.
+ * lexical and vector retrieval in parallel with the same filters, the vector side once per
+ * language lane when no language is asked for, keeps vector hits near the best one, fuses
+ * all lists with RRF, collapses chunks to articles, puts both languages among the first
+ * results and returns one page with teasers and match labels, all within the time budget.
  */
 export function createSearchService(deps: SearchServiceDeps): SearchService {
   const options = { ...DEFAULT_SEARCH_OPTIONS, ...deps.options };
@@ -87,28 +111,34 @@ export function createSearchService(deps: SearchServiceDeps): SearchService {
     offset: number,
     signal: AbortSignal,
   ) {
-    const { filters } = request;
-    let embeddingCached = false;
-    const [lexical, vector] = await Promise.all([
+    const embedded = embeddings.embed(plan.embeddingText, signal);
+    const [lexical, lanes] = await Promise.all([
       plan.terms.length === 0
         ? []
         : search.lexical(
             {
               terms: plan.terms,
               ...(plan.language !== undefined && { language: plan.language }),
-              filters,
+              filters: request.filters,
               limit: options.candidates,
             },
             signal,
           ),
-      embeddings.embed(plan.embeddingText, signal).then(({ vector: embedding, cached }) => {
-        embeddingCached = cached;
-        return search.vector({ embedding, filters, limit: options.candidates }, signal);
-      }),
+      embedded.then(({ vector: embedding }) =>
+        Promise.all(
+          languageLanes(request.filters).map((filters) =>
+            search.vector({ embedding, filters, limit: options.candidates }, signal),
+          ),
+        ),
+      ),
     ]);
-
+    const { cached: embeddingCached } = await embedded;
+    const related = relatedHits(lanes, options.vectorMargin);
     const best = collapseToArticles(
-      fuseRankings([lexical, vector], options.rrfK, [options.lexicalWeight, 1]),
+      fuseRankings([lexical, ...related], options.rrfK, [
+        options.lexicalWeight,
+        ...related.map(() => 1),
+      ]),
     );
     const articles = new Map(
       (
@@ -118,13 +148,14 @@ export function createSearchService(deps: SearchServiceDeps): SearchService {
         )
       ).map((article) => [article.doi, article]),
     );
-    const ordered = orderResults(
+    const ranked = orderResults(
       best.flatMap((chunk) => {
         const article = articles.get(chunk.doi);
         return article === undefined ? [] : [{ article, best: chunk }];
       }),
       query,
     );
+    const ordered = related.length > 1 ? await mixed(ranked, related, articles, signal) : ranked;
     const page = ordered.slice(offset, offset + request.limit);
     const chunks = new Map(
       (
@@ -148,8 +179,45 @@ export function createSearchService(deps: SearchServiceDeps): SearchService {
     return {
       hits,
       total: ordered.length,
-      stats: { lexicalHits: lexical.length, vectorHits: vector.length, embeddingCached },
+      stats: {
+        lexicalHits: lexical.length,
+        vectorHits: lanes.reduce((total, hits) => total + hits.length, 0),
+        embeddingCached,
+      },
     };
+  }
+
+  /**
+   * Puts both language lanes among the first results (ADR 0044). A vector hit's lane is the
+   * lane that found it; a word-only match among the first results takes the lane of its
+   * passage's language. Only results related in meaning move up.
+   */
+  async function mixed(
+    ranked: Candidate[],
+    related: readonly (readonly VectorChunk[])[],
+    articles: ReadonlyMap<Doi, Article>,
+    signal: AbortSignal,
+  ): Promise<Candidate[]> {
+    const laneByChunk = new Map(
+      related.flatMap((hits, lane) => hits.map(({ chunkId }) => [chunkId, lane] as const)),
+    );
+    const wordOnly = ranked
+      .slice(0, MIXED_WITHIN)
+      .map(({ best: { chunkId } }) => chunkId)
+      .filter((chunkId) => !laneByChunk.has(chunkId));
+    for (const chunk of await reader.findChunks(wordOnly, signal)) {
+      laneByChunk.set(
+        chunk.id,
+        laneOfLanguage(chunk.language ?? articles.get(chunk.doi)?.language),
+      );
+    }
+    const relatedInMeaning = new Set(related.flat().map(({ doi }) => doi));
+    return mixLanes(
+      ranked,
+      ({ best: { chunkId } }) => laneByChunk.get(chunkId),
+      MIXED_WITHIN,
+      ({ article }) => relatedInMeaning.has(article.doi),
+    );
   }
 
   async function run(query: string, request: SearchRequest, signal: AbortSignal) {

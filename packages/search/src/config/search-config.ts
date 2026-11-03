@@ -16,7 +16,7 @@ export type SearchConfig = z.output<typeof searchConfigSchema>;
 /** The service options a parsed config sets. */
 export function searchOptionsFrom(
   config: SearchConfig,
-): Omit<SearchOptions, 'rrfK' | 'lexicalWeight'> {
+): Omit<SearchOptions, 'rrfK' | 'lexicalWeight' | 'vectorMargin'> {
   return {
     budgetMs: config.SEARCH_BUDGET_MS,
     candidates: config.SEARCH_CANDIDATES,

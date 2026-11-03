@@ -3,6 +3,7 @@ import { appError, type BuildKind, type IndexMeta } from '@scholarly-mcp/core';
 import { createSqliteIndexStore, type SqliteIndexStore } from '../create-sqlite-index-store.js';
 import {
   INDEX_SCHEMA_VERSION,
+  addIndexes,
   createIndexSchema,
   embeddingDimensionsOf,
   indexSchemaVersion,
@@ -81,6 +82,7 @@ function indexBuild(
       db.transaction(() => {
         db.prepare('DELETE FROM index_build').run();
         writeIndexMeta(db, meta);
+        addIndexes(db);
       })();
       // One self-contained file, so read-only openers need no -wal or -shm next to it.
       db.pragma('journal_mode = DELETE');

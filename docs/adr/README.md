@@ -27,8 +27,8 @@ Each ADR records one decision: the context, what we chose and what follows from 
 | [0019](0019-logger-package-and-core-boundaries.md)         | Logger package, logging port and core's ambient types            | accepted              |
 | [0020](0020-crossref-source-ingestion-rules.md)            | Crossref source: paging, notices, retractions and failure rules  | accepted              |
 | [0021](0021-chunking-language-and-embedder-rules.md)       | Chunking, per-chunk language and embedder rules                  | accepted              |
-| [0022](0022-sqlite-index-files-and-builds.md)              | SQLite index files, text matching and builds                     | amended by 0040       |
-| [0023](0023-search-service-rules.md)                       | Search service: query rules, fusion, teasers, cursors, budget    | accepted              |
+| [0022](0022-sqlite-index-files-and-builds.md)              | SQLite index files, text matching and builds                     | amended by 0040, 0044 |
+| [0023](0023-search-service-rules.md)                       | Search service: query rules, fusion, teasers, cursors, budget    | amended by 0044       |
 | [0024](0024-europe-pmc-enrichment.md)                      | Europe PMC enrichment: subjects and matching-only full text      | accepted              |
 | [0025](0025-mcp-server-and-tool-rules.md)                  | MCP server: SDK, transports, errors, links, journals, citations  | amended by 0031, 0043 |
 | [0026](0026-golden-set-eval-and-tuning.md)                 | Golden set, eval and tuning results                              | accepted              |
@@ -49,3 +49,4 @@ Each ADR records one decision: the context, what we chose and what follows from 
 | [0041](0041-sqlite-search-on-worker-threads.md)            | SQLite search on worker threads                                  | accepted              |
 | [0042](0042-sqlite-vec-compiled-with-simd-in-the-image.md) | sqlite-vec compiled with SIMD in the image                       | accepted              |
 | [0043](0043-card-access-from-the-open-access-flag.md)      | Card access from the open access flag                            | accepted              |
+| [0044](0044-language-lanes-for-any-language-search.md)     | Language lanes for "any language" search                         | accepted              |

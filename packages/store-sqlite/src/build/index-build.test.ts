@@ -128,6 +128,28 @@ describe('index builds', () => {
     await reader.close();
   });
 
+  it('adds the language index to a live index that lacks it on the next build', async () => {
+    await buildFull('v1', 1);
+    const live = openDatabase(indexPath);
+    live.exec('DROP INDEX vec_chunks_by_language');
+    live.close();
+    const build = beginIndexBuild({
+      indexPath,
+      kind: 'incremental',
+      now,
+      dimensions: TEST_EMBEDDING_DIMENSIONS,
+    });
+    build.commit(metaFor('v2', 1));
+    const db = openDatabase(indexPath, { readonly: true });
+    const plan = db
+      .prepare<[], { detail: string }>(
+        "EXPLAIN QUERY PLAN SELECT rowid FROM vec_chunks WHERE language = 'de'",
+      )
+      .all();
+    db.close();
+    expect(plan.map(({ detail }) => detail).join(' ')).toContain('vec_chunks_by_language');
+  });
+
   it('starts a purge build from a copy of the live index too', async () => {
     await buildFull('v1', 1);
     const build = beginIndexBuild({
