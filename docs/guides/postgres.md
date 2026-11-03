@@ -59,7 +59,7 @@ STORE=postgres DATABASE_URL=postgres://scholarly_server:server-local@127.0.0.1:5
   node --env-file=presets/thieme.env apps/server/dist/main.js
 ```
 
-At start the server checks that the database is migrated, and refuses to start otherwise (`run "ingest migrate" first`). It follows each committed build on its refresh tick (`INDEX_REFRESH_MS`), as it reopens a swapped SQLite file, and refuses a build of another embedding model while it keeps serving the current one. API keys are made with the writer:
+At start the server checks that the database is migrated, and refuses to start otherwise (`run "ingest migrate" first`). It follows each committed build on its refresh tick (`INDEX_REFRESH_MS`), as it reopens a swapped SQLite file, and refuses a build of another embedding model while it keeps serving the current one. After an upgrade, run `ingest migrate` again before the servers start: it is idempotent. The live funnel reads `scholarly.usage_events` as the server role (`funnel --store --serve`, [The funnel and the card view](funnel-and-card-view.md#the-live-view)). API keys are made with the writer:
 
 ```bash
 STORE=postgres DATABASE_URL=postgres://scholarly_ingest:ingest-local@127.0.0.1:5432/scholarly \

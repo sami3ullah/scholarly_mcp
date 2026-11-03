@@ -10,10 +10,10 @@
 - [x] `ingest copy --from <index>` loads an existing SQLite index into the configured store, with embeddings and sync state
 - [x] Postgres `ApiKeyStore` and `UsageOutbox` passing the testkit contracts; claim outbox rows (`FOR UPDATE SKIP LOCKED`) so several exporters do not resend each other's batches (ADR 0031)
 - [x] Outbox rows as envelope plus `jsonb` payload, like SQLite runtime migration 3, so all three event kinds fit; sessions keep their `tool` (ADR 0033)
-- [ ] Follow-up from SM-12: a live funnel view once events sit in Postgres (the `funnel` CLI reads the JSON lines export today)
+- [x] Follow-up from SM-12: a live funnel view once events sit in Postgres: `funnel --store` and `funnel --store --serve` over the outbox's stored events (ADR 0035)
 - [x] Postgres `SessionStore` passing the session contract, so landing links work across replicas (ADR 0032)
 
-Design: ADR 0034. Done so far: shared `packages/lexical` stemmer, outbox `claim`/`release` port (SQLite runtime migration 4), Postgres runtime migrations and runtime stores, the Postgres index store with schema-per-build builds and verify. Store selection: the server, ingest and eval pick the adapter with `STORE`; the keys command uses the writer URL.
+Design: ADR 0034; the live funnel: ADR 0035. Done so far: shared `packages/lexical` stemmer, outbox `claim`/`release` port (SQLite runtime migration 4), Postgres runtime migrations and runtime stores, the Postgres index store with schema-per-build builds and verify. Store selection: the server, ingest and eval pick the adapter with `STORE`; the keys command uses the writer URL.
 
 ## Exit
 

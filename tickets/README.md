@@ -18,7 +18,7 @@ Status values: `todo`, `in-progress`, `done`, `blocked`. Update the table when a
 | SM-10 | Auth, rate limits, telemetry, metering, entitlements | 4     | SM-09        | done                           |
 | SM-11 | Landing sessions and Next.js landing page            | 4b    | SM-09        | done                           |
 | SM-12 | MCP Apps cards and funnel dashboard                  | 4b    | SM-10, SM-11 | done                           |
-| SM-13 | Postgres adapter                                     | 5     | SM-07        | in-progress                    |
+| SM-13 | Postgres adapter                                     | 5     | SM-07        | done                           |
 | SM-14 | Hardening, image and docs                            | 6     | SM-12        | todo                           |
 | SM-15 | Demo deployment, recording, outreach                 | 7-8   | SM-14        | todo (needs user decisions)    |
 | SM-16 | Embedding model evaluation (bge-m3)                  | 3     | SM-08        | done (e5-small kept, ADR 0029) |

@@ -2,7 +2,7 @@
 
 [← Back to the docs index](../README.md)
 
-This guide covers two things from SM-12 ([ADR 0033](../adr/0033-referral-events-funnel-and-card-view.md)):
+This guide covers two things from SM-12 ([ADR 0033](../adr/0033-referral-events-funnel-and-card-view.md)), and the live funnel from SM-13 ([ADR 0035](../adr/0035-live-funnel-over-stored-events.md)):
 
 - **The funnel.** How the server measures what happens after a search, from cards shown to landing visits to what readers do next, and how to read the report.
 - **The card view.** How `search_articles` shows its results as cards in clients that support MCP Apps.
@@ -84,6 +84,37 @@ Lines that are not events (for example a write torn by a crash) are skipped and 
 | By day       | The steps per UTC day                                                            |
 
 A publisher with a warehouse can skip the CLI: the webhook delivers the same events, and `computeFunnel` in `@scholarly-mcp/core` documents the counting rules.
+
+### From the store
+
+`--store` reads the events in the store `STORE` picks instead of a file: the runtime database on SQLite, `scholarly.usage_events` on Postgres. Every replica appends there, so the numbers are current. The outbox deletes exported events after `METER_RETENTION_DAYS` (30), so the store covers the recent weeks only; the report names its source and that window. For longer periods use the export.
+
+```bash
+# Postgres, as the server's role (it may read usage_events)
+STORE=postgres DATABASE_URL=postgres://scholarly_server:server-local@127.0.0.1:5432/scholarly \
+  node --env-file=presets/thieme.env apps/server/dist/main.js funnel --store --out data/funnel.html
+```
+
+## The live view
+
+`--serve` keeps the report open in a browser: every request counts the events in the store now.
+
+```bash
+STORE=postgres DATABASE_URL=postgres://scholarly_server:server-local@127.0.0.1:5432/scholarly \
+  node --env-file=presets/thieme.env apps/server/dist/main.js funnel --store --serve
+# Live funnel at http://127.0.0.1:8092/ (Ctrl+C stops it)
+```
+
+| Route                    | Answers                                          |
+| ------------------------ | ------------------------------------------------ |
+| `GET /`                  | The report, which reloads itself every 60 s      |
+| `GET /funnel.json`       | The same numbers as JSON                         |
+| `?since=…&until=…&key=…` | Filters for either route, as on the command line |
+
+- **Options.** `--host` (default `127.0.0.1`), `--port` (8092) and `--refresh` (60 s, 5 to 3600). `--since`, `--until` and `--key` set the filters for requests that bring none.
+- **Load.** A count is reused for `--refresh` seconds per filter set, and requests meanwhile share one read, so open tabs do not pile up on the database. A failed read answers 503 and is retried on the next request.
+- **No login.** The view has none, and it shows click-through per client. Keep it on loopback and reach it with `ssh -L 8092:127.0.0.1:8092 <host>`, or put it behind a proxy with its own login. It warns when bound to another address.
+- **Separate process.** It is not a route of the MCP server, whose HTTP surface is public. It needs only read access to the events and stops on SIGINT or SIGTERM.
 
 ## The landing page side
 

@@ -15,23 +15,23 @@ Every response has a `notice` and a plain-text rendering for clients without str
 
 ## Layout
 
-| Folder                     | What it holds                                                                      |
-| -------------------------- | ---------------------------------------------------------------------------------- |
-| `tools/`                   | One file per tool, the shared schemas, text rendering and the single error mapping |
-| `server/`                  | The `McpServer` factory: registration, argument parsing, per-call logs             |
-| `http/`                    | Routes: `/mcp` behind `Host`, `Origin` and auth checks, health, metrics, metadata  |
-| `transports/`              | The Node HTTP server: limits, in-flight tracking and draining                      |
-| `auth/`                    | API key and OAuth JWT verifiers, the caller carried in `AuthInfo`                  |
-| `limits/`                  | Per-caller token bucket                                                            |
-| `metering/`                | Outbox meter, exporter with backoff, JSON-lines and webhook sinks                  |
-| `telemetry/`               | Prometheus metrics and OpenTelemetry tracing                                       |
-| `keys/`                    | The `keys create`, `list` and `revoke` command                                     |
-| `funnel/`                  | The `funnel` command: the funnel report from the metering export (ADR 0033)        |
-| `journals/`                | Journal catalog cached per index version, name and ISSN matching                   |
-| `landing/`                 | Landing sessions and links, the landing API, its pages and referrals (ADR 0032/33) |
-| `access/`                  | Card access badge and licence, mock entitlements                                   |
-| `runtime/`                 | The live index (reopens swapped builds, survives a missing one), random tokens     |
-| `create-app.ts`, `main.ts` | Wiring, and the composition root that creates the real adapters                    |
+| Folder                     | What it holds                                                                              |
+| -------------------------- | ------------------------------------------------------------------------------------------ |
+| `tools/`                   | One file per tool, the shared schemas, text rendering and the single error mapping         |
+| `server/`                  | The `McpServer` factory: registration, argument parsing, per-call logs                     |
+| `http/`                    | Routes: `/mcp` behind `Host`, `Origin` and auth checks, health, metrics, metadata          |
+| `transports/`              | The Node HTTP server: limits, in-flight tracking and draining                              |
+| `auth/`                    | API key and OAuth JWT verifiers, the caller carried in `AuthInfo`                          |
+| `limits/`                  | Per-caller token bucket                                                                    |
+| `metering/`                | Outbox meter, exporter with backoff, JSON-lines and webhook sinks                          |
+| `telemetry/`               | Prometheus metrics and OpenTelemetry tracing                                               |
+| `keys/`                    | The `keys create`, `list` and `revoke` command                                             |
+| `funnel/`                  | The `funnel` command: the report from the export or the store, the live view (ADR 0033/35) |
+| `journals/`                | Journal catalog cached per index version, name and ISSN matching                           |
+| `landing/`                 | Landing sessions and links, the landing API, its pages and referrals (ADR 0032/33)         |
+| `access/`                  | Card access badge and licence, mock entitlements                                           |
+| `runtime/`                 | The live index (reopens swapped builds, survives a missing one), random tokens             |
+| `create-app.ts`, `main.ts` | Wiring, and the composition root that creates the real adapters                            |
 
 ## Configuration
 

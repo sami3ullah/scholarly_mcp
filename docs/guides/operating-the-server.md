@@ -74,7 +74,7 @@ The exporter sends pending events every `METER_EXPORT_MS` (5 s):
 
 A batch counts as exported only when every sink took it. When one fails, the whole batch is sent again later with growing pauses (up to `METER_BACKOFF_MAX_MS`, 5 min), so delivery is at least once: **dedupe on the event `id`**. Exported events are deleted after `METER_RETENTION_DAYS` (30). `meter_outbox_pending` shows the backlog.
 
-`scholarly-mcp funnel --from data/usage.jsonl --out funnel.html` turns the JSON lines file into the funnel report.
+`scholarly-mcp funnel --from data/usage.jsonl --out funnel.html` turns the JSON lines file into the funnel report; `funnel --store --serve` shows the recent weeks live from the outbox ([The funnel and the card view](funnel-and-card-view.md#the-live-view)).
 
 ### Verifying webhook requests
 
