@@ -38,8 +38,10 @@ export function renderCards(root: HTMLElement, list: CardList, options: RenderOp
     if (text !== undefined) node.textContent = text;
     return node;
   };
-  const link = (url: string, className: string, text: string) => {
-    const anchor = el('a', className, text);
+  const link = (url: string, className: string, text: string, icon?: Icon) => {
+    const anchor = el('a', className);
+    if (icon === undefined) anchor.textContent = text;
+    else anchor.append(el('span', undefined, text), iconOf(doc, icon));
     anchor.href = url;
     anchor.target = '_blank';
     anchor.rel = 'noopener noreferrer';
@@ -67,9 +69,12 @@ export function renderCards(root: HTMLElement, list: CardList, options: RenderOp
       ...(card.firstAuthor === undefined ? [] : [doc.createTextNode(` · ${card.firstAuthor}`)]),
     );
     const footer = el('div', 'card-footer');
+    const badge = el('span', `badge badge-${card.access}`);
+    if (card.access === 'subscription') badge.append(iconOf(doc, 'lock'));
+    badge.append(doc.createTextNode(accessLabel(card.access, options.labels)));
     footer.append(
-      el('span', `badge badge-${card.access}`, accessLabel(card.access, options.labels)),
-      link(card.url, 'read', options.labels.read(options.publisher)),
+      badge,
+      link(card.url, 'read', options.labels.read(options.publisher), 'external'),
     );
     item.append(title, meta);
     if (card.teaser !== '') item.append(el('p', 'teaser', card.teaser));
@@ -78,8 +83,31 @@ export function renderCards(root: HTMLElement, list: CardList, options: RenderOp
   }
   root.append(items);
   if (list.collectionUrl !== undefined) {
-    root.append(link(list.collectionUrl, 'all', options.labels.allResults));
+    root.append(link(list.collectionUrl, 'all', options.labels.allResults, 'external'));
   }
+}
+
+type Icon = 'external' | 'lock';
+
+/** Fixed, decorative icons; drawn from constants, never from card data. */
+const ICON_PATHS: Readonly<Record<Icon, readonly string[]>> = {
+  external: ['M4.5 11.5l7-7', 'M5.5 4.5h6v6'],
+  lock: ['M4 7.5h8v6H4z', 'M5.75 7.5V5.25a2.25 2.25 0 0 1 4.5 0V7.5'],
+};
+
+function iconOf(doc: Document, icon: Icon): SVGSVGElement {
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = doc.createElementNS(ns, 'svg');
+  svg.setAttribute('class', 'icon');
+  svg.setAttribute('viewBox', '0 0 16 16');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
+  for (const d of ICON_PATHS[icon]) {
+    const path = doc.createElementNS(ns, 'path');
+    path.setAttribute('d', d);
+    svg.append(path);
+  }
+  return svg;
 }
 
 function accessLabel(access: ArticleCard['access'], labels: Labels): string {

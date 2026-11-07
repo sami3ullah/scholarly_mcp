@@ -6,34 +6,40 @@
     <meta name="color-scheme" content="light dark" />
     <title>Articles</title>
     <style>
-      /* Host variables (MCP Apps styles) win; the fallbacks keep the view readable without them. */
+      /*
+       * Colours and the font family come from the host (MCP Apps styles), so the cards sit in
+       * the chat's theme; the fallbacks keep the view readable without them. Sizes and spacing
+       * are the view's own: host size tokens differ between clients and broke the hierarchy.
+       */
       :root {
         --cv-bg: var(--color-background-primary, #ffffff);
-        --cv-card: var(--color-background-secondary, #f6f5f3);
+        --cv-card: var(--color-background-secondary, #faf9f7);
         --cv-text: var(--color-text-primary, #141413);
-        --cv-muted: var(--color-text-secondary, #5e5d59);
-        --cv-border: var(--color-border-tertiary, #e3e1dc);
-        --cv-accent: var(--color-text-info, #1f63b5);
+        --cv-muted: var(--color-text-secondary, #6b6a65);
         --cv-ring: var(--color-ring-primary, #2a78d6);
-        --cv-radius: var(--border-radius-lg, 10px);
+        --cv-success: var(--color-text-success, #1d7a4b);
+        --cv-line: color-mix(in srgb, var(--cv-text) 9%, transparent);
+        --cv-line-strong: color-mix(in srgb, var(--cv-text) 18%, transparent);
+        --cv-chip: color-mix(in srgb, var(--cv-text) 6%, transparent);
+        --cv-chip-success: color-mix(in srgb, var(--cv-success) 13%, transparent);
+        --cv-radius: 14px;
+        --cv-ease: cubic-bezier(0.2, 0, 0, 1);
       }
       @media (prefers-color-scheme: dark) {
         :root:not([data-theme='light']) {
           --cv-bg: var(--color-background-primary, #1f1e1d);
-          --cv-card: var(--color-background-secondary, #2a2927);
+          --cv-card: var(--color-background-secondary, #262624);
           --cv-text: var(--color-text-primary, #f0efec);
-          --cv-muted: var(--color-text-secondary, #c3c2b7);
-          --cv-border: var(--color-border-tertiary, #3d3c39);
-          --cv-accent: var(--color-text-info, #7fb2f0);
+          --cv-muted: var(--color-text-secondary, #a8a69e);
+          --cv-success: var(--color-text-success, #63c48f);
         }
       }
       :root[data-theme='dark'] {
         --cv-bg: var(--color-background-primary, #1f1e1d);
-        --cv-card: var(--color-background-secondary, #2a2927);
+        --cv-card: var(--color-background-secondary, #262624);
         --cv-text: var(--color-text-primary, #f0efec);
-        --cv-muted: var(--color-text-secondary, #c3c2b7);
-        --cv-border: var(--color-border-tertiary, #3d3c39);
-        --cv-accent: var(--color-text-info, #7fb2f0);
+        --cv-muted: var(--color-text-secondary, #a8a69e);
+        --cv-success: var(--color-text-success, #63c48f);
       }
       * {
         box-sizing: border-box;
@@ -45,30 +51,39 @@
         color: var(--cv-text);
       }
       body {
-        font: var(--font-text-md-size, 15px)/var(--font-text-md-line-height, 1.5)
-          var(--font-sans, system-ui, -apple-system, 'Segoe UI', sans-serif);
+        font-family: var(--font-sans, system-ui, -apple-system, 'Segoe UI', sans-serif);
+        font-size: 14px;
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
       }
       #cards {
-        padding: 4px;
+        padding: 2px;
       }
       .cards {
         list-style: none;
         margin: 0;
         padding: 0;
         display: grid;
-        gap: 8px;
+        gap: 10px;
       }
       .card {
         background: var(--cv-card);
-        border: 1px solid var(--cv-border);
+        border: 1px solid var(--cv-line);
         border-radius: var(--cv-radius);
-        padding: 12px 14px;
+        padding: 16px 18px 14px;
+        transition: border-color 160ms var(--cv-ease);
+      }
+      .card:hover {
+        border-color: var(--cv-line-strong);
       }
       .title {
         margin: 0;
-        font-size: var(--font-heading-xs-size, 16px);
-        line-height: 1.35;
-        font-weight: var(--font-weight-semibold, 600);
+        font-size: 15.5px;
+        line-height: 1.4;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        text-wrap: pretty;
       }
       .title-link {
         color: inherit;
@@ -76,53 +91,110 @@
       }
       .title-link:hover {
         text-decoration: underline;
+        text-decoration-color: var(--cv-line-strong);
+        text-underline-offset: 3px;
       }
       .meta {
         margin: 4px 0 0;
         color: var(--cv-muted);
-        font-size: var(--font-text-sm-size, 13px);
+        font-size: 12.5px;
+        line-height: 1.45;
+      }
+      .journal {
+        color: var(--cv-text);
+        font-weight: 500;
+        opacity: 0.85;
       }
       .teaser {
-        margin: 8px 0 0;
-        font-size: var(--font-text-sm-size, 14px);
+        margin: 10px 0 0;
+        color: var(--cv-muted);
+        font-size: 13.5px;
+        line-height: 1.55;
+        text-wrap: pretty;
       }
       .card-footer {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
         justify-content: space-between;
-        gap: 8px;
-        margin-top: 10px;
+        gap: 10px;
+        margin-top: 14px;
       }
       .badge {
-        font-size: var(--font-text-xs-size, 12px);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 24px;
+        padding: 0 10px;
+        border-radius: 999px;
+        background: var(--cv-chip);
         color: var(--cv-muted);
-        border: 1px solid var(--cv-border);
-        border-radius: var(--border-radius-full, 999px);
-        padding: 1px 8px;
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1;
+        white-space: nowrap;
       }
       .badge-open {
-        color: var(--color-text-success, #2e7d4f);
-        border-color: currentColor;
+        background: var(--cv-chip-success);
+        color: var(--cv-success);
+      }
+      .badge-open::before {
+        content: '';
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+      }
+      .icon {
+        width: 12px;
+        height: 12px;
+        flex: none;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.75;
+        stroke-linecap: round;
+        stroke-linejoin: round;
       }
       .read {
-        display: inline-block;
-        padding: 6px 12px;
-        border-radius: var(--border-radius-md, 8px);
-        background: var(--cv-accent);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 34px;
+        padding: 0 12px 0 14px;
+        border-radius: 9px;
+        background: var(--cv-text);
         color: var(--cv-bg);
-        font-weight: var(--font-weight-medium, 500);
-        font-size: var(--font-text-sm-size, 14px);
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: 0.005em;
         text-decoration: none;
+        transition: opacity 160ms var(--cv-ease);
       }
       .read:hover {
-        filter: brightness(1.08);
+        opacity: 0.86;
+      }
+      .read .icon,
+      .all .icon {
+        transition: transform 160ms var(--cv-ease);
+      }
+      .read:hover .icon,
+      .all:hover .icon {
+        transform: translate(1.5px, -1.5px);
       }
       .all {
-        display: inline-block;
-        margin: 10px 2px 2px;
-        color: var(--cv-accent);
-        font-size: var(--font-text-sm-size, 14px);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin: 12px 4px 4px;
+        color: var(--cv-text);
+        font-size: 13px;
+        font-weight: 500;
+        text-decoration: underline;
+        text-decoration-color: var(--cv-line-strong);
+        text-underline-offset: 4px;
+      }
+      .all:hover {
+        text-decoration-color: currentColor;
       }
       a:focus-visible {
         outline: 2px solid var(--cv-ring);
@@ -130,7 +202,12 @@
       }
       .empty {
         color: var(--cv-muted);
-        margin: 8px 2px;
+        margin: 8px 4px;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          transition: none !important;
+        }
       }
     </style>
     <script type="application/json" id="card-view-config">
