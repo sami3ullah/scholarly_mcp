@@ -1,0 +1,9 @@
+# Image findings that do not reach running code. Each one expires, so the scan fails again
+# and the finding is looked at once more (same practice as osv-scanner.toml).
+
+# zlib1g in the distroless runtime base (gcr.io/distroless/nodejs24-debian13), fixed in
+# Debian 1:1.3.dfsg+really1.3.1-1+deb13u1 but not yet in distroless as of 2026-11-07.
+# Node does not link the system zlib (it bundles zlib 1.3.2.1-motley) and its zlib module
+# exposes no gz* file functions, so nothing in the image loads the vulnerable gz_vacate().
+CVE-2026-85091 exp:2026-11-28
+CVE-2026-76844 exp:2026-11-28
