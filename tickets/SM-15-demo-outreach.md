@@ -7,6 +7,7 @@
 - **Keys:** the guide shows how to issue one API key per user or team, revoke one, and read per-key metering.
 - **Demo index:** the full Thieme index (70,989 articles), local only, so the paywalled and retraction questions work. Not published.
 - **Specialties:** the agent picks them from the index (strong DE and EN coverage, a paywalled hit, a retraction) and proposes 5 questions for approval.
+- **Nothing paid (2026-11-07).** The demo runs only in Docker on the owner's machine; no VM, domain or cloud account. The self-hosting bundle is verified in Docker locally and by `docker/e2e/deploy-smoke.sh` in CI on every push, not on a paid VM; Thieme runs it on its own infrastructure.
 - **Repo:** stays at `github.com/sami3ullah/scholarly_mcp` (public); images at `ghcr.io/sami3ullah/scholarly-mcp`.
 
 ## Demo questions (approved 2026-11-03)
@@ -29,13 +30,12 @@ Owner follow-ups from the review: cards show closed articles as `subscription` (
 - [x] Connector instructions for Claude and ChatGPT (`docs/CONNECTORS.md`; ChatGPT and most claude.ai organisations need `AUTH_MODE=oauth`)
 - [x] One-page memo drafted (`docs/outreach/memo.md`; Loom link and contact to fill in)
 - [ ] Release v0.2.0, so the bundle's default `SCHOLARLY_VERSION` exists (owner approval)
-- [ ] Clean-machine run of the guide on a real VM with a public hostname, after the release
 - [ ] Loom recording (user; script in `docs/outreach/loom-script.md`)
 - [ ] Outreach (user)
 
 ## Exit
 
-A clean machine reaches a working deployment by following the guide alone (SQLite, and Postgres against an existing database); video under 5 minutes; outreach sent.
+The self-hosting bundle passes the smoke checks on SQLite, the bundled Postgres and an existing Postgres in Docker (locally and in CI); video under 5 minutes; outreach sent.
 
 ## Verification (2026-11-07)
 

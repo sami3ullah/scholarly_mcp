@@ -359,3 +359,18 @@ Append-only. Newest entry at the bottom.
 - **Gotchas:** the local full index `data/index.sqlite` lacks `vec_chunks_by_language` until its next ingest build (works, German lane slower). Rejected variants and their numbers are in ADR 0044.
 - **Open idea (not asked):** `search_articles` with a retracted DOI returns nothing and no hint; a hint pointing to `get_article`/`cite` would help.
 - **Next:** SM-15 step 2, ADR for the self-hosting shape, then `docs/SELF-HOSTING.md` verified on a clean machine (SQLite and external Postgres).
+
+## 2026-11-07 - session 26, SM-15 self-hosting bundle, guides, memo; CI fixes
+
+- **Objective:** everything on SM-15 the agent can do, then hand the owner their steps.
+- **Done (pushed, `e0e18d9`..`88e7c94`):**
+  - ADR 0045 and `deploy/` (compose, Caddyfile, `.env.example`, `secrets/`): published images behind Caddy on one hostname (TLS by Let's Encrypt; `/mcp`, `/healthz`, `/readyz`, OAuth metadata to the server, the rest to the landing app), `STORE=sqlite` default, bundled Postgres (`COMPOSE_PROFILES=postgres`) or your own (`DATABASE_URL`, `ADMIN_DATABASE_URL`), `init` runs `ingest migrate` on every `up`, `admin` runs keys/ingest/funnel as the writer, `cloudflare` profile for a tunnel. Caddy runs as root with all caps dropped except `NET_BIND_SERVICE` (its binary has a file cap; without it exec fails), listens on 8080/8443.
+  - `docker/e2e/deploy-smoke.sh [sqlite|postgres]` (13 smoke checks over HTTPS via Caddy, `PUBLIC_HOST=localhost`), in the CI `e2e` job after `smoke.sh`. Dependabot watches `/deploy`.
+  - `docs/SELF-HOSTING.md`, `docs/CONNECTORS.md`, `docs/outreach/memo.md` (Loom link and contact to fill), `docs/outreach/loom-script.md`. README recall row updated (0.71 / 0.66 cross).
+  - Local `data/index.sqlite` refreshed by `ingest incremental`: 71,197 articles, now with `vec_chunks_by_language`.
+  - CI on `63f7cb4` failed for two outside reasons, fixed: Trivy HIGH zlib CVE-2026-85091 in the distroless base (Node bundles its own zlib; `.trivyignore` expires 2026-11-28); demo DOI 10.1055/a-2917-0294 lost its Crossref licence, replaced by 10.1055/a-2891-6315 (ADR 0039 note). Demo index rebuilt locally: 214 articles, all CC BY.
+- **Verified locally:** bundle from a clean copy on SQLite, bundled Postgres, and a separate Postgres prepared with the guide's role SQL alone: 13/13 each; tunnel settings serve HTTP on loopback; keys, `funnel --store --json /dev/stdout`, runtime backup via `node:sqlite` work.
+- **Owner steps (SM-15 open):** approve tag `v0.2.0` (bundle defaults to `SCHOLARLY_VERSION=0.2.0`; v0.1.0 lacks ADRs 0042-0044); record the Loom; send outreach. Older: Claude Desktop manual check, Dependabot npm error and PRs #1/#2.
+- **Open questions for the owner:** accept API keys and OAuth in one deployment (ChatGPT and most claude.ai orgs need OAuth); a hint when `search_articles` gets a retracted DOI.
+- **Gotchas:** `gh` is not installed; CI status via `curl https://api.github.com/repos/sami3ullah/scholarly_mcp/actions/runs?head_sha=…` and `/actions/runs/<id>/jobs` (logs need auth). mcp-inspector v2 changed its CLI flags; the guide uses `smoke.mjs` run in the image instead.
+- **Owner decision (2026-11-07): nothing paid.** The demo runs only in Docker locally; the real-VM check is dropped (ticket exit rewritten). Demo stack is up: `INDEX_DIR=$PWD/data/demo-full docker compose --profile sqlite --profile landing up -d --wait` (full index hard-linked at `data/demo-full/index.sqlite`, 71,197 articles; the old eval `scholarly-mcp_index` volume was removed so the image seeds it). Demo key in `data/demo-full/demo-key.txt` (gitignored). 13/13 smoke checks on it.
