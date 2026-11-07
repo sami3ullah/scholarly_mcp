@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { labelsFor } from './labels.js';
-import { cardListOf, renderCards } from './render-cards.js';
+import { cardListOf, renderCards, renderLoading } from './render-cards.js';
 
 const card = {
   doi: '10.1055/a-1001',
@@ -44,6 +44,17 @@ describe('the card view', () => {
     expect(item?.querySelector('.badge')?.textContent).toBe('Open access');
     expect(item?.querySelector('.read')?.textContent).toBe('Read on Thieme');
     expect(item?.querySelector('.read')?.getAttribute('href')).toBe(card.url);
+  });
+
+  it('shows placeholder cards while waiting, announcing only the waiting label', () => {
+    renderLoading(root, labelsFor('en'));
+    expect(root.getAttribute('aria-busy')).toBe('true');
+    expect(root.querySelectorAll('.skeleton')).toHaveLength(3);
+    expect(root.querySelector('.cards')?.getAttribute('aria-hidden')).toBe('true');
+    expect(root.textContent).toBe('Loading articles…');
+    render({ cards: [card] });
+    expect(root.hasAttribute('aria-busy')).toBe(false);
+    expect(root.querySelector('.skeleton')).toBeNull();
   });
 
   it('opens links through the host instead of navigating the frame', () => {

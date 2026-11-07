@@ -6,7 +6,7 @@ import {
   type McpUiHostContext,
 } from '@modelcontextprotocol/ext-apps/app-with-deps';
 import { labelsFor } from './labels.js';
-import { cardListOf, renderCards, type CardList } from './render-cards.js';
+import { cardListOf, renderCards, renderLoading, type CardList } from './render-cards.js';
 
 /*
  * The MCP Apps card view (ADR 0033). The host renders this page in a sandboxed iframe and
@@ -23,7 +23,7 @@ function draw(context: McpUiHostContext | undefined) {
   const labels = labelsFor(context?.locale ?? navigator.language);
   document.documentElement.lang = labels === labelsFor('de') ? 'de' : 'en';
   if (latest === undefined) {
-    root.textContent = labels.waiting;
+    renderLoading(root, labels);
     return;
   }
   renderCards(root, latest, {

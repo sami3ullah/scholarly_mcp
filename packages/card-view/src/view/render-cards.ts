@@ -29,6 +29,40 @@ export function cardListOf(structured: unknown): CardList {
   };
 }
 
+/**
+ * Shows placeholder cards while the tool result is on its way. The placeholders are hidden
+ * from assistive technology, which hears the waiting label instead.
+ */
+export function renderLoading(root: HTMLElement, labels: Labels): void {
+  const doc = root.ownerDocument;
+  const div = (className: string) => {
+    const node = doc.createElement('div');
+    node.className = className;
+    return node;
+  };
+  const status = doc.createElement('p');
+  status.className = 'sr-only';
+  status.textContent = labels.waiting;
+  const list = div('cards');
+  list.setAttribute('aria-hidden', 'true');
+  for (let i = 0; i < 3; i++) {
+    const card = div('card skeleton');
+    const footer = div('card-footer');
+    footer.append(div('sk sk-pill'), div('sk sk-button'));
+    card.append(
+      div('sk sk-title'),
+      div('sk sk-title sk-short'),
+      div('sk sk-meta'),
+      div('sk sk-text'),
+      div('sk sk-text sk-end'),
+      footer,
+    );
+    list.append(card);
+  }
+  root.setAttribute('aria-busy', 'true');
+  root.replaceChildren(status, list);
+}
+
 /** Replaces the root's content with the cards (PLAN.md tool contracts: MCP Apps). */
 export function renderCards(root: HTMLElement, list: CardList, options: RenderOptions): void {
   const doc = root.ownerDocument;
@@ -52,6 +86,7 @@ export function renderCards(root: HTMLElement, list: CardList, options: RenderOp
     return anchor;
   };
 
+  root.removeAttribute('aria-busy');
   root.replaceChildren();
   if (list.cards.length === 0) {
     root.append(el('p', 'empty', options.labels.noResults));
