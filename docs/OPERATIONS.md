@@ -2,7 +2,7 @@
 
 [← Docs index](README.md) · [Main README](../README.md)
 
-How to deploy, refresh, scale and watch scholarly-mcp. Settings for auth, keys, rate limits, metering and probes are in the [operating guide](guides/operating-the-server.md); the image and compose details in [docker/README.md](../docker/README.md).
+How to deploy, refresh, scale and watch scholarly-mcp. For a complete HTTPS deployment with Docker Compose on a VM, AWS or Cloudflare, follow the [self-hosting guide](SELF-HOSTING.md); this page covers the image itself. Settings for auth, keys, rate limits, metering and probes are in the [operating guide](guides/operating-the-server.md); the image and compose details in [docker/README.md](../docker/README.md).
 
 ## Deploy
 

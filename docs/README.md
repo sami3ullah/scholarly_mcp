@@ -10,16 +10,18 @@ Everything beyond the quick start lives here. New guides are added as the featur
 | ------------------------------------ | --------------------------------------------------------------------------------------------------------- |
 | [Engineering plan](PLAN.md)          | The full design: goals, architecture, data model, tool contracts, edge cases, standards and delivery plan |
 | [Phase 0 results](spike-results.md)  | Crossref and Europe PMC coverage, embedding model and vector store checks                                 |
-| [Ticket board](../tickets/README.md) | Work broken into tickets SM-00 to SM-16, with status                                                      |
+| [Ticket board](../tickets/README.md) | Work broken into tickets SM-00 to SM-17, with status                                                      |
 
 ## Run it and build on it
 
-| Document                       | What's inside                                                                                   |
-| ------------------------------ | ----------------------------------------------------------------------------------------------- |
-| [Operations](OPERATIONS.md)    | Deploying the image, keeping the index fresh, scaling, capacity, monitoring, backups, upgrades  |
-| [Adapters](ADAPTERS.md)        | The ports, plugging in your own content API, access rules, store, embedding model or billing    |
-| [The landing page](LANDING.md) | Running the landing app, the landing API contract, rebuilding the page in your own stack, tests |
-| [Security](SECURITY.md)        | Reporting vulnerabilities, threat model, controls, supply chain checks, known limits            |
+| Document                        | What's inside                                                                                       |
+| ------------------------------- | --------------------------------------------------------------------------------------------------- |
+| [Self-hosting](SELF-HOSTING.md) | Your own HTTPS deployment with Docker Compose: SQLite or Postgres, keys, index, VM, AWS, Cloudflare |
+| [Connectors](CONNECTORS.md)     | Adding a deployed server to Claude and ChatGPT, with API keys or OAuth                              |
+| [Operations](OPERATIONS.md)     | Deploying the image, keeping the index fresh, scaling, capacity, monitoring, backups, upgrades      |
+| [Adapters](ADAPTERS.md)         | The ports, plugging in your own content API, access rules, store, embedding model or billing        |
+| [The landing page](LANDING.md)  | Running the landing app, the landing API contract, rebuilding the page in your own stack, tests     |
+| [Security](SECURITY.md)         | Reporting vulnerabilities, threat model, controls, supply chain checks, known limits                |
 
 ## Design
 
@@ -68,4 +70,6 @@ Planned:
 | Document                                           | What's inside                                   |
 | -------------------------------------------------- | ----------------------------------------------- |
 | [Session handoff](session-handoff.md)              | Running log used to resume work across sessions |
+| [Outreach memo](outreach/memo.md)                  | One-page memo for decision-makers (draft)       |
+| [Loom script](outreach/loom-script.md)             | Checklist and timings for the demo video        |
 | [PR template](../.github/pull_request_template.md) | What every pull request must describe           |
