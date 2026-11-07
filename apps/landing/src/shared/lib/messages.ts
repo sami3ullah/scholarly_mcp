@@ -33,6 +33,8 @@ export interface Messages {
   readonly disclaimer: string;
   readonly notFoundHeading: string;
   readonly notFoundText: string;
+  readonly noLinkHeading: string;
+  readonly noLinkText: string;
   readonly errorHeading: string;
   readonly errorText: string;
   readonly retry: string;
@@ -77,6 +79,9 @@ const en: Messages = {
   disclaimer: 'Independent prototype, not affiliated with any publisher.',
   notFoundHeading: 'This link is no longer available',
   notFoundText: 'Landing links work for 24 hours. Ask your assistant again to get fresh results.',
+  noLinkHeading: 'There is no article here',
+  noLinkText:
+    "This site opens the article links in your AI assistant's search results. Click one of those links to see the article.",
   errorHeading: 'This page could not be loaded',
   errorText: 'Something went wrong on our side. Please try again in a moment.',
   retry: 'Try again',
@@ -123,6 +128,9 @@ const de: Messages = {
   notFoundHeading: 'Dieser Link ist nicht mehr verfügbar',
   notFoundText:
     'Landing-Links gelten 24 Stunden. Fragen Sie Ihren Assistenten erneut nach aktuellen Ergebnissen.',
+  noLinkHeading: 'Hier ist kein Artikel',
+  noLinkText:
+    'Diese Seite öffnet die Artikel-Links aus den Suchergebnissen Ihres KI-Assistenten. Klicken Sie auf einen dieser Links, um den Artikel zu sehen.',
   errorHeading: 'Diese Seite konnte nicht geladen werden',
   errorText: 'Bei uns ist etwas schiefgelaufen. Bitte versuchen Sie es gleich noch einmal.',
   retry: 'Erneut versuchen',

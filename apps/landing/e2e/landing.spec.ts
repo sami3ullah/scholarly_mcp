@@ -193,6 +193,12 @@ test.describe('falling back', () => {
       'This link is no longer available',
     );
   });
+
+  test('answers 404 at the root without claiming a link expired', async ({ page }) => {
+    const response = await page.goto('/');
+    expect(response?.status()).toBe(404);
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('There is no article here');
+  });
 });
 
 test.describe('usability', () => {
