@@ -22,3 +22,4 @@ The full index holds every abstract of the corpus and matching-only full-text ch
 - **A full run with a list replaces the live index with just the listed articles**, like any full run. Set `INGEST_DOIS_FILE` only for a demo or test index.
 - **Attribution.** CC BY needs attribution; every card links the article's landing page and DOI, and the licence URL is on each card.
 - **Refreshing the list** is a manual query on a full index (the conditions in decision 2), reviewed in a PR like any preset change.
+- **Licences change upstream.** On 2026-11-07 Crossref re-deposited 10.1055/a-2917-0294 without a licence, and the licence check failed CI as intended; it was replaced by another CC BY 4.0 article of the same journal (10.1055/a-2891-6315). Expect this now and then: the fix is a one-line swap found with the same query.

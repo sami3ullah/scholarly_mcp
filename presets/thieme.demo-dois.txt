@@ -2,6 +2,8 @@
 # from the full index on 2026-11-03. Every licence Crossref lists for them is CC BY 4.0, so
 # the index built from this list may be published. Build it with docker/demo-index/build.sh,
 # which checks every licence in the built index again before it is used.
+# 2026-11-07: 10.1055/a-2917-0294 lost its licence at Crossref; replaced by 10.1055/a-2891-6315
+# (same journal, CC BY 4.0).
 10.1055/s-0044-1788652
 10.1055/s-0044-1788621
 10.1055/s-0045-1809704
@@ -80,7 +82,7 @@
 10.1055/a-2743-2825
 10.1055/s-0046-1829875
 10.1055/s-0046-1827023
-10.1055/a-2917-0294
+10.1055/a-2891-6315
 10.1055/a-2684-8925
 10.1055/s-0044-1801398
 10.1055/s-0044-1801322
