@@ -3,6 +3,7 @@ import type { ApiKeyStore, Clock, Logger } from '@scholarly-mcp/core';
 import { createRemoteJWKSet } from 'jose';
 import type { AuthConfig } from '../config/auth-config.js';
 import type { HttpAuth } from '../http/create-http-handler.js';
+import { createApiKeyOrJwtVerifier } from './create-api-key-or-jwt-verifier.js';
 import { createApiKeyVerifier } from './create-api-key-verifier.js';
 import { createJwtVerifier } from './create-jwt-verifier.js';
 
@@ -13,35 +14,39 @@ export interface HttpAuthDeps {
 }
 
 /**
- * Turns `AUTH_MODE` into the HTTP layer's auth. In OAuth mode the server also publishes
+ * Turns `AUTH_MODE` into the HTTP layer's auth. In OAuth modes the server also publishes
  * RFC 9728 Protected Resource Metadata naming the issuer, so MCP clients can find the
  * identity provider from the `401` challenge, as the MCP authorization spec describes.
+ * `api-key+oauth` accepts both kinds of token (ADR 0047).
  */
 export function httpAuthFromConfig(config: AuthConfig, deps: HttpAuthDeps): HttpAuth {
   if (config.AUTH_MODE === 'none') return { mode: 'none' };
-  if (config.AUTH_MODE === 'api-key') {
-    return {
-      mode: 'bearer',
-      verifier: createApiKeyVerifier({ ...deps, cacheMs: config.AUTH_CACHE_MS }),
-    };
-  }
+  const apiKeys = createApiKeyVerifier({ ...deps, cacheMs: config.AUTH_CACHE_MS });
+  if (config.AUTH_MODE === 'api-key') return { mode: 'bearer', verifier: apiKeys };
+
   const { OAUTH_ISSUER: issuer, OAUTH_AUDIENCE: audience, OAUTH_JWKS_URL: jwks } = config;
   if (issuer === undefined || audience === undefined || jwks === undefined) {
-    throw new Error('AUTH_MODE oauth needs OAUTH_ISSUER, OAUTH_AUDIENCE and OAUTH_JWKS_URL');
+    throw new Error(
+      `AUTH_MODE ${config.AUTH_MODE} needs OAUTH_ISSUER, OAUTH_AUDIENCE and OAUTH_JWKS_URL`,
+    );
   }
   const scopes = config.OAUTH_REQUIRED_SCOPES;
+  const jwt = createJwtVerifier({
+    issuer,
+    audience,
+    keys: createRemoteJWKSet(new URL(jwks), { timeoutDuration: 5000 }),
+    ...(config.OAUTH_INSTITUTION_CLAIM !== undefined && {
+      institutionClaim: config.OAUTH_INSTITUTION_CLAIM,
+    }),
+    clock: deps.clock,
+    logger: deps.logger,
+  });
   return {
     mode: 'bearer',
-    verifier: createJwtVerifier({
-      issuer,
-      audience,
-      keys: createRemoteJWKSet(new URL(jwks), { timeoutDuration: 5000 }),
-      ...(config.OAUTH_INSTITUTION_CLAIM !== undefined && {
-        institutionClaim: config.OAUTH_INSTITUTION_CLAIM,
-      }),
-      clock: deps.clock,
-      logger: deps.logger,
-    }),
+    verifier:
+      config.AUTH_MODE === 'oauth'
+        ? jwt
+        : createApiKeyOrJwtVerifier({ apiKeys, jwt, resource: new URL(audience), scopes }),
     expectedResource: new URL(audience),
     ...(scopes.length > 0 && { requiredScopes: scopes }),
     protectedResource: {

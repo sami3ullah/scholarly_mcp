@@ -52,3 +52,4 @@ Each ADR records one decision: the context, what we chose and what follows from 
 | [0044](0044-language-lanes-for-any-language-search.md)     | Language lanes for "any language" search                         | accepted              |
 | [0045](0045-self-hosting-bundle.md)                        | Self-hosting bundle                                              | accepted              |
 | [0046](0046-focused-reference-landing-page.md)             | Focused reference landing page                                   | accepted              |
+| [0047](0047-api-keys-and-oauth-in-one-deployment.md)       | API keys and OAuth in one deployment                             | accepted              |

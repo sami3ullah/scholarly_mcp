@@ -24,4 +24,4 @@ The owner decided against a hosted demo: the publisher gets a guide to host the 
 - The bundle runs one server replica. Several replicas on Postgres need a platform that load-balances containers (ECS, Kubernetes); the guide points to the image settings in OPERATIONS.md for that.
 - Card links need the landing app at `PUBLIC_HOST`. A publisher with its own landing page sets `LANDING_BASE_URL` elsewhere and calls the landing API from its stack (LANDING.md); the bundle's landing service can then be left out.
 - `SCHOLARLY_VERSION` defaults to the release that carries ADRs 0042 to 0044 (`0.2.0`); a release must exist before the bundle pulls it.
-- Clients that only speak OAuth (ChatGPT, claude.ai without header support) need `AUTH_MODE=oauth` against the publisher's identity provider (`docs/CONNECTORS.md`); one deployment runs one auth mode.
+- Clients that only speak OAuth (ChatGPT, claude.ai without header support) need `AUTH_MODE=oauth` against the publisher's identity provider (`docs/CONNECTORS.md`); one deployment runs one auth mode. (2026-11-08: `api-key+oauth` accepts both, [ADR 0047](0047-api-keys-and-oauth-in-one-deployment.md).)

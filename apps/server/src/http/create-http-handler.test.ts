@@ -179,6 +179,42 @@ describe('createHttpHandler OAuth metadata', () => {
   });
 });
 
+describe('createHttpHandler API key and OAuth auth', () => {
+  function combined() {
+    const { made, keys } = apiKeyAuth();
+    const auth = httpAuthFromConfig(
+      authConfigSchema.parse({
+        AUTH_MODE: 'api-key+oauth',
+        OAUTH_ISSUER: 'https://id.example.org',
+        OAUTH_AUDIENCE: 'https://mcp.example.org/mcp',
+        OAUTH_JWKS_URL: 'https://id.example.org/jwks',
+        OAUTH_REQUIRED_SCOPES: 'mcp',
+      }),
+      { keys, clock, logger: createTestLogger() },
+    );
+    return { made, ...handlerWith({ auth }) };
+  }
+
+  it('lets a valid API key through the resource and scope checks meant for OAuth tokens', async () => {
+    const { made, handler } = combined();
+    const response = await handler.fetch(post({ authorization: `Bearer ${made.key}` }));
+    expect(await response.text()).toBe('mcp reached');
+  });
+
+  it('refuses a wrong key and challenges with the OAuth metadata, so OAuth clients can sign in', async () => {
+    const { handler } = combined();
+    const wrong = await handler.fetch(
+      post({ authorization: `Bearer smk_key_aaaaaaaaaaaa_${'A'.repeat(43)}` }),
+    );
+    expect(wrong.status).toBe(401);
+    expect(wrong.headers.get('www-authenticate')).toContain(
+      'resource_metadata="https://mcp.example.org/.well-known/oauth-protected-resource/mcp"',
+    );
+    const metadata = await handler.fetch(get('/.well-known/oauth-protected-resource/mcp'));
+    expect(metadata.status).toBe(200);
+  });
+});
+
 describe('the app behind the HTTP layer', () => {
   let harness: Harness | undefined;
   afterEach(async () => {

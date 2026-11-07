@@ -6,11 +6,12 @@ import { csv } from './csv.js';
  * caller and is only allowed on loopback; `api-key` checks keys made with
  * `scholarly-mcp keys create`; `oauth` validates JWT access tokens from the identity
  * provider in `OAUTH_ISSUER`, signed by a key in `OAUTH_JWKS_URL` and issued for
- * `OAUTH_AUDIENCE` (this server's public `/mcp` URL). The token bucket allows
+ * `OAUTH_AUDIENCE` (this server's public `/mcp` URL); `api-key+oauth` accepts both, telling them
+ * apart by the `smk_` key prefix (ADR 0047). The token bucket allows
  * `RATE_LIMIT_PER_MINUTE` tool calls a minute per caller, in bursts of `RATE_LIMIT_BURST`.
  */
 export const authConfigSchema = z.object({
-  AUTH_MODE: z.enum(['none', 'api-key', 'oauth']).default('none'),
+  AUTH_MODE: z.enum(['none', 'api-key', 'oauth', 'api-key+oauth']).default('none'),
   AUTH_CACHE_MS: z.coerce.number().int().min(0).max(60_000).default(5000),
   OAUTH_ISSUER: z.url({ protocol: /^https?$/ }).optional(),
   OAUTH_AUDIENCE: z.url({ protocol: /^https?$/ }).optional(),

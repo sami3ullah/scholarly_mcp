@@ -78,7 +78,7 @@ export const serverConfigSchema = serverOwnConfigSchema
       ctx.addIssue({
         code: 'custom',
         path: ['AUTH_MODE'],
-        message: 'HTTP beyond loopback needs AUTH_MODE api-key or oauth',
+        message: 'HTTP beyond loopback needs AUTH_MODE api-key, oauth or api-key+oauth',
       });
     }
     if ((exposed || landingExposed) && config.HTTP_ALLOWED_HOSTS.length === 0) {
@@ -95,10 +95,11 @@ export const serverConfigSchema = serverOwnConfigSchema
         message: 'HTTP beyond loopback needs LANDING_API_SECRET for the landing API',
       });
     }
-    if (config.AUTH_MODE === 'oauth') {
+    if (config.AUTH_MODE === 'oauth' || config.AUTH_MODE === 'api-key+oauth') {
       for (const key of ['OAUTH_ISSUER', 'OAUTH_AUDIENCE', 'OAUTH_JWKS_URL'] as const) {
         if (config[key] === undefined) {
-          ctx.addIssue({ code: 'custom', path: [key], message: `AUTH_MODE oauth needs ${key}` });
+          const message = `AUTH_MODE ${config.AUTH_MODE} needs ${key}`;
+          ctx.addIssue({ code: 'custom', path: [key], message });
         }
       }
     }

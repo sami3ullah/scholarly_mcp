@@ -24,7 +24,7 @@ describe('serverConfigSchema', () => {
   it('refuses HTTP beyond loopback without auth and a Host allowlist', () => {
     const exposed = { ...base, MCP_TRANSPORT: 'http', HTTP_HOST: '0.0.0.0' };
     expect(() => parseConfig(serverConfigSchema, exposed)).toThrow(
-      /AUTH_MODE: HTTP beyond loopback needs AUTH_MODE api-key or oauth[\s\S]*HTTP_ALLOWED_HOSTS/,
+      /AUTH_MODE: HTTP beyond loopback needs AUTH_MODE api-key, oauth or api-key\+oauth[\s\S]*HTTP_ALLOWED_HOSTS/,
     );
     expect(
       parseConfig(serverConfigSchema, {
@@ -106,6 +106,12 @@ describe('serverConfigSchema', () => {
   it('needs issuer, audience and key set URL for OAuth', () => {
     expect(() => parseConfig(serverConfigSchema, { ...base, AUTH_MODE: 'oauth' })).toThrow(
       /OAUTH_ISSUER[\s\S]*OAUTH_AUDIENCE[\s\S]*OAUTH_JWKS_URL/,
+    );
+  });
+
+  it('needs the same OAuth settings when API keys and OAuth are both accepted', () => {
+    expect(() => parseConfig(serverConfigSchema, { ...base, AUTH_MODE: 'api-key+oauth' })).toThrow(
+      /api-key\+oauth needs OAUTH_ISSUER[\s\S]*OAUTH_AUDIENCE[\s\S]*OAUTH_JWKS_URL/,
     );
   });
 
