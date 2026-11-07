@@ -22,7 +22,7 @@
 	encode zstd gzip
 
 	# The MCP endpoint, its probes for uptime checks, and the OAuth metadata clients read when
-	# AUTH_MODE=oauth. Metrics and the landing API are not on the server's public port.
+	# AUTH_MODE is oauth or api-key+oauth. Metrics and the landing API are not on the server's public port.
 	@mcp path /mcp /healthz /readyz /.well-known/oauth-protected-resource /.well-known/oauth-protected-resource/*
 	handle @mcp {
 		reverse_proxy server:8080

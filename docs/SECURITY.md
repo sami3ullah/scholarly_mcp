@@ -34,7 +34,7 @@ scholarly-mcp is an independent prototype, not affiliated with Thieme or any oth
 
 ### The HTTP edge
 
-- **Authentication** by API key (`smk_…`, stored as a SHA-256 hash and compared in constant time) or OAuth 2.1 access tokens checked against the issuer's JWKS, asymmetric signatures only ([ADR 0031](adr/0031-auth-limits-metering-and-telemetry.md)). `AUTH_MODE=none` is refused beyond loopback; the image defaults to API keys.
+- **Authentication** by API key (`smk_…`, stored as a SHA-256 hash and compared in constant time) or OAuth 2.1 access tokens checked against the issuer's JWKS, asymmetric signatures only ([ADR 0031](adr/0031-auth-limits-metering-and-telemetry.md)); `api-key+oauth` accepts both, routing each token to one verifier by its `smk_` prefix ([ADR 0047](adr/0047-api-keys-and-oauth-in-one-deployment.md)). `AUTH_MODE=none` is refused beyond loopback; the image defaults to API keys.
 - **DNS rebinding:** `/mcp` and the landing API accept only `Host` values on `HTTP_ALLOWED_HOSTS`, and `/mcp` only browser `Origin`s on its allowlist. No route sends CORS headers.
 - **Rate limits** per caller (token buckets, shared across replicas on Postgres, [ADR 0036](adr/0036-shared-rate-limit-buckets.md)) and per landing visitor.
 - **Limits on every request:** 64 KB bodies, 16 KB of headers, 10 s to send headers, 60 s per request; all tool inputs are parsed with zod schemas, strict about unknown fields.

@@ -6,15 +6,19 @@ How readers add a deployed scholarly-mcp server to their AI assistant. The endpo
 
 ## Which auth each client needs
 
-| Client                              | API key (`AUTH_MODE=api-key`)       | OAuth (`AUTH_MODE=oauth`) |
-| ----------------------------------- | ----------------------------------- | ------------------------- |
-| Claude Code                         | Yes, as a header                    | Yes                       |
-| Claude Desktop, local config        | Yes, through `mcp-remote`           | Yes                       |
-| Claude (claude.ai, Desktop, mobile) | Only where "Request headers" exists | Yes                       |
-| ChatGPT (developer mode, apps)      | No                                  | Yes                       |
-| MCP Inspector, other MCP clients    | Yes, as a header                    | Depends on the client     |
+| Client                              | API key                             | OAuth                 |
+| ----------------------------------- | ----------------------------------- | --------------------- |
+| Claude Code                         | Yes, as a header                    | Yes                   |
+| Claude Desktop, local config        | Yes, through `mcp-remote`           | Yes                   |
+| Claude (claude.ai, Desktop, mobile) | Only where "Request headers" exists | Yes                   |
+| ChatGPT (developer mode, apps)      | No                                  | Yes                   |
+| MCP Inspector, other MCP clients    | Yes, as a header                    | Depends on the client |
 
-API keys are enough for a pilot with Claude Code and Claude Desktop. Connectors added in claude.ai or ChatGPT are called from those platforms' cloud, not from the reader's machine, so the server must be reachable from the internet, and they expect OAuth: ChatGPT supports OAuth or no auth, and claude.ai's request-header option (for a fixed key) is in beta for some organisations only. A deployment runs one `AUTH_MODE`, so a publisher that wants ChatGPT and claude.ai sets up OAuth for everyone.
+API keys are enough for a pilot with Claude Code and Claude Desktop. Connectors added in claude.ai or ChatGPT are called from those platforms' cloud, not from the reader's machine, so the server must be reachable from the internet, and they expect OAuth: ChatGPT supports OAuth or no auth, and claude.ai's request-header option (for a fixed key) is in beta for some organisations only. `AUTH_MODE` picks what a deployment accepts:
+
+- `api-key` (default): keys only. Enough for Claude Code and Claude Desktop.
+- `api-key+oauth`: both, on one hostname. Recommended once ChatGPT or claude.ai readers join: they log in through your identity provider, and existing key holders (pilots, scripts, monitoring) keep their keys ([ADR 0047](adr/0047-api-keys-and-oauth-in-one-deployment.md)).
+- `oauth`: your identity provider only.
 
 Platform settings and screens change; the platforms' own pages are the reference: [Claude custom connectors](https://claude.com/docs/connectors/custom), [ChatGPT developer mode](https://developers.openai.com/api/docs/guides/developer-mode).
 
@@ -66,7 +70,7 @@ The server does not issue tokens. It checks JWT access tokens from your identity
 2. **In `deploy/.env`:**
 
    ```bash
-   AUTH_MODE=oauth
+   AUTH_MODE=api-key+oauth   # or oauth, to stop accepting API keys
    OAUTH_ISSUER=https://login.example.org/realms/main
    OAUTH_AUDIENCE=https://mcp.example.org/mcp
    OAUTH_JWKS_URL=https://login.example.org/realms/main/protocol/openid-connect/certs
@@ -81,7 +85,7 @@ The server does not issue tokens. It checks JWT access tokens from your identity
    - **ChatGPT:** Settings → Apps → Advanced settings, turn on developer mode, then create an app with the URL `https://mcp.example.org/mcp` and OAuth. Business, Enterprise and Edu workspace admins can publish it for the workspace.
    - **Claude Code:** `claude mcp add --transport http scholarly https://mcp.example.org/mcp`, then `/mcp` in a session to log in.
 
-Usage and rate limits then count per OAuth client (`oauth:<client id>`), and `check_access` uses the institution claim.
+Usage and rate limits then count per OAuth client (`oauth:<client id>`), and `check_access` uses the institution claim. With `api-key+oauth`, key holders count per key as before.
 
 ## What readers see
 

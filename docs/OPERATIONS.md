@@ -8,15 +8,15 @@ How to deploy, refresh, scale and watch scholarly-mcp. For a complete HTTPS depl
 
 One image, `ghcr.io/sami3ullah/scholarly-mcp`, runs the server and every command (`serve`, `keys`, `funnel`, `ingest`). Release images carry the CC BY demo index ([ADR 0039](adr/0039-demo-index-from-a-cc-by-doi-list.md)); for the real corpus, build an index with `ingest full` or bake one into a private image ([docker/README.md](../docker/README.md#build)).
 
-| Need               | Set                                                                                                    |
-| ------------------ | ------------------------------------------------------------------------------------------------------ |
-| Public hostname    | `HTTP_ALLOWED_HOSTS=mcp.example.org` (and `HTTP_ALLOWED_ORIGINS` for browser clients)                  |
-| Auth               | `AUTH_MODE=api-key` (image default) or `oauth` with `OAUTH_ISSUER`, `OAUTH_AUDIENCE`, `OAUTH_JWKS_URL` |
-| Card links         | `LANDING_BASE_URL` to your landing page ([LANDING.md](LANDING.md))                                     |
-| Publisher settings | the preset, e.g. `--env-file presets/thieme.env`                                                       |
-| Runtime state      | a volume at `/var/lib/scholarly` (SQLite) or `STORE=postgres` with `DATABASE_URL`                      |
-| Secrets            | `LANDING_API_SECRET_FILE`, `METER_WEBHOOK_SECRET_FILE`, `DATABASE_URL_FILE` from the secret store      |
-| Usage export       | `METER_WEBHOOK_URL` and its secret ([operating guide](guides/operating-the-server.md#usage-metering))  |
+| Need               | Set                                                                                                                     |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| Public hostname    | `HTTP_ALLOWED_HOSTS=mcp.example.org` (and `HTTP_ALLOWED_ORIGINS` for browser clients)                                   |
+| Auth               | `AUTH_MODE=api-key` (image default), `oauth` or `api-key+oauth` with `OAUTH_ISSUER`, `OAUTH_AUDIENCE`, `OAUTH_JWKS_URL` |
+| Card links         | `LANDING_BASE_URL` to your landing page ([LANDING.md](LANDING.md))                                                      |
+| Publisher settings | the preset, e.g. `--env-file presets/thieme.env`                                                                        |
+| Runtime state      | a volume at `/var/lib/scholarly` (SQLite) or `STORE=postgres` with `DATABASE_URL`                                       |
+| Secrets            | `LANDING_API_SECRET_FILE`, `METER_WEBHOOK_SECRET_FILE`, `DATABASE_URL_FILE` from the secret store                       |
+| Usage export       | `METER_WEBHOOK_URL` and its secret ([operating guide](guides/operating-the-server.md#usage-metering))                   |
 
 Publish port 8080 behind a TLS-terminating proxy; keep 9464 (`/metrics`) and 8081 (landing API, when `LANDING_API_PORT` is set) on the internal network. Probe `/healthz` for liveness and `/readyz` for readiness, and give the container at least 15 s to stop (`SHUTDOWN_TIMEOUT_MS` plus 5 s), so requests in flight drain and the usage outbox is flushed.
 
@@ -113,7 +113,7 @@ Release tags (`v1.2.3`) publish `1.2.3`, `1.2` and `latest`. Pin a version in pr
 
 | Symptom                                                       | Cause and fix                                                                                     |
 | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| Exits at start with `AUTH_MODE: HTTP beyond loopback needs …` | Set `AUTH_MODE=api-key` or `oauth`, and `HTTP_ALLOWED_HOSTS`                                      |
+| Exits at start with `AUTH_MODE: HTTP beyond loopback needs …` | Set `AUTH_MODE=api-key`, `oauth` or `api-key+oauth`, and `HTTP_ALLOWED_HOSTS`                     |
 | `421` or `403` from `/mcp`                                    | The `Host` or `Origin` the client sends is not on `HTTP_ALLOWED_HOSTS` / `HTTP_ALLOWED_ORIGINS`   |
 | `/readyz` stays `503`                                         | No index at `INDEX_PATH` or no live Postgres build: bake one in, run `ingest full` or `copy`      |
 | `401` with a key you just made                                | The key was made against another runtime database than the server uses (volume or `DATABASE_URL`) |

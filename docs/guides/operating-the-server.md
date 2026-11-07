@@ -8,15 +8,16 @@ Every command below assumes `source ~/.nvm/nvm.sh && nvm use` and `pnpm build`.
 
 ## Auth modes
 
-| `AUTH_MODE` | Who may call `/mcp`                                                          | Use it for                                 |
-| ----------- | ---------------------------------------------------------------------------- | ------------------------------------------ |
-| `none`      | Anyone who reaches the port, as the caller `local`. Only allowed on loopback | Your own machine, MCP Inspector            |
-| `api-key`   | Requests with `Authorization: Bearer smk_…` of an active key                 | The demo and pilots                        |
-| `oauth`     | Requests with a JWT access token issued for this server by your IdP          | Production behind the publisher's identity |
+| `AUTH_MODE`     | Who may call `/mcp`                                                                                                                                        | Use it for                                          |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| `none`          | Anyone who reaches the port, as the caller `local`. Only allowed on loopback                                                                               | Your own machine, MCP Inspector                     |
+| `api-key`       | Requests with `Authorization: Bearer smk_…` of an active key                                                                                               | The demo and pilots                                 |
+| `oauth`         | Requests with a JWT access token issued for this server by your IdP                                                                                        | Production behind the publisher's identity          |
+| `api-key+oauth` | Either of the two above; `smk_…` tokens go to the key store, all others to the JWT check ([ADR 0047](../adr/0047-api-keys-and-oauth-in-one-deployment.md)) | ChatGPT and claude.ai readers alongside key holders |
 
 Stdio never authenticates: the client starts the server as its own process.
 
-HTTP beyond loopback (`HTTP_HOST=0.0.0.0`) is refused at boot unless `AUTH_MODE` is `api-key` or `oauth` and `HTTP_ALLOWED_HOSTS` lists the public hostnames, for example `mcp.example.org`. `HTTP_ALLOWED_ORIGINS` lists the hostnames whose browser pages may call `/mcp`; requests without an `Origin` header, as MCP clients send them, always pass. Both default to `localhost`, `127.0.0.1` and `[::1]`. No route sends CORS headers.
+HTTP beyond loopback (`HTTP_HOST=0.0.0.0`) is refused at boot unless `AUTH_MODE` is `api-key`, `oauth` or `api-key+oauth` and `HTTP_ALLOWED_HOSTS` lists the public hostnames, for example `mcp.example.org`. `HTTP_ALLOWED_ORIGINS` lists the hostnames whose browser pages may call `/mcp`; requests without an `Origin` header, as MCP clients send them, always pass. Both default to `localhost`, `127.0.0.1` and `[::1]`. No route sends CORS headers.
 
 ## API keys
 
@@ -41,7 +42,7 @@ A client sends the key as a bearer token. Without one, or with a wrong or revoke
 
 ## OAuth
 
-Set `AUTH_MODE=oauth` and:
+Set `AUTH_MODE=oauth` (or `api-key+oauth` to keep accepting keys) and:
 
 | Variable                  | Meaning                                                                    |
 | ------------------------- | -------------------------------------------------------------------------- |
@@ -51,7 +52,7 @@ Set `AUTH_MODE=oauth` and:
 | `OAUTH_REQUIRED_SCOPES`   | Optional comma-separated scopes every token needs (`403` otherwise)        |
 | `OAUTH_INSTITUTION_CLAIM` | Optional claim holding the reader's institution, passed on to entitlements |
 
-The server publishes Protected Resource Metadata at `/.well-known/oauth-protected-resource/mcp`, naming the issuer, and points to it in every `401`, so MCP clients can find where to log in. Only asymmetric signatures are accepted. The caller is `oauth:<client id>`.
+The server publishes Protected Resource Metadata at `/.well-known/oauth-protected-resource/mcp`, naming the issuer, and points to it in every `401`, so MCP clients can find where to log in. Only asymmetric signatures are accepted. The caller is `oauth:<client id>`. With `api-key+oauth` an accepted key counts as issued for `OAUTH_AUDIENCE` with every scope in `OAUTH_REQUIRED_SCOPES`, and its caller stays the key id.
 
 ## Rate limits
 
