@@ -86,3 +86,6 @@ jobs:
       - run: docker/e2e/smoke.sh postgres
         env:
           SMOKE_INDEX_DIR: ${{ runner.temp }}/demo-index
+      # The self-hosting bundle (ADR 0045) on the images built above, over HTTPS via Caddy.
+      - run: docker/e2e/deploy-smoke.sh sqlite
+      - run: docker/e2e/deploy-smoke.sh postgres

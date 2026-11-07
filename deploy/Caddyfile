@@ -1,0 +1,44 @@
+# The one public entry point of a self-hosted deployment (ADR 0045). Caddy ends TLS for
+# PUBLIC_HOST with a certificate it gets and renews itself, sends the MCP endpoint to the
+# server and everything else to the landing app. Ports 8080 and 8443 inside the container
+# are published as 80 and 443, so the proxy runs without root.
+#
+# With no trusted proxies, Caddy drops any X-Forwarded-For a client sends and sets the
+# client's own address, which the landing app's per-reader limit uses (ADR 0038). Behind a
+# tunnel or load balancer, TRUSTED_PROXIES lists the ranges it connects from.
+{
+	admin off
+	persist_config off
+	http_port 8080
+	https_port 8443
+	email {$ACME_EMAIL:}
+	servers {
+		trusted_proxies static {$TRUSTED_PROXIES:127.0.0.1/32}
+		client_ip_headers Cf-Connecting-Ip X-Forwarded-For
+	}
+}
+
+{$SITE_ADDRESS} {
+	encode zstd gzip
+
+	# The MCP endpoint, its probes for uptime checks, and the OAuth metadata clients read when
+	# AUTH_MODE=oauth. Metrics and the landing API are not on the server's public port.
+	@mcp path /mcp /healthz /readyz /.well-known/oauth-protected-resource /.well-known/oauth-protected-resource/*
+	handle @mcp {
+		reverse_proxy server:8080
+	}
+
+	# The landing pages behind every card link (the app answers 404 elsewhere).
+	handle {
+		reverse_proxy landing:3000
+	}
+
+	header {
+		-Server
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+	}
+	# No access log: landing links carry a session token, and the server and the app log
+	# what is needed without it.
+}

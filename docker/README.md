@@ -2,7 +2,7 @@
 
 [← Back to the docs index](../docs/README.md)
 
-The scholarly-mcp image runs the MCP server and the ingest CLI on a distroless, non-root Node 24 base with a read-only filesystem ([ADR 0037](../docs/adr/0037-container-image-and-compose-profiles.md)). `compose.yaml` at the repository root runs it on SQLite or on Postgres. A second image runs the reference landing app behind a proxy ([ADR 0038](../docs/adr/0038-landing-image-proxy-and-secret-files.md)).
+The scholarly-mcp image runs the MCP server and the ingest CLI on a distroless, non-root Node 24 base with a read-only filesystem ([ADR 0037](../docs/adr/0037-container-image-and-compose-profiles.md)). `compose.yaml` at the repository root runs it on SQLite or on Postgres. A second image runs the reference landing app behind a proxy ([ADR 0038](../docs/adr/0038-landing-image-proxy-and-secret-files.md)). These files are for development and tests; a production deployment uses the published images through `deploy/` ([self-hosting guide](../docs/SELF-HOSTING.md), [ADR 0045](../docs/adr/0045-self-hosting-bundle.md)).
 
 ## Build
 
@@ -71,12 +71,13 @@ INDEX_DIR=/tmp/demo-index docker compose --profile sqlite build
 
 ## Tests
 
-| Script                                       | What it does                                                                                                            |
-| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `docker/e2e/smoke.sh [sqlite\|postgres]`     | Both images with the demo index, the stack with the landing app, a key, every tool over HTTP, a card link via the proxy |
-| `docker/e2e/load.sh <dir with index.sqlite>` | Cold start, then tool calls at `LOAD_RATE` (20) a second for `LOAD_SECONDS` (60): p50/p95/p99, errors, memory           |
+| Script                                          | What it does                                                                                                            |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `docker/e2e/smoke.sh [sqlite\|postgres]`        | Both images with the demo index, the stack with the landing app, a key, every tool over HTTP, a card link via the proxy |
+| `docker/e2e/deploy-smoke.sh [sqlite\|postgres]` | The self-hosting bundle (`deploy/`) on those images, `PUBLIC_HOST=localhost`, every tool over HTTPS through Caddy       |
+| `docker/e2e/load.sh <dir with index.sqlite>`    | Cold start, then tool calls at `LOAD_RATE` (20) a second for `LOAD_SECONDS` (60): p50/p95/p99, errors, memory           |
 
-The smoke test builds the demo index first unless `SMOKE_INDEX_DIR` names one; `SMOKE_KEEP=1` leaves the stack up. CI runs it on both stores. Load results are in [OPERATIONS.md](../docs/OPERATIONS.md#capacity).
+The smoke test builds the demo index first unless `SMOKE_INDEX_DIR` names one; `SMOKE_KEEP=1` leaves the stack up. CI runs both scripts on both stores. Load results are in [OPERATIONS.md](../docs/OPERATIONS.md#capacity).
 
 ## Releases
 

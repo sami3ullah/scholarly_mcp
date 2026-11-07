@@ -43,8 +43,9 @@ updates:
     commit-message:
       prefix: build(docker)
 
+  # The development stack and the self-hosting bundle (Caddy, Postgres, cloudflared).
   - package-ecosystem: docker-compose
-    directory: /
+    directories: [/, /deploy]
     schedule:
       interval: weekly
     cooldown:
