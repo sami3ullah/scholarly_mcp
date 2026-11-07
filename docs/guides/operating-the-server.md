@@ -71,7 +71,7 @@ Every exported event carries `kind`. A billing consumer that sums `billable` eve
 
 The exporter sends pending events every `METER_EXPORT_MS` (5 s):
 
-- **JSON lines**, always, to `METER_JSONL_PATH` (default `data/usage.jsonl`), one event per line.
+- **JSON lines**, always, to `METER_JSONL_PATH` (default `data/usage.jsonl`; `/var/lib/scholarly/usage.jsonl` in the image, on the state volume), one event per line.
 - **Webhook**, when `METER_WEBHOOK_URL` is set: `POST` with `{ "events": [...] }`.
 
 A batch counts as exported only when every sink took it. When one fails, the whole batch is sent again later with growing pauses (up to `METER_BACKOFF_MAX_MS`, 5 min), so delivery is at least once: **dedupe on the event `id`**. Exported events are deleted after `METER_RETENTION_DAYS` (30). `meter_outbox_pending` shows the backlog.

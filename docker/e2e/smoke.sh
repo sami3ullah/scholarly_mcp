@@ -72,4 +72,21 @@ SMOKE_MCP_URL=http://127.0.0.1:$HTTP_PORT \
   SMOKE_KEY=$key \
   node docker/e2e/smoke.mjs
 
+step "Usage export on the read-only image"
+# The tool calls above are metered; the exporter appends them to METER_JSONL_PATH within a
+# few seconds, unless the path cannot be written.
+exported=0
+for _ in $(seq 1 30); do
+  if "${compose[@]}" exec -T "$server" /nodejs/bin/node -e \
+    "process.exit(require('node:fs').statSync(process.env.METER_JSONL_PATH, { throwIfNoEntry: false })?.size > 0 ? 0 : 1)"; then
+    exported=1
+    break
+  fi
+  sleep 1
+done
+if [ "$exported" != 1 ]; then
+  echo "no usage events reached METER_JSONL_PATH within 30 s" >&2
+  exit 1
+fi
+
 step "Done"

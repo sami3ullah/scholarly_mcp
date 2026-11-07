@@ -105,10 +105,11 @@ ENV NODE_ENV=production \
     EMBEDDER_CACHE_DIR=/models \
     EMBEDDER_ALLOW_REMOTE=false \
     INDEX_PATH=/data/index.sqlite \
-    RUNTIME_DB_PATH=/var/lib/scholarly/runtime.sqlite
+    RUNTIME_DB_PATH=/var/lib/scholarly/runtime.sqlite \
+    METER_JSONL_PATH=/var/lib/scholarly/usage.jsonl
 USER nonroot
 EXPOSE 8080 9464
-# The runtime database is the only thing the server writes; mount a volume there.
+# The runtime database and the usage export are all the server writes; mount a volume there.
 VOLUME ["/var/lib/scholarly"]
 ENTRYPOINT ["/nodejs/bin/node", "/app/scholarly-mcp.mjs"]
 CMD ["serve"]

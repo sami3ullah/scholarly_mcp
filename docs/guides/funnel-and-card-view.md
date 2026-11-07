@@ -51,7 +51,7 @@ Every event goes through the metering outbox and its exporters ([Operating the s
 
 ## Writing the report
 
-The report reads the JSON lines export (`METER_JSONL_PATH`, default `data/usage.jsonl`). That file is the durable event log: the outbox deletes exported events after 30 days, the file keeps them.
+The report reads the JSON lines export (`METER_JSONL_PATH`, default `data/usage.jsonl`, in the image `/var/lib/scholarly/usage.jsonl`). That file is the durable event log: the outbox deletes exported events after 30 days, the file keeps them.
 
 ```bash
 source ~/.nvm/nvm.sh && nvm use
