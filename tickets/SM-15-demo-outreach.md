@@ -24,12 +24,19 @@ Owner follow-ups from the review: cards show closed articles as `subscription` (
 ## Tasks
 
 - [x] 5 demo questions (DE, EN, cross-language, paywalled, retraction), proposed and approved (2026-11-03, below)
-- [ ] Self-hosting guide: Compose deployment with TLS, SQLite or Postgres (bundled or existing, with pgvector and pg_trgm), per-user keys, index build and refresh
-- [ ] Deployment notes for AWS and Cloudflare (and the general VM case)
-- [ ] Connector instructions for Claude and ChatGPT
-- [ ] One-page memo (agent can draft); Loom recording (user)
+- [x] Self-hosting guide: Compose deployment with TLS, SQLite or Postgres (bundled or existing, with pgvector and pg_trgm), per-user keys, index build and refresh (ADR 0045, `deploy/`, `docs/SELF-HOSTING.md`, 2026-11-07)
+- [x] Deployment notes for AWS and Cloudflare (and the general VM case) (`docs/SELF-HOSTING.md#where-to-run-it`; Cloudflare Tunnel as a compose profile)
+- [x] Connector instructions for Claude and ChatGPT (`docs/CONNECTORS.md`; ChatGPT and most claude.ai organisations need `AUTH_MODE=oauth`)
+- [x] One-page memo drafted (`docs/outreach/memo.md`; Loom link and contact to fill in)
+- [ ] Release v0.2.0, so the bundle's default `SCHOLARLY_VERSION` exists (owner approval)
+- [ ] Clean-machine run of the guide on a real VM with a public hostname, after the release
+- [ ] Loom recording (user; script in `docs/outreach/loom-script.md`)
 - [ ] Outreach (user)
 
 ## Exit
 
 A clean machine reaches a working deployment by following the guide alone (SQLite, and Postgres against an existing database); video under 5 minutes; outreach sent.
+
+## Verification (2026-11-07)
+
+`deploy/` run from a copy holding only `deploy/`, `docker/postgres/init` and `docker/e2e/smoke.mjs`, with images built from `main` and `PUBLIC_HOST=localhost` (Caddy's local CA): all 13 smoke checks pass over HTTPS on SQLite, on the bundled Postgres (after `admin ingest copy`) and on a separate Postgres prepared with the guide's role SQL alone. Tunnel settings (`SITE_ADDRESS=:8080`, loopback bind, trusted private ranges) serve `/readyz` and `/mcp` on plain HTTP. Keys, `funnel --store` and the runtime backup command work through `admin`. Not yet done: Let's Encrypt on a public hostname, published v0.2.0 images, a real Cloudflare tunnel.
