@@ -1,32 +1,46 @@
 /*
  * Design tokens (PLAN.md React conventions): every colour, size and radius the landing
  * page uses, as CSS variables, so a publisher maps them onto its own design system here.
+ * Warm neutrals with one ink-blue accent; a serif for titles and quotes, the system sans for
+ * everything else. Both stacks are local fonts, so the page loads no web font.
  */
 :root {
-  --color-bg: #ffffff;
-  --color-surface: #f5f7f9;
-  --color-text: #1b1f24;
-  --color-text-muted: #4d5763;
-  --color-border: #d5dbe1;
-  --color-accent: #0b5cad;
-  --color-accent-hover: #084a8c;
-  --color-on-accent: #ffffff;
-  --color-focus: #ffbf47;
-  --color-open: #0f6b3a;
-  --color-open-bg: #e3f4ea;
-  --color-locked: #6b4e00;
-  --color-locked-bg: #fdf3d8;
-  --color-danger: #a4161a;
-  --color-danger-bg: #fde8e8;
-  --color-quote-bar: #8fb6dd;
+  color-scheme: light dark;
 
-  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --color-bg: #faf9f6;
+  --color-surface: #ffffff;
+  --color-sunken: #f3f1ec;
+  --color-text: #1a1916;
+  --color-text-muted: #5c5a54;
+  --color-border: #e5e2db;
+  --color-border-strong: #d2cec5;
+  --color-accent: #2851a3;
+  --color-accent-hover: #1f4189;
+  --color-accent-soft: #eaf0fb;
+  --color-on-accent: #ffffff;
+  --color-focus: #e0a526;
+  --color-open: #17703f;
+  --color-open-bg: #e4f3e9;
+  --color-locked: #7f5300;
+  --color-locked-bg: #fbf0d6;
+  --color-danger: #a4161a;
+  --color-danger-bg: #fdeaea;
+  --color-quote-bar: #2851a3;
+  --glow: rgb(40 81 163 / 7%);
+  --shadow-sm: 0 1px 2px rgb(26 25 22 / 5%);
+  --shadow-md: 0 1px 2px rgb(26 25 22 / 4%), 0 8px 24px -12px rgb(26 25 22 / 14%);
+
+  --font-body:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-serif:
+    'Iowan Old Style', 'Charter', 'Sitka Text', 'Source Serif Pro', Cambria, Georgia, serif;
+  --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
   --font-size-md: 1rem;
   --font-size-lg: 1.125rem;
-  --font-size-xl: 1.5rem;
-  --font-size-2xl: clamp(1.5rem, 1.2rem + 1.5vw, 2.125rem);
-  --line-height: 1.55;
+  --font-size-xl: 1.375rem;
+  --font-size-2xl: clamp(1.75rem, 1.25rem + 2.2vw, 2.75rem);
+  --line-height: 1.6;
 
   --space-1: 0.25rem;
   --space-2: 0.5rem;
@@ -35,30 +49,41 @@
   --space-5: 1.5rem;
   --space-6: 2rem;
   --space-7: 3rem;
+  --space-8: 4.5rem;
 
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --content-width: 72rem;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+  --content-width: 74rem;
+  --measure: 42rem;
   --tap-target: 44px;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-bg: #121418;
-    --color-surface: #1c2027;
-    --color-text: #e8ebef;
-    --color-text-muted: #aab3bd;
-    --color-border: #343b45;
-    --color-accent: #6aa9ec;
-    --color-accent-hover: #8dbdf1;
-    --color-on-accent: #0b1520;
-    --color-open: #7fd6a5;
-    --color-open-bg: #173324;
-    --color-locked: #f0cf73;
-    --color-locked-bg: #3a2f0f;
+    --color-bg: #131312;
+    --color-surface: #1c1b19;
+    --color-sunken: #181816;
+    --color-text: #f0eee9;
+    --color-text-muted: #aba89f;
+    --color-border: #2e2d29;
+    --color-border-strong: #45433d;
+    --color-accent: #93b4f0;
+    --color-accent-hover: #b3cbf5;
+    --color-accent-soft: #1d2638;
+    --color-on-accent: #0d1424;
+    --color-open: #7fd3a1;
+    --color-open-bg: #16301f;
+    --color-locked: #ecc76f;
+    --color-locked-bg: #352b12;
     --color-danger: #ff9b9b;
-    --color-danger-bg: #3d1618;
-    --color-quote-bar: #3f6f9f;
+    --color-danger-bg: #3a1618;
+    --color-quote-bar: #6f95dc;
+    --glow: rgb(111 149 220 / 9%);
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 30%);
+    --shadow-md: 0 1px 2px rgb(0 0 0 / 30%), 0 12px 32px -16px rgb(0 0 0 / 60%);
   }
 }
 
@@ -74,25 +99,35 @@ html {
 
 body {
   margin: 0;
-  background: var(--color-bg);
+  min-height: 100vh;
+  background:
+    radial-gradient(60rem 28rem at 15% -8rem, var(--glow), transparent 70%), var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-body);
   font-size: var(--font-size-md);
   line-height: var(--line-height);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 a {
   color: var(--color-accent);
-  text-underline-offset: 0.15em;
+  text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
+  text-underline-offset: 0.2em;
+  transition:
+    color 160ms var(--ease),
+    text-decoration-color 160ms var(--ease);
 }
 
 a:hover {
   color: var(--color-accent-hover);
+  text-decoration-color: currentColor;
 }
 
 :focus-visible {
   outline: 3px solid var(--color-focus);
   outline-offset: 2px;
+  border-radius: 2px;
 }
 
 h1,
@@ -100,6 +135,15 @@ h2,
 h3 {
   line-height: 1.25;
   margin: 0;
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-accent) 22%, transparent);
 }
 
 .visually-hidden {

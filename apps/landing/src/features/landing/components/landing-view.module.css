@@ -1,43 +1,92 @@
 .page {
   max-width: var(--content-width);
   margin: 0 auto;
-  padding: var(--space-4) var(--space-4) var(--space-7);
+  padding: var(--space-5) var(--space-4) var(--space-7);
 }
 
 .header {
-  margin-bottom: var(--space-5);
+  margin-bottom: var(--space-6);
 }
 
+/* The search's topic, as a quiet chip above the article. */
 .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: 100%;
   margin: 0;
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--color-surface) 70%, transparent);
   color: var(--color-text-muted);
-  font-weight: 600;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  box-shadow: var(--shadow-sm);
+}
+
+.eyebrow::before {
+  content: '';
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-soft);
 }
 
 .notice {
   margin: var(--space-3) 0 0;
   padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: var(--color-surface);
+  background: var(--color-sunken);
+  color: var(--color-text-muted);
+}
+
+.columns {
+  display: grid;
+  gap: var(--space-7);
+}
+
+.aside {
+  min-width: 0;
 }
 
 .footer {
-  margin-top: var(--space-7);
-  padding-top: var(--space-4);
+  margin-top: var(--space-8);
+  padding-top: var(--space-5);
   border-top: 1px solid var(--color-border);
   color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.01em;
 }
 
 @media (min-width: 60rem) {
   .page {
-    padding-inline: var(--space-6);
+    padding: var(--space-7) var(--space-6) var(--space-7);
+  }
+
+  .header {
+    margin-bottom: var(--space-6);
   }
 
   .columns {
-    display: grid;
-    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-    gap: var(--space-7);
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem);
+    gap: var(--space-8);
+    align-items: start;
+  }
+
+  /* The other results stay in view while the reader scrolls the article. */
+  .aside {
+    position: sticky;
+    top: var(--space-6);
+    max-height: calc(100vh - var(--space-6) * 2);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border-strong) transparent;
+    padding-right: var(--space-1);
   }
 
   .aside > :first-child {

@@ -1,36 +1,49 @@
 .article {
   display: block;
+  min-width: 0;
 }
 
 .badges {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-4);
 }
 
 .title {
+  max-width: 20em;
+  font-family: var(--font-serif);
   font-size: var(--font-size-2xl);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
 }
 
 .subtitle {
-  margin: var(--space-2) 0 0;
-  font-size: var(--font-size-lg);
-  color: var(--color-text-muted);
-}
-
-.byline,
-.source {
   margin: var(--space-3) 0 0;
+  max-width: var(--measure);
+  font-family: var(--font-serif);
+  font-size: var(--font-size-xl);
+  line-height: 1.35;
+  color: var(--color-text-muted);
+}
+
+.byline {
+  margin: var(--space-5) 0 0;
+  max-width: var(--measure);
+  font-weight: 500;
 }
 
 .source {
+  margin: var(--space-1) 0 0;
   color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
 }
 
 .retracted {
-  margin: var(--space-4) 0 0;
+  margin: var(--space-5) 0 0;
   padding: var(--space-3) var(--space-4);
+  border: 1px solid color-mix(in srgb, var(--color-danger) 30%, transparent);
   border-radius: var(--radius-md);
   background: var(--color-danger-bg);
   color: var(--color-danger);
@@ -38,12 +51,18 @@
 }
 
 .section {
-  margin-top: var(--space-5);
+  margin-top: var(--space-7);
+  max-width: var(--measure);
 }
 
+/* Section headings are small labels, so the article's own text leads. */
 .heading {
-  font-size: var(--font-size-lg);
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-3);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .subjects {
@@ -56,7 +75,15 @@
 }
 
 .facts {
-  margin: var(--space-5) 0 0;
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--space-2) var(--space-5);
+  max-width: var(--measure);
+  margin: var(--space-7) 0 0;
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-sunken);
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
   overflow-wrap: anywhere;
@@ -64,8 +91,9 @@
 
 .facts dt {
   font-weight: 600;
+  color: var(--color-text);
 }
 
 .facts dd {
-  margin: 0 0 var(--space-2);
+  margin: 0;
 }

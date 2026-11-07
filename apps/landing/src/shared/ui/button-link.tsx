@@ -20,6 +20,10 @@ export function ButtonLink(props: {
       {...(props.action !== undefined && { 'data-action': props.action })}
     >
       {props.children}
+      {/* Every button leaves for the publisher's site, so each carries an outbound arrow. */}
+      <svg className={styles['icon']} viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+        <path d="M5 11 11 5M6 5h5v5" />
+      </svg>
     </a>
   );
 }

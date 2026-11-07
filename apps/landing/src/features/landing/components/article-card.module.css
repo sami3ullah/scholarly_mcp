@@ -1,34 +1,81 @@
+/* The title link covers the whole card, so the card is one large target. */
 .card {
-  padding-block: var(--space-4);
-  border-top: 1px solid var(--color-border);
+  position: relative;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  transition:
+    border-color 160ms var(--ease),
+    box-shadow 160ms var(--ease),
+    transform 160ms var(--ease);
+}
+
+.card:hover {
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.card:focus-within {
+  border-color: var(--color-accent);
 }
 
 .title {
-  font-size: var(--font-size-lg);
+  font-family: var(--font-serif);
+  font-size: 1.0625rem;
   font-weight: 600;
+  line-height: 1.35;
 }
 
 .title a {
+  color: var(--color-text);
   text-decoration: none;
 }
 
-.title a:hover {
-  text-decoration: underline;
+.title a::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.title a:focus-visible {
+  outline: none;
+}
+
+.card:has(.title a:focus-visible) {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.card:hover .title a {
+  color: var(--color-accent);
 }
 
 .meta {
   margin: var(--space-1) 0 0;
   color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
+  line-height: 1.5;
 }
 
 .badges {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
-  margin-top: var(--space-2);
+  margin-top: var(--space-3);
 }
 
 .teaser {
-  margin: var(--space-2) 0 0;
+  display: -webkit-box;
+  margin: var(--space-3) 0 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1.55;
 }
