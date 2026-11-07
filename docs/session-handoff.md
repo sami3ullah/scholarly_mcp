@@ -374,3 +374,10 @@ Append-only. Newest entry at the bottom.
 - **Open questions for the owner:** accept API keys and OAuth in one deployment (ChatGPT and most claude.ai orgs need OAuth); a hint when `search_articles` gets a retracted DOI.
 - **Gotchas:** `gh` is not installed; CI status via `curl https://api.github.com/repos/sami3ullah/scholarly_mcp/actions/runs?head_sha=…` and `/actions/runs/<id>/jobs` (logs need auth). mcp-inspector v2 changed its CLI flags; the guide uses `smoke.mjs` run in the image instead.
 - **Owner decision (2026-11-07): nothing paid.** The demo runs only in Docker locally; the real-VM check is dropped (ticket exit rewritten). Demo stack is up: `INDEX_DIR=$PWD/data/demo-full docker compose --profile sqlite --profile landing up -d --wait` (full index hard-linked at `data/demo-full/index.sqlite`, 71,197 articles; the old eval `scholarly-mcp_index` volume was removed so the image seeds it). Demo key in `data/demo-full/demo-key.txt` (gitignored). 13/13 smoke checks on it.
+
+## 2026-11-07 - session 27, owner trying the local demo; two fixes
+
+- **Owner report:** the MCP failed with "Dynamic Client Registration rejected (HTTP 404)" and the landing showed "This link is no longer available".
+- **Causes:** the MCP was added without the `Authorization` header, so Claude Code fell back to OAuth (re-added with the demo key, now connected). The landing root rendered the expired-link 404 copy; card links from a real search work.
+- **Done (pushed, `181b241`, `4a1ed8b`):** app-wide not-found now says "There is no article here" (landing links keep the expired copy; e2e test for `/`). The image sets `METER_JSONL_PATH=/var/lib/scholarly/usage.jsonl`: the relative default could not be created on the read-only root, so every usage export failed and events stayed in the outbox. `smoke.sh` now fails if no usage events reach the file. Demo stack rebuilt and verified.
+- **Next:** owner records the Loom; `v0.2.0` tag still awaits approval (the deploy bundle needs it for the meter fix too). CI on `4a1ed8b` not checked.
