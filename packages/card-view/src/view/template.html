@@ -44,10 +44,11 @@
       * {
         box-sizing: border-box;
       }
+      /* Transparent around the panel, so its rounded corners sit on the chat itself. */
       html,
       body {
         margin: 0;
-        background: var(--cv-bg);
+        background: transparent;
         color: var(--cv-text);
       }
       body {
@@ -58,7 +59,11 @@
         text-rendering: optimizeLegibility;
       }
       #cards {
-        padding: 2px;
+        margin: 1px;
+        padding: 12px;
+        background: var(--cv-bg);
+        border: 1px solid var(--cv-line);
+        border-radius: 18px;
       }
       .cards {
         list-style: none;
@@ -185,7 +190,7 @@
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        margin: 12px 4px 4px;
+        margin: 14px 6px 2px;
         color: var(--cv-text);
         font-size: 13px;
         font-weight: 500;
