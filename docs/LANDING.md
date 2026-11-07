@@ -2,7 +2,7 @@
 
 [← Back to the docs index](README.md)
 
-Every article link the MCP server returns opens a landing page built for that search. It shows the chosen article on top, then the search's other results, where the search matched, how to read the article and related reading. This guide covers running the reference page, the landing API behind it, and what to keep if you rebuild the page in your own stack. Design decisions are in [ADR 0032](adr/0032-landing-api-and-reference-landing-page.md).
+Every article link the MCP server returns opens a landing page built for that search. The reference page shows that one article as a focused reading page: how to read it, where the search matched, the abstract, and related reading at the end. The landing API also returns the search's other results and topic labels, which the reference page leaves out ([ADR 0046](adr/0046-focused-reference-landing-page.md)) and a publisher's own page may show. This guide covers running the reference page, the landing API behind it, and what to keep if you rebuild the page in your own stack. Design decisions are in [ADR 0032](adr/0032-landing-api-and-reference-landing-page.md).
 
 ## How a click becomes a page
 

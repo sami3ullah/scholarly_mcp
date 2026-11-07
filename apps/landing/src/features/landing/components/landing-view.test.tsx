@@ -14,25 +14,17 @@ const token = 'pSSYWKV6y282qdANYe86LA' as never;
 const messages = messagesFor('en');
 
 describe('LandingView', () => {
-  it('puts the chosen article first as the page heading', () => {
+  it('makes the chosen article the page heading', () => {
     render(<LandingView page={aLandingPage()} token={token} campaign="search_articles" />);
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe(
       'Oral anticoagulation in the elderly',
     );
-    expect(screen.getByText('Your results on Atrial Fibrillation, Anticoagulants')).toBeTruthy();
   });
 
-  it('lists the other results in order, linking with the same token', () => {
+  it('keeps the page on one article: no other results and no topic heading (ADR 0046)', () => {
     render(<LandingView page={aLandingPage()} token={token} campaign={undefined} />);
-    const list = screen.getByRole('region', { name: 'Other results from your search' });
-    const links = within(list).getAllByRole('link');
-    expect(links.map((link) => link.textContent)).toEqual([
-      'Rivaroxaban dosing',
-      'Stroke prevention',
-    ]);
-    expect(links[0]?.getAttribute('href')).toBe(
-      `/mcp/landing?t=${String(token)}&doi=10.1055%2Fa-1002`,
-    );
+    expect(screen.queryByText('Rivaroxaban dosing')).toBeNull();
+    expect(screen.queryByText(/Your results on/)).toBeNull();
   });
 
   it('links related reading by DOI alone, since it was not part of the search', () => {
@@ -73,7 +65,6 @@ describe('LandingView', () => {
     const page = aLandingPage({ session: 'unavailable', matches: [], related: [], topics: [] });
     render(<LandingView page={page} token={token} campaign={undefined} />);
     expect(screen.getByText('This link has expired, so only the article is shown.')).toBeTruthy();
-    expect(screen.queryByRole('region', { name: 'Other results from your search' })).toBeNull();
   });
 
   it('speaks German for a German search', () => {
@@ -81,7 +72,7 @@ describe('LandingView', () => {
       <LandingView page={aLandingPage({ language: 'de' })} token={token} campaign={undefined} />,
     );
     expect(screen.getByRole('main').getAttribute('lang')).toBe('de');
-    expect(screen.getByText('Weitere Ergebnisse Ihrer Suche')).toBeTruthy();
+    expect(screen.getByText('Verwandte Artikel')).toBeTruthy();
   });
 
   it('warns about a retracted article', () => {
@@ -103,7 +94,7 @@ describe('LandingView', () => {
 
   it('keys list items by DOI, so repeated titles are fine', () => {
     const page = aLandingPage({
-      matches: [aSummary('10.1055/a-1', 'Same'), aSummary('10.1055/a-2', 'Same')],
+      related: [aSummary('10.1055/a-1', 'Same'), aSummary('10.1055/a-2', 'Same')],
     });
     render(<LandingView page={page} token={token} campaign={undefined} />);
     expect(screen.getAllByRole('link', { name: 'Same' })).toHaveLength(2);

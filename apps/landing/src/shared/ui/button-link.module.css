@@ -6,15 +6,16 @@
   min-height: var(--tap-target);
   padding: var(--space-2) var(--space-5);
   border: 1px solid transparent;
-  border-radius: var(--radius-md);
-  font-weight: 600;
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
   text-align: center;
   text-decoration: none;
   transition:
     background-color 160ms var(--ease),
     border-color 160ms var(--ease),
     color 160ms var(--ease),
-    box-shadow 160ms var(--ease);
+    opacity 160ms var(--ease);
 }
 
 .icon {
@@ -33,27 +34,24 @@
   transform: translate(2px, -2px);
 }
 
+/* Ink on paper: the one filled button on the page. */
 .primary {
-  background: var(--color-accent);
-  color: var(--color-on-accent);
-  box-shadow:
-    var(--shadow-sm),
-    inset 0 1px 0 rgb(255 255 255 / 12%);
+  background: var(--color-text);
+  color: var(--color-bg);
 }
 
 .primary:hover {
-  background: var(--color-accent-hover);
-  color: var(--color-on-accent);
+  opacity: 0.85;
+  color: var(--color-bg);
 }
 
 .secondary {
   border-color: var(--color-border-strong);
-  background: var(--color-surface);
+  background: transparent;
   color: var(--color-text);
 }
 
 .secondary:hover {
-  border-color: var(--color-text-muted);
-  background: var(--color-sunken);
+  border-color: var(--color-text);
   color: var(--color-text);
 }

@@ -1,15 +1,15 @@
 /*
  * Design tokens (PLAN.md React conventions): every colour, size and radius the landing
  * page uses, as CSS variables, so a publisher maps them onto its own design system here.
- * Warm neutrals with one ink-blue accent; a serif for titles and quotes, the system sans for
- * everything else. Both stacks are local fonts, so the page loads no web font.
+ * A plain reading page (ADR 0046): neutral background, ink text, one blue accent for links,
+ * a serif for the article's own words and the system sans for everything around them. Both stacks are local fonts, so the page loads no web font.
  */
 :root {
   color-scheme: light dark;
 
-  --color-bg: #faf9f6;
+  --color-bg: #ffffff;
   --color-surface: #ffffff;
-  --color-sunken: #f3f1ec;
+  --color-sunken: #f4f3f0;
   --color-text: #1a1916;
   --color-text-muted: #5c5a54;
   --color-border: #e5e2db;
@@ -26,7 +26,6 @@
   --color-danger: #a4161a;
   --color-danger-bg: #fdeaea;
   --color-quote-bar: #2851a3;
-  --glow: rgb(40 81 163 / 7%);
   --shadow-sm: 0 1px 2px rgb(26 25 22 / 5%);
   --shadow-md: 0 1px 2px rgb(26 25 22 / 4%), 0 8px 24px -12px rgb(26 25 22 / 14%);
 
@@ -39,7 +38,8 @@
   --font-size-md: 1rem;
   --font-size-lg: 1.125rem;
   --font-size-xl: 1.375rem;
-  --font-size-2xl: clamp(1.75rem, 1.25rem + 2.2vw, 2.75rem);
+  --font-size-2xl: clamp(2rem, 1.5rem + 2vw, 2.625rem);
+  --font-size-reading: clamp(1.125rem, 1.05rem + 0.3vw, 1.25rem);
   --line-height: 1.6;
 
   --space-1: 0.25rem;
@@ -55,8 +55,7 @@
   --radius-md: 10px;
   --radius-lg: 16px;
   --radius-pill: 999px;
-  --content-width: 74rem;
-  --measure: 42rem;
+  --measure: 42.5rem;
   --tap-target: 44px;
   --ease: cubic-bezier(0.2, 0, 0, 1);
 }
@@ -81,7 +80,6 @@
     --color-danger: #ff9b9b;
     --color-danger-bg: #3a1618;
     --color-quote-bar: #6f95dc;
-    --glow: rgb(111 149 220 / 9%);
     --shadow-sm: 0 1px 2px rgb(0 0 0 / 30%);
     --shadow-md: 0 1px 2px rgb(0 0 0 / 30%), 0 12px 32px -16px rgb(0 0 0 / 60%);
   }
@@ -100,8 +98,7 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  background:
-    radial-gradient(60rem 28rem at 15% -8rem, var(--glow), transparent 70%), var(--color-bg);
+  background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-body);
   font-size: var(--font-size-md);

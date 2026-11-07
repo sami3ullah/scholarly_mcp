@@ -34,7 +34,8 @@ export function AccessOptions(props: {
   const { access, article, messages } = props;
   return (
     <section className={styles['section']} aria-labelledby="access-options">
-      <h2 id="access-options" className={styles['heading']}>
+      {/* Named for screen readers; the buttons speak for themselves on screen. */}
+      <h2 id="access-options" className="visually-hidden">
         {messages.accessHeading}
       </h2>
       <div className={styles['actions']}>{actions(access, article.articleUrl, messages)}</div>

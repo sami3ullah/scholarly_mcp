@@ -3,9 +3,6 @@ export type UiLanguage = 'de' | 'en';
 
 /** Every string the landing page shows, so a design system can swap them in one place. */
 export interface Messages {
-  readonly resultsOn: (topics: string) => string;
-  readonly resultsHeading: string;
-  readonly articleHeading: string;
   readonly expiredNotice: string;
   readonly authorsMore: (count: number) => string;
   readonly retracted: string;
@@ -28,7 +25,6 @@ export interface Messages {
   readonly subjects: string;
   readonly license: string;
   readonly licenseUnknown: string;
-  readonly otherResults: string;
   readonly related: string;
   readonly disclaimer: string;
   readonly notFoundHeading: string;
@@ -41,9 +37,6 @@ export interface Messages {
 }
 
 const en: Messages = {
-  resultsOn: (topics) => `Your results on ${topics}`,
-  resultsHeading: 'Your search results',
-  articleHeading: 'Article',
   expiredNotice: 'This link has expired, so only the article is shown.',
   authorsMore: (count) => `and ${String(count)} more`,
   retracted: 'Retracted',
@@ -74,7 +67,6 @@ const en: Messages = {
   subjects: 'Subjects',
   license: 'Licence',
   licenseUnknown: 'Licence not stated',
-  otherResults: 'Other results from your search',
   related: 'Related reading',
   disclaimer: 'Independent prototype, not affiliated with any publisher.',
   notFoundHeading: 'This link is no longer available',
@@ -88,9 +80,6 @@ const en: Messages = {
 };
 
 const de: Messages = {
-  resultsOn: (topics) => `Ihre Ergebnisse zu ${topics}`,
-  resultsHeading: 'Ihre Suchergebnisse',
-  articleHeading: 'Artikel',
   expiredNotice: 'Dieser Link ist abgelaufen, daher wird nur der Artikel angezeigt.',
   authorsMore: (count) => `und ${String(count)} weitere`,
   retracted: 'Zurückgezogen',
@@ -122,7 +111,6 @@ const de: Messages = {
   subjects: 'Themen',
   license: 'Lizenz',
   licenseUnknown: 'Lizenz nicht angegeben',
-  otherResults: 'Weitere Ergebnisse Ihrer Suche',
   related: 'Verwandte Artikel',
   disclaimer: 'Unabhängiger Prototyp, mit keinem Verlag verbunden.',
   notFoundHeading: 'Dieser Link ist nicht mehr verfügbar',

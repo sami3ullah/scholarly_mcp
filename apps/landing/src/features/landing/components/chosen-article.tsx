@@ -9,8 +9,8 @@ import { ExpandableAbstract } from './expandable-abstract';
 import { MatchedPassage } from './matched-passage';
 
 /**
- * The article the reader clicked, on top (PLAN.md: mobile-first). The access options come
- * right after the byline, so the next step is visible without scrolling on a phone.
+ * The article the reader clicked, set as a story (ADR 0046). The access options come right
+ * after the byline, so the next step is visible without scrolling on a phone.
  */
 export function ChosenArticle(props: {
   article: LandingArticle;
@@ -31,10 +31,12 @@ export function ChosenArticle(props: {
       </div>
       <h1 className={styles['title']}>{article.title}</h1>
       {article.subtitle !== undefined && <p className={styles['subtitle']}>{article.subtitle}</p>}
-      {byline.length > 0 && <p className={styles['byline']}>{byline.join(', ')}</p>}
-      <p className={styles['source']}>
-        {article.journal} · {formatPublished(article.published, props.language)}
-      </p>
+      <div className={styles['meta']}>
+        {byline.length > 0 && <p className={styles['byline']}>{byline.join(', ')}</p>}
+        <p className={styles['source']}>
+          {article.journal} · {formatPublished(article.published, props.language)}
+        </p>
+      </div>
       {article.retracted && (
         <p className={styles['retracted']} role="alert">
           {messages.retractedNotice}

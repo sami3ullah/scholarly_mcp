@@ -11,39 +11,38 @@
 }
 
 .title {
-  max-width: 20em;
   font-family: var(--font-serif);
   font-size: var(--font-size-2xl);
-  font-weight: 600;
-  line-height: 1.15;
-  letter-spacing: -0.015em;
+  font-weight: 700;
+  line-height: 1.18;
+  letter-spacing: -0.016em;
 }
 
 .subtitle {
   margin: var(--space-3) 0 0;
-  max-width: var(--measure);
-  font-family: var(--font-serif);
   font-size: var(--font-size-xl);
-  line-height: 1.35;
+  line-height: 1.4;
   color: var(--color-text-muted);
 }
 
+.meta {
+  margin-top: var(--space-6);
+  font-size: var(--font-size-sm);
+}
+
 .byline {
-  margin: var(--space-5) 0 0;
-  max-width: var(--measure);
+  margin: 0;
   font-weight: 500;
 }
 
 .source {
   margin: var(--space-1) 0 0;
   color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
 }
 
 .retracted {
   margin: var(--space-5) 0 0;
   padding: var(--space-3) var(--space-4);
-  border: 1px solid color-mix(in srgb, var(--color-danger) 30%, transparent);
   border-radius: var(--radius-md);
   background: var(--color-danger-bg);
   color: var(--color-danger);
@@ -52,17 +51,13 @@
 
 .section {
   margin-top: var(--space-7);
-  max-width: var(--measure);
 }
 
-/* Section headings are small labels, so the article's own text leads. */
 .heading {
   margin-bottom: var(--space-3);
-  color: var(--color-text-muted);
-  font-size: var(--font-size-xs);
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .subjects {
@@ -74,16 +69,24 @@
   list-style: none;
 }
 
+/* Subjects read as topic tags. */
+.subjects > li > span {
+  min-height: 2.25rem;
+  padding: 0 var(--space-4);
+  border: 0;
+  background: var(--color-sunken);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-weight: 400;
+}
+
 .facts {
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr);
-  gap: var(--space-2) var(--space-5);
-  max-width: var(--measure);
+  gap: var(--space-1) var(--space-4);
   margin: var(--space-7) 0 0;
-  padding: var(--space-4) var(--space-5);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-sunken);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-border);
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
   overflow-wrap: anywhere;

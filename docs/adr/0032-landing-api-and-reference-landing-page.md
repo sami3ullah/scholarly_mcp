@@ -1,6 +1,6 @@
 # 0032 Landing API and reference landing page
 
-- Status: accepted
+- Status: accepted; decision 2 amended for the reference app by ADR 0046
 - Date: 2026-11-03
 - Records: SM-11; builds on ADR 0017 (tokens), ADR 0025 (link format), ADR 0003 (full text never shown)
 

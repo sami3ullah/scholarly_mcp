@@ -20,19 +20,12 @@ test.beforeEach(async ({ request }) => {
 });
 
 test.describe('a landing link from a search', () => {
-  test('opens the clicked article first, then the other results in order', async ({ page }) => {
+  test('opens the clicked article alone, with where it matched', async ({ page }) => {
     await page.goto(link(`t=${LIVE}&doi=10.5555/e2e-2&${UTM}`));
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
       'Rivaroxaban dosing after falls',
     );
-    await expect(
-      page.getByText('Your results on Atrial Fibrillation, Anticoagulants'),
-    ).toBeVisible();
-    const others = page.getByRole('region', { name: 'Other results from your search' });
-    await expect(others.getByRole('heading', { level: 3 })).toHaveText([
-      'Oral anticoagulation in the very old',
-      'Stroke prevention in frail patients',
-    ]);
+    await expect(page.getByText('Oral anticoagulation in the very old')).toHaveCount(0);
     await expect(page.getByRole('region', { name: 'Where your search matched' })).toContainText(
       'Lower doses were not inferior',
     );
@@ -69,22 +62,19 @@ test.describe('a landing link from a search', () => {
   test('speaks the search language', async ({ page }) => {
     await page.goto(link(`t=${LIVE}&doi=10.5555/e2e-3`));
     await expect(page.getByRole('main')).toHaveAttribute('lang', 'de');
-    await expect(page.getByText('Weitere Ergebnisse Ihrer Suche')).toBeVisible();
+    await expect(page.getByText('Verwandte Artikel')).toBeVisible();
   });
 });
 
 test.describe('the referral beacon', () => {
-  test('fires once per result, not again on reload or a move to another result', async ({
-    page,
-  }) => {
+  test('fires once per result, not again on reload', async ({ page }) => {
     await page.goto(link(`t=${LIVE}&doi=10.5555/e2e-1&${UTM}`));
     await expect
       .poll(() => visits(page))
       .toEqual([{ t: LIVE, doi: '10.5555/e2e-1', tool: 'search_articles' }]);
     await page.reload();
-    await page.getByRole('link', { name: 'Rivaroxaban dosing after falls' }).click();
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-      'Rivaroxaban dosing after falls',
+      'Oral anticoagulation in the very old',
     );
     await page.waitForTimeout(500);
     expect(await visits(page)).toHaveLength(1);
@@ -173,9 +163,6 @@ test.describe('falling back', () => {
     await expect(
       page.getByText('This link has expired, so only the article is shown.'),
     ).toBeVisible();
-    await expect(page.getByRole('region', { name: 'Other results from your search' })).toHaveCount(
-      0,
-    );
     await page.waitForTimeout(300);
     expect(await visits(page)).toEqual([]);
   });
