@@ -57,7 +57,6 @@ describe('search_articles', () => {
     expect(session).toMatchObject({
       results: [{ doi: '10.1055/a-1001', matchedChunkId: expect.any(String) as string }],
       language: 'en',
-      apiKeyId: 'local',
     });
     expect(JSON.stringify(session)).not.toContain('rivaroxaban dosing');
     expect(new URL(String(structured(result)['collectionUrl'])).search).not.toContain(

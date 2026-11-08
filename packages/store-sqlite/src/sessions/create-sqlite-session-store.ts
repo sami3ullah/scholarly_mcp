@@ -6,7 +6,6 @@ interface SessionRow {
   readonly token: string;
   readonly results: string;
   readonly language: string;
-  readonly api_key_id: string;
   readonly created_at: string;
   readonly expires_at: string;
   readonly visit_count: number;
@@ -20,8 +19,8 @@ interface SessionRow {
 export function createSqliteSessionStore(db: Db): SessionStore {
   const insert = db.prepare(
     `INSERT OR REPLACE INTO landing_sessions
-       (token, results, language, api_key_id, created_at, expires_at, visit_count, tool)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+       (token, results, language, created_at, expires_at, visit_count, tool)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
   );
   const select = db.prepare<[string], SessionRow>('SELECT * FROM landing_sessions WHERE token = ?');
   const visit = db.prepare(
@@ -36,7 +35,6 @@ export function createSqliteSessionStore(db: Db): SessionStore {
           session.token,
           JSON.stringify(session.results),
           session.language,
-          session.apiKeyId,
           session.createdAt.toISOString(),
           session.expiresAt.toISOString(),
           session.visitCount,
@@ -61,7 +59,6 @@ function sessionFromRow(row: SessionRow) {
     token: row.token,
     results: JSON.parse(row.results) as unknown,
     language: row.language,
-    apiKeyId: row.api_key_id,
     createdAt: new Date(row.created_at),
     expiresAt: new Date(row.expires_at),
     visitCount: row.visit_count,

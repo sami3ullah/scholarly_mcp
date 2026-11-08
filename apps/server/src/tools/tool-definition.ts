@@ -1,10 +1,9 @@
-import type { Caller, Logger, ToolName } from '@scholarly-mcp/core';
+import type { Logger, ToolName } from '@scholarly-mcp/core';
 import type { z } from 'zod';
 
 /** What a tool handler gets besides its input. */
 export interface ToolContext {
   readonly signal: AbortSignal;
-  readonly caller: Caller;
   readonly logger: Logger;
 }
 

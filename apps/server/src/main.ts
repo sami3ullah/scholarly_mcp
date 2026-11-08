@@ -15,7 +15,6 @@ import { createLogger, loggingConfigSchema } from '@scholarly-mcp/logger';
 import { searchOptionsFrom } from '@scholarly-mcp/search';
 import { postgresConfigSchema } from '@scholarly-mcp/store-postgres';
 import { sqliteConfigSchema, type SqliteConfig } from '@scholarly-mcp/store-sqlite';
-import { httpAuthFromConfig } from './auth/http-auth-from-config.js';
 import {
   serverConfigSchema,
   serverOwnConfigSchema,
@@ -26,7 +25,6 @@ import { createApp } from './create-app.js';
 import { createHttpHandler, type HttpHandlerDeps } from './http/create-http-handler.js';
 import { createMetricsHandler } from './http/create-metrics-handler.js';
 import { runFunnelCommand } from './funnel/run-funnel-command.js';
-import { runKeysCommand } from './keys/run-keys-command.js';
 import { createLandingApi } from './landing/create-landing-api.js';
 import { createRateLimiter } from './limits/create-rate-limiter.js';
 import { createJsonlSink } from './metering/create-jsonl-sink.js';
@@ -38,13 +36,14 @@ import { createLiveIndex } from './runtime/live-index.js';
 import { createNodeRandomToken } from './runtime/node-random-token.js';
 import {
   openFunnelStore,
-  openKeyStore,
   openServerStores,
   storeSelectionFrom,
   type StoreSelection,
 } from './runtime/open-server-stores.js';
 import { createMetrics } from './telemetry/create-metrics.js';
 import { startTracing } from './telemetry/create-tracing.js';
+import { createClientAddressResolver } from './http/client-address.js';
+import { createClientContext } from './limits/client-limit-key.js';
 import { MAX_BODY_BYTES, serveHttp, type HttpServer } from './transports/serve-http.js';
 
 const LOCAL_HOSTS = ['localhost', '127.0.0.1', '[::1]'];
@@ -56,9 +55,8 @@ const SECRET_NAMES = ['LANDING_API_SECRET', 'METER_WEBHOOK_SECRET', 'DATABASE_UR
 
 /**
  * The composition root (PLAN.md "Backend conventions"): reads config, creates the real
- * adapters, wires the app and serves it over stdio or Streamable HTTP. `keys …` manages
- * API keys and `funnel …` writes the funnel report from the metering export or the store,
- * or serves it live (ADR 0035), instead.
+ * adapters, wires the app and serves it over stdio or Streamable HTTP. `funnel …` writes the funnel
+ * report from the metering export or the store, or serves it live (ADR 0035), instead.
  * `STORE` picks SQLite files or Postgres (ADR 0034). The model and the index are opened at
  * boot; a missing index is retried on every refresh tick, and tools answer
  * `INDEX_UNAVAILABLE` meanwhile.
@@ -69,22 +67,6 @@ async function main(): Promise<void> {
     process.env,
     withSecretFiles(process.env, SECRET_NAMES, (path) => readFileSync(path, 'utf8')),
   );
-  if (process.argv[2] === 'keys') {
-    const store = await openKeyStore(
-      storeSelectionOf(process.env, parseConfig(sqliteConfigSchema, process.env)),
-      AbortSignal.timeout(30_000),
-    );
-    try {
-      process.exitCode = await runKeysCommand(process.argv.slice(3), {
-        keys: store.keys,
-        clock,
-        out: (line) => process.stdout.write(`${line}\n`),
-      });
-    } finally {
-      await store.close();
-    }
-    return;
-  }
   if (process.argv[2] === 'funnel') {
     const { PUBLISHER_NAME } = parseConfig(
       serverOwnConfigSchema.pick({ PUBLISHER_NAME: true }),
@@ -260,13 +242,8 @@ async function serve(config: ServerConfig, selection: StoreSelection): Promise<v
   });
   const allowedHosts =
     config.HTTP_ALLOWED_HOSTS.length > 0 ? config.HTTP_ALLOWED_HOSTS : LOCAL_HOSTS;
-  const auth = httpAuthFromConfig(config, {
-    keys: stores.keys,
-    clock,
-    logger: logger.child({ component: 'auth' }),
-  });
   const handlerDeps = {
-    auth,
+    clientContext: createClientContext(),
     allowedHosts,
     allowedOrigins:
       config.HTTP_ALLOWED_ORIGINS.length > 0 ? config.HTTP_ALLOWED_ORIGINS : LOCAL_HOSTS,
@@ -286,6 +263,7 @@ async function serve(config: ServerConfig, selection: StoreSelection): Promise<v
       }),
       host: config.HTTP_HOST,
       port: config.HTTP_PORT,
+      clientAddress: createClientAddressResolver(config.HTTP_TRUSTED_PROXIES),
       logger,
       onInFlight: (count) => {
         metrics.inFlight.set(count);
@@ -368,7 +346,6 @@ async function serve(config: ServerConfig, selection: StoreSelection): Promise<v
     {
       transport: config.MCP_TRANSPORT,
       store: selection.store,
-      auth: config.AUTH_MODE,
       version,
       ready: index.isReady(),
       tracing: tracing !== undefined,

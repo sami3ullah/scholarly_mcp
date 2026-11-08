@@ -28,19 +28,19 @@ describe('createMockEntitlements', () => {
   const entitlements = createMockEntitlements();
   const doi = anArticle().build().doi;
 
-  it('grants institutional access to a caller with an institution', async () => {
-    expect(
-      await entitlements.check(
-        { doi, isOpenAccess: false, caller: { apiKeyId: 'k', institutionId: 'uni' } },
-        signal,
-      ),
-    ).toEqual({ status: 'institution' });
+  it('answers from the article alone: open access is open, the rest needs a subscription', async () => {
+    expect(await entitlements.check({ doi, isOpenAccess: true }, signal)).toEqual({
+      status: 'open',
+    });
+    expect(await entitlements.check({ doi, isOpenAccess: false }, signal)).toEqual({
+      status: 'subscription',
+      loginUrl: `https://doi.org/${doi}`,
+      purchaseUrl: `https://doi.org/${doi}`,
+    });
   });
 
   it('rejects when the caller has already aborted', async () => {
     const aborted = AbortSignal.abort(new Error('gone'));
-    await expect(
-      entitlements.check({ doi, isOpenAccess: true, caller: { apiKeyId: 'k' } }, aborted),
-    ).rejects.toThrow('gone');
+    await expect(entitlements.check({ doi, isOpenAccess: true }, aborted)).rejects.toThrow('gone');
   });
 });

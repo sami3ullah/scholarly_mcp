@@ -20,7 +20,6 @@ export const landingSessionSchema = z
     language: z.enum(['de', 'en', 'any']),
     /** The tool that made the session; absent on sessions stored before ADR 0033. */
     tool: toolNameSchema.optional(),
-    apiKeyId: z.string().min(1),
     createdAt: z.date(),
     expiresAt: z.date(),
     visitCount: z.int().nonnegative(),

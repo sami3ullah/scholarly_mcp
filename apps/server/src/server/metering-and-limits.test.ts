@@ -33,7 +33,7 @@ describe('every tool call is metered, limited, counted and traced', () => {
       { tool: 'get_article', status: 'NOT_FOUND', billable: false },
       { tool: 'search_articles', status: 'INVALID_INPUT', billable: false },
     ]);
-    expect(events[0]).toMatchObject({ apiKeyId: 'local', id: 'event-1' });
+    expect(events[0]).toMatchObject({ id: 'event-1' });
     expect(events[0]?.resultCount).toBeGreaterThan(0);
     const shown = events[0]?.cardsByJournal.reduce((sum, { cards }) => sum + cards, 0);
     expect(shown).toBe(events[0]?.resultCount);

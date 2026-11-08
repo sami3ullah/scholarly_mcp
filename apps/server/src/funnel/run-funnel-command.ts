@@ -44,7 +44,7 @@ const USAGE = `Usage:
   scholarly-mcp funnel --store --out <funnel.html> [--json <funnel.json>] [filters]
   scholarly-mcp funnel --store --serve [--host 127.0.0.1] [--port 8092] [--refresh 60] [filters]
 
-Filters: [--since YYYY-MM-DD] [--until YYYY-MM-DD] [--key <api key id>]
+Filters: [--since YYYY-MM-DD] [--until YYYY-MM-DD]
 --since is inclusive and --until exclusive, both UTC days.
 --store reads the events in the store STORE picks: the outbox keeps exported events for
 METER_RETENTION_DAYS, so it covers recent weeks; the export file covers everything.
@@ -79,7 +79,6 @@ export async function runFunnelCommand(
         refresh: { type: 'string' },
         since: { type: 'string' },
         until: { type: 'string' },
-        key: { type: 'string' },
       },
       strict: true,
     }));

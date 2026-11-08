@@ -78,6 +78,10 @@ const MIGRATIONS: readonly string[] = [
      allowed boolean NOT NULL
    );
    CREATE INDEX rate_buckets_by_update ON scholarly.rate_buckets (updated_at);`,
+  // ADR 0048: the server is public and callers are anonymous, so keys and key ids go.
+  `DROP TABLE scholarly.api_keys;
+   ALTER TABLE scholarly.landing_sessions DROP COLUMN api_key_id;
+   ALTER TABLE scholarly.usage_events DROP COLUMN api_key_id;`,
 ];
 
 /** The schema version this code needs. */
@@ -145,9 +149,7 @@ export async function grantServerRole(
       `GRANT SELECT, INSERT, UPDATE, DELETE ON scholarly.landing_sessions, scholarly.usage_events,
          scholarly.rate_buckets TO ${to}`,
     );
-    await client.query(
-      `GRANT SELECT ON scholarly.api_keys, scholarly.live_index, scholarly.migrations TO ${to}`,
-    );
+    await client.query(`GRANT SELECT ON scholarly.live_index, scholarly.migrations TO ${to}`);
   });
 }
 

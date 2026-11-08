@@ -15,7 +15,6 @@ function anEvent(id: string, minute: number, extra: Partial<ToolCallEvent> = {})
   return {
     kind: 'tool_call',
     id,
-    apiKeyId: 'key_aaaaaaaaaaaa',
     tool: 'search_articles',
     resultCount: 5,
     latencyMs: 12.5,
@@ -54,7 +53,6 @@ export function runUsageOutboxContract(
       const visit: UsageEvent = {
         kind: 'landing_visit',
         id: 'v1',
-        apiKeyId: 'key_aaaaaaaaaaaa',
         tool: 'find_related',
         doi: doiSchema.parse('10.1055/a-1'),
         journal: 'Pneumologie',
@@ -141,7 +139,7 @@ export function runUsageOutboxContract(
     });
 
     it('lists stored events, exported or claimed, by time then id, within the filters', async () => {
-      const other = anEvent('e4', 3, { apiKeyId: 'key_bbbbbbbbbbbb' });
+      const other = anEvent('e4', 3, { tool: 'cite' });
       await outbox.append(anEvent('e3', 2), signal);
       await outbox.append(other, signal);
       await outbox.append(anEvent('e1', 0), signal);
@@ -164,7 +162,6 @@ export function runUsageOutboxContract(
           to: new Date(Date.UTC(2026, 10, 3, 10, 3)),
         }),
       ).toEqual(['e2', 'e3']);
-      expect(await ids({ apiKeyId: 'key_bbbbbbbbbbbb' })).toEqual(['e4']);
       expect(await outbox.countPending(signal)).toBe(3);
     });
 

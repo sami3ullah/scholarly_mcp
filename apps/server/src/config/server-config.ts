@@ -4,7 +4,8 @@ import { loggingConfigSchema } from '@scholarly-mcp/logger';
 import { searchConfigSchema } from '@scholarly-mcp/search';
 import { sqliteConfigSchema } from '@scholarly-mcp/store-sqlite';
 import { z } from 'zod';
-import { authConfigSchema } from './auth-config.js';
+import { limitsConfigSchema } from './limits-config.js';
+import { trustedProxiesError } from '../http/client-address.js';
 import { csv } from './csv.js';
 import { meteringConfigSchema } from './metering-config.js';
 import { telemetryConfigSchema } from './telemetry-config.js';
@@ -19,7 +20,8 @@ const LOOPBACK = new Set(['127.0.0.1', '::1', 'localhost']);
  * `Origin` may have; both default to localhost. `PUBLISHER_NAME` names the publisher in the
  * notice and tool descriptions (ADR 0015). `JOURNAL_URL_TEMPLATE` turns an ISSN into a
  * journal page link, with `{issn}` as the placeholder; without it no journal link is shown.
- * `HTTP_ALONGSIDE_STDIO` also serves the HTTP routes other than `/mcp` (health, metrics,
+ * `HTTP_TRUSTED_PROXIES` lists the proxies (addresses or CIDR ranges) whose `X-Forwarded-For`
+ * names the client, for per-client rate limits (ADR 0048). `HTTP_ALONGSIDE_STDIO` also serves the HTTP routes other than `/mcp` (health, metrics,
  * landing API) while MCP runs on stdio, so a local client's links open a working landing
  * page. The landing API (ADR 0032) takes `LANDING_API_SECRET` as a bearer token and allows
  * `LANDING_RATE_LIMIT_PER_MINUTE` requests a minute per visitor, in bursts of
@@ -33,6 +35,10 @@ export const serverOwnConfigSchema = z.object({
   HTTP_PORT: z.coerce.number().int().min(0).max(65_535).default(8080),
   HTTP_ALLOWED_HOSTS: csv(),
   HTTP_ALLOWED_ORIGINS: csv(),
+  HTTP_TRUSTED_PROXIES: csv().superRefine((entries, ctx) => {
+    const error = trustedProxiesError(entries);
+    if (error !== undefined) ctx.addIssue({ code: 'custom', message: error });
+  }),
   HTTP_ALONGSIDE_STDIO: z.stringbool().default(false),
   SHUTDOWN_TIMEOUT_MS: z.coerce.number().int().min(100).max(120_000).default(10_000),
   PUBLISHER_NAME: z.string().min(1).max(60).default('the publisher'),
@@ -56,7 +62,7 @@ export const serverOwnConfigSchema = z.object({
 
 /** Everything the server reads from the environment, validated at boot. */
 export const serverConfigSchema = serverOwnConfigSchema
-  .extend(authConfigSchema.shape)
+  .extend(limitsConfigSchema.shape)
   .extend(meteringConfigSchema.shape)
   .extend(telemetryConfigSchema.shape)
   .extend(landingConfigSchema.shape)
@@ -74,13 +80,6 @@ export const serverConfigSchema = serverOwnConfigSchema
       !LOOPBACK.has(
         config.LANDING_API_PORT === undefined ? config.HTTP_HOST : config.LANDING_API_HOST,
       );
-    if (exposed && config.MCP_TRANSPORT === 'http' && config.AUTH_MODE === 'none') {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['AUTH_MODE'],
-        message: 'HTTP beyond loopback needs AUTH_MODE api-key, oauth or api-key+oauth',
-      });
-    }
     if ((exposed || landingExposed) && config.HTTP_ALLOWED_HOSTS.length === 0) {
       ctx.addIssue({
         code: 'custom',
@@ -94,14 +93,6 @@ export const serverConfigSchema = serverOwnConfigSchema
         path: ['LANDING_API_SECRET'],
         message: 'HTTP beyond loopback needs LANDING_API_SECRET for the landing API',
       });
-    }
-    if (config.AUTH_MODE === 'oauth' || config.AUTH_MODE === 'api-key+oauth') {
-      for (const key of ['OAUTH_ISSUER', 'OAUTH_AUDIENCE', 'OAUTH_JWKS_URL'] as const) {
-        if (config[key] === undefined) {
-          const message = `AUTH_MODE ${config.AUTH_MODE} needs ${key}`;
-          ctx.addIssue({ code: 'custom', path: [key], message });
-        }
-      }
     }
   });
 

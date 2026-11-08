@@ -24,7 +24,7 @@ const ACTION_LABELS: Record<string, string> = {
 /**
  * The funnel as one self-contained HTML page (ADR 0033): no scripts, fonts or images from
  * elsewhere, light and dark themes, a table behind every chart. It holds counts, journal
- * names and API key ids only, never query text or tokens.
+ * names only, never query text or tokens.
  */
 export function renderFunnelReport(funnel: Funnel, context: FunnelReportContext): string {
   const { totals } = funnel;
@@ -63,11 +63,7 @@ export function renderFunnelReport(funnel: Funnel, context: FunnelReportContext)
       <p class="meta">${escape(context.publisher)} · ${escape(periodText(funnel, context.filters))}</p>
       <p class="meta">${count(funnel.events)} events${
         funnel.duplicates > 0 ? `, ${count(funnel.duplicates)} duplicates dropped` : ''
-      }${context.skippedLines > 0 ? `, ${count(context.skippedLines)} unreadable lines skipped` : ''}${
-        context.filters.apiKeyId === undefined
-          ? ''
-          : ` · client <code>${escape(context.filters.apiKeyId)}</code>`
-      } · generated ${escape(context.generatedAt.toISOString().slice(0, 16).replace('T', ' '))} UTC</p>
+      }${context.skippedLines > 0 ? `, ${count(context.skippedLines)} unreadable lines skipped` : ''} · generated ${escape(context.generatedAt.toISOString().slice(0, 16).replace('T', ' '))} UTC</p>
     </header>`,
     `<section aria-labelledby="kpi"><h2 id="kpi" class="visually-hidden">Totals</h2><div class="kpis">
       ${steps
@@ -106,20 +102,6 @@ export function renderFunnelReport(funnel: Funnel, context: FunnelReportContext)
         count(row.actions),
       ]),
       'Cards and visits per journal. Low click-through means readers saw the cards but did not open them.',
-    ),
-    table(
-      'clients',
-      'By client',
-      ['API key', 'Searches', 'Cards shown', 'Visits', 'Click-through', 'Actions'],
-      funnel.byClient.map((row) => [
-        `<code>${escape(row.apiKeyId)}</code>`,
-        count(row.searches),
-        count(row.cardsShown),
-        count(row.visits),
-        rateCell(row.clickThrough),
-        count(row.actions),
-      ]),
-      'A client with many cards and almost no visits probably hides or rewrites the links.',
     ),
     `<section aria-labelledby="actions"><h2 id="actions">Next actions</h2>
       <div class="bars" role="img" aria-label="${escape(

@@ -1,27 +1,19 @@
 import type { McpHttpHandler } from '@modelcontextprotocol/server';
-import {
-  createFakeClock,
-  createInMemoryApiKeyStore,
-  createTestLogger,
-} from '@scholarly-mcp/testkit';
+import { createTestLogger } from '@scholarly-mcp/testkit';
 import { afterEach, describe, expect, it } from 'vitest';
-import { generateApiKey } from '../auth/api-key-secrets.js';
-import { httpAuthFromConfig } from '../auth/http-auth-from-config.js';
-import { authConfigSchema } from '../config/auth-config.js';
+import { createClientContext, rateLimitKeyOf } from '../limits/client-limit-key.js';
 import { createMetrics } from '../telemetry/create-metrics.js';
 import { startHarness, structured, type Harness } from '../testing/server-harness.js';
-import { createHttpHandler, type HttpAuth, type HttpHandlerDeps } from './create-http-handler.js';
+import { CLIENT_ADDRESS_HEADER } from './client-address.js';
+import { createHttpHandler, type HttpHandlerDeps } from './create-http-handler.js';
 
 const LOCAL = ['localhost', '127.0.0.1', '[::1]'];
-// Now, not a fixed date: the SDK checks a token's expiry against the wall clock, so a key
-// accepted at a fixed past time would expire an hour after it.
-const clock = createFakeClock(new Date());
 
 function handlerWith(extra: Partial<HttpHandlerDeps> = {}) {
   const metrics = createMetrics({ defaults: false });
   const handler = createHttpHandler({
     mcp: { fetch: () => Promise.resolve(new Response('mcp reached')) },
-    auth: { mode: 'none' },
+    clientContext: createClientContext(),
     allowedHosts: LOCAL,
     allowedOrigins: LOCAL,
     readiness: () => ({ index: true, model: true }),
@@ -39,7 +31,7 @@ const post = (headers: Record<string, string> = {}) =>
 
 describe('createHttpHandler routes', () => {
   it('answers health, readiness and metrics without auth or Host checks', async () => {
-    const { handler } = handlerWith({ auth: apiKeyAuth().auth, allowedHosts: ['mcp.example.org'] });
+    const { handler } = handlerWith({ allowedHosts: ['mcp.example.org'] });
     expect((await handler.fetch(get('/healthz'))).status).toBe(200);
     expect(await (await handler.fetch(get('/readyz'))).json()).toEqual({
       status: 'ready',
@@ -122,96 +114,36 @@ describe('createHttpHandler /mcp guards', () => {
   });
 });
 
-function apiKeyAuth() {
-  const made = generateApiKey();
-  const keys = createInMemoryApiKeyStore([
-    { id: made.id, label: 'demo', secretHash: made.secretHash, createdAt: clock.now() },
-  ]);
-  const auth: HttpAuth = httpAuthFromConfig(authConfigSchema.parse({ AUTH_MODE: 'api-key' }), {
-    keys,
-    clock,
-    logger: createTestLogger(),
-  });
-  return { made, keys, auth };
-}
-
-describe('createHttpHandler API key auth', () => {
-  it('answers 401 with a Bearer challenge for a missing or wrong key, and counts it', async () => {
-    const { handler, metrics } = handlerWith({ auth: apiKeyAuth().auth });
-    const missing = await handler.fetch(post());
-    expect(missing.status).toBe(401);
-    expect(missing.headers.get('www-authenticate')).toMatch(/^Bearer/);
-    const wrong = await handler.fetch(
-      post({ authorization: `Bearer smk_key_aaaaaaaaaaaa_${'A'.repeat(43)}` }),
-    );
-    expect(wrong.status).toBe(401);
-    expect(await metrics.registry.metrics()).toMatch(
-      /auth_failures_total\{reason="invalid_token"\} 2/,
-    );
-  });
-});
-
-describe('createHttpHandler OAuth metadata', () => {
-  it('serves Protected Resource Metadata naming the issuer and advertises it in 401s', async () => {
-    const auth = httpAuthFromConfig(
-      authConfigSchema.parse({
-        AUTH_MODE: 'oauth',
-        OAUTH_ISSUER: 'https://id.example.org',
-        OAUTH_AUDIENCE: 'https://mcp.example.org/mcp',
-        OAUTH_JWKS_URL: 'https://id.example.org/jwks',
-        OAUTH_REQUIRED_SCOPES: 'mcp',
-      }),
-      { keys: { find: () => Promise.resolve(undefined) }, clock, logger: createTestLogger() },
-    );
-    const { handler } = handlerWith({ auth });
-    const metadata = await handler.fetch(get('/.well-known/oauth-protected-resource/mcp'));
-    expect(await metadata.json()).toEqual({
-      resource: 'https://mcp.example.org/mcp',
-      authorization_servers: ['https://id.example.org'],
-      bearer_methods_supported: ['header'],
-      scopes_supported: ['mcp'],
-      resource_name: 'scholarly-mcp',
+describe('createHttpHandler public /mcp', () => {
+  function capturing() {
+    const seen: (string | undefined)[] = [];
+    const { handler } = handlerWith({
+      mcp: {
+        fetch: (_request, options) => {
+          seen.push(rateLimitKeyOf(options?.authInfo));
+          return Promise.resolve(new Response('mcp reached'));
+        },
+      },
     });
-    const challenge = (await handler.fetch(post())).headers.get('www-authenticate');
-    expect(challenge).toContain(
-      'resource_metadata="https://mcp.example.org/.well-known/oauth-protected-resource/mcp"',
-    );
-  });
-});
-
-describe('createHttpHandler API key and OAuth auth', () => {
-  function combined() {
-    const { made, keys } = apiKeyAuth();
-    const auth = httpAuthFromConfig(
-      authConfigSchema.parse({
-        AUTH_MODE: 'api-key+oauth',
-        OAUTH_ISSUER: 'https://id.example.org',
-        OAUTH_AUDIENCE: 'https://mcp.example.org/mcp',
-        OAUTH_JWKS_URL: 'https://id.example.org/jwks',
-        OAUTH_REQUIRED_SCOPES: 'mcp',
-      }),
-      { keys, clock, logger: createTestLogger() },
-    );
-    return { made, ...handlerWith({ auth }) };
+    return { handler, seen };
   }
 
-  it('lets a valid API key through the resource and scope checks meant for OAuth tokens', async () => {
-    const { made, handler } = combined();
-    const response = await handler.fetch(post({ authorization: `Bearer ${made.key}` }));
-    expect(await response.text()).toBe('mcp reached');
+  it('serves a request without credentials, and ignores any it sends', async () => {
+    const { handler } = handlerWith();
+    expect((await handler.fetch(post())).status).toBe(200);
+    expect((await handler.fetch(post({ authorization: 'Bearer anything' }))).status).toBe(200);
   });
 
-  it('refuses a wrong key and challenges with the OAuth metadata, so OAuth clients can sign in', async () => {
-    const { handler } = combined();
-    const wrong = await handler.fetch(
-      post({ authorization: `Bearer smk_key_aaaaaaaaaaaa_${'A'.repeat(43)}` }),
-    );
-    expect(wrong.status).toBe(401);
-    expect(wrong.headers.get('www-authenticate')).toContain(
-      'resource_metadata="https://mcp.example.org/.well-known/oauth-protected-resource/mcp"',
-    );
-    const metadata = await handler.fetch(get('/.well-known/oauth-protected-resource/mcp'));
-    expect(metadata.status).toBe(200);
+  it('gives each client address its own rate-limit key that does not reveal it', async () => {
+    const { handler, seen } = capturing();
+    await handler.fetch(post({ [CLIENT_ADDRESS_HEADER]: '203.0.113.7' }));
+    await handler.fetch(post({ [CLIENT_ADDRESS_HEADER]: '203.0.113.7' }));
+    await handler.fetch(post({ [CLIENT_ADDRESS_HEADER]: '198.51.100.1' }));
+    const [first, again, other] = seen;
+    expect(first).toMatch(/^client:[\w-]{22}$/);
+    expect(again).toBe(first);
+    expect(other).not.toBe(first);
+    expect(seen.join()).not.toContain('203.0.113');
   });
 });
 
@@ -222,38 +154,19 @@ describe('the app behind the HTTP layer', () => {
     harness = undefined;
   });
 
-  it('serves a caller with a valid API key and records the key id on sessions and usage', async () => {
-    const { made, auth } = apiKeyAuth();
+  it('serves an anonymous client end to end, with sessions and usage recorded', async () => {
     harness = await startHarness({
-      http: {
-        wrap: (mcp: McpHttpHandler) => handlerWith({ mcp, auth }).handler,
-        headers: { authorization: `Bearer ${made.key}` },
-      },
+      http: { wrap: (mcp: McpHttpHandler) => handlerWith({ mcp }).handler },
     });
     const result = await harness.call('search_articles', { query: 'rivaroxaban dosing' });
     expect(result.isError).not.toBe(true);
     const url = (structured(result)['cards'] as { url: string }[])[0]?.url ?? '';
     const token = new URL(url).searchParams.get('t');
     const session = await harness.sessions.find(token as never, new AbortController().signal);
-    expect(session?.apiKeyId).toBe(made.id);
+    expect(session).toBeDefined();
     await harness.flushMeter();
     expect(harness.outbox.all()).toEqual([
-      expect.objectContaining({
-        apiKeyId: made.id,
-        tool: 'search_articles',
-        status: 'ok',
-        billable: true,
-      }),
+      expect.objectContaining({ tool: 'search_articles', status: 'ok', billable: true }),
     ]);
-  });
-
-  it('refuses the MCP handshake without a key', async () => {
-    await expect(
-      startHarness({
-        http: {
-          wrap: (mcp: McpHttpHandler) => handlerWith({ mcp, auth: apiKeyAuth().auth }).handler,
-        },
-      }),
-    ).rejects.toThrow();
   });
 });

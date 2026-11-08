@@ -6,9 +6,9 @@ import {
 } from '@modelcontextprotocol/server';
 import { RESOURCE_MIME_TYPE, registerAppResource } from '@modelcontextprotocol/ext-apps/server';
 import { CARD_VIEW_URI, cardViewHtml } from '@scholarly-mcp/card-view';
-import type { Caller, JournalCardCount, Logger, Meter, UsageStatus } from '@scholarly-mcp/core';
+import type { JournalCardCount, Logger, Meter, UsageStatus } from '@scholarly-mcp/core';
 import { z } from 'zod';
-import { callerOf } from '../auth/auth-info.js';
+import { rateLimitKeyOf } from '../limits/client-limit-key.js';
 import type { RateLimiter } from '../limits/create-rate-limiter.js';
 import type { ServerMetrics } from '../telemetry/create-metrics.js';
 import { toolErrorResult } from '../tools/tool-error.js';
@@ -35,9 +35,9 @@ const tracer = trace.getTracer('scholarly-mcp');
 /**
  * Returns the factory the transports call for each HTTP request or stdio connection: a
  * fresh `McpServer` with the six read-only tools. Handlers are stateless; everything they
- * share (index, sessions, caches) lives in the deps (PLAN.md: concurrent requests). The
- * caller comes from the request's verified `AuthInfo`; stdio and unauthenticated loopback
- * HTTP have the local caller. Each server also offers the MCP Apps card view (ADR 0033);
+ * share (index, sessions, caches) lives in the deps (PLAN.md: concurrent requests). Callers
+ * are anonymous (ADR 0048); the request context only names the client's rate-limit bucket,
+ * and stdio has the local one. Each server also offers the MCP Apps card view (ADR 0033);
  * clients without MCP Apps ignore it and show the text with links.
  */
 export function createServerFactory(
@@ -45,7 +45,7 @@ export function createServerFactory(
 ): (ctx?: McpRequestContext) => McpServer {
   const cardView = cardViewHtml({ publisher: deps.publisher });
   return (ctx) => {
-    const caller = callerOf(ctx?.authInfo);
+    const rateLimitKey = rateLimitKeyOf(ctx?.authInfo);
     const server = new McpServer(
       { name: 'scholarly-mcp', version: deps.version },
       { instructions: instructions(deps) },
@@ -65,7 +65,7 @@ export function createServerFactory(
           runTool(deps, tool, args, {
             signal: extra.mcpReq.signal,
             requestId: String(extra.mcpReq.id),
-            caller,
+            rateLimitKey,
           }),
       );
     }
@@ -95,7 +95,8 @@ export function createServerFactory(
 interface CallContext {
   readonly signal: AbortSignal;
   readonly requestId: string;
-  readonly caller: Caller;
+  /** The client's rate-limit bucket (ADR 0048). */
+  readonly rateLimitKey: string;
 }
 
 /**
@@ -112,7 +113,6 @@ async function runTool(
   const logger = deps.logger.child({
     tool: tool.name,
     requestId: call.requestId,
-    apiKeyId: call.caller.apiKeyId,
   });
   const occurredAt = deps.clock.now();
   const span = tracer.startSpan(`tool ${tool.name}`, {
@@ -123,9 +123,9 @@ async function runTool(
   let cardsByJournal: JournalCardCount[] = [];
   let result: CallToolResult;
   try {
-    await deps.limiter.take(call.caller.apiKeyId, call.signal);
+    await deps.limiter.take(call.rateLimitKey, call.signal);
     const input: unknown = tool.input.parse(args ?? {});
-    const reply = await tool.run(input, { signal: call.signal, caller: call.caller, logger });
+    const reply = await tool.run(input, { signal: call.signal, logger });
     resultCount = reply.resultCount;
     cardsByJournal = countByJournal(reply.cards ?? []);
     result = {
@@ -146,7 +146,6 @@ async function runTool(
   deps.meter.record({
     kind: 'tool_call',
     id: deps.eventId(),
-    apiKeyId: call.caller.apiKeyId,
     tool: tool.name,
     resultCount,
     latencyMs,

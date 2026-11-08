@@ -1,6 +1,4 @@
-import { runApiKeyStoreContract } from '../contracts/api-key-store-contract.js';
 import { runUsageOutboxContract } from '../contracts/usage-outbox-contract.js';
-import { createInMemoryApiKeyStore } from './in-memory-api-key-store.js';
 import { createInMemoryUsageOutbox } from './in-memory-usage-outbox.js';
 import { runArticleStoreContract } from '../contracts/article-store-contract.js';
 import { runEmbedderContract } from '../contracts/embedder-contract.js';
@@ -23,8 +21,6 @@ runArticleStoreContract('in-memory article store', () => {
 });
 
 runSessionStoreContract('in-memory session store', createInMemorySessionStore);
-
-runApiKeyStoreContract('in-memory API key store', () => createInMemoryApiKeyStore());
 
 runUsageOutboxContract('in-memory usage outbox', createInMemoryUsageOutbox);
 

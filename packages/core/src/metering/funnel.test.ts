@@ -9,13 +9,12 @@ let next = 0;
 function call(
   tool: 'search_articles' | 'find_related' | 'cite',
   cards: Record<string, number>,
-  extra: { apiKeyId?: string; day?: number; status?: 'ok' | 'TIMEOUT'; id?: string } = {},
+  extra: { day?: number; status?: 'ok' | 'TIMEOUT'; id?: string } = {},
 ): UsageEvent {
   const ok = (extra.status ?? 'ok') === 'ok';
   return {
     kind: 'tool_call',
     id: extra.id ?? `c${String((next += 1))}`,
-    apiKeyId: extra.apiKeyId ?? 'key_a',
     tool,
     resultCount: ok ? Object.values(cards).reduce((a, b) => a + b, 0) : 0,
     latencyMs: 10,
@@ -28,11 +27,10 @@ function call(
   };
 }
 
-function visit(journal: string, extra: { apiKeyId?: string; day?: number; id?: string } = {}) {
+function visit(journal: string, extra: { day?: number; id?: string } = {}) {
   return {
     kind: 'landing_visit',
     id: extra.id ?? `v${String((next += 1))}`,
-    apiKeyId: extra.apiKeyId ?? 'key_a',
     tool: 'search_articles',
     doi: doiSchema.parse('10.1055/a-1'),
     journal,
@@ -41,19 +39,19 @@ function visit(journal: string, extra: { apiKeyId?: string; day?: number; id?: s
   } satisfies UsageEvent;
 }
 
-function action(journal: string, kind: LandingAction, apiKeyId = 'key_a'): UsageEvent {
-  return { ...visit(journal, { apiKeyId }), kind: 'landing_action', action: kind };
+function action(journal: string, kind: LandingAction): UsageEvent {
+  return { ...visit(journal), kind: 'landing_action', action: kind };
 }
 
 describe('computeFunnel', () => {
   const events: UsageEvent[] = [
     call('search_articles', { Thrombosis: 3, Pneumologie: 2 }),
-    call('search_articles', { Thrombosis: 1 }, { apiKeyId: 'key_b', day: 4 }),
+    call('search_articles', { Thrombosis: 1 }, { day: 4 }),
     call('find_related', { Pneumologie: 4 }),
     call('cite', {}),
     call('search_articles', {}, { status: 'TIMEOUT' }),
     visit('Thrombosis'),
-    visit('Thrombosis', { apiKeyId: 'key_b', day: 4 }),
+    visit('Thrombosis', { day: 4 }),
     visit('Pneumologie'),
     action('Thrombosis', 'read'),
     action('Pneumologie', 'buy'),
@@ -90,16 +88,6 @@ describe('computeFunnel', () => {
     });
   });
 
-  it('shows click-through per client, the signal that a client drops links', () => {
-    const rows = computeFunnel(events).byClient;
-    expect(rows.map((row) => [row.apiKeyId, row.cardsShown, row.visits, row.clickThrough])).toEqual(
-      [
-        ['key_a', 9, 2, 2 / 9],
-        ['key_b', 1, 1, 1],
-      ],
-    );
-  });
-
   it('lists every action, zeros included, most clicked first', () => {
     expect(computeFunnel(events).byAction).toEqual([
       { action: 'buy', count: 2 },
@@ -129,11 +117,10 @@ describe('computeFunnel', () => {
     expect(funnel.duplicates).toBe(3);
   });
 
-  it('filters by period and client', () => {
+  it('filters by period', () => {
     const funnel = computeFunnel(events, { from: at(4, 0), to: at(5, 0) });
     expect(funnel.totals).toMatchObject({ searches: 1, cardsShown: 1, visits: 1 });
     expect(funnel.period).toEqual({ first: at(4), last: at(4, 11) });
-    expect(computeFunnel(events, { apiKeyId: 'key_b' }).totals.searches).toBe(1);
   });
 
   it('has no period and no click-through without events', () => {

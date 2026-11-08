@@ -4,29 +4,28 @@ import { query, type Pool } from '../database/pool.js';
 interface UsageRow {
   readonly id: string;
   readonly kind: string;
-  readonly api_key_id: string;
   readonly occurred_at: Date;
   readonly exported_at: Date | null;
   readonly payload: object;
 }
 
 /**
- * The metering outbox in Postgres (ADR 0033, ADR 0034): an envelope (id, kind, key id,
- * times, lease) plus the kind's fields as `jsonb`; none of them holds query text or a
+ * The metering outbox in Postgres (ADR 0033, ADR 0034): an envelope (id, kind, times,
+ * lease) plus the kind's fields as `jsonb`; none of them holds query text or a
  * landing token. A claim locks its rows `FOR UPDATE SKIP LOCKED`, so exporters on several
  * replicas never take the same batch.
  */
 export function createPostgresUsageOutbox(pool: Pool): UsageOutbox {
   return {
     append: async (event, signal) => {
-      const { id, kind, apiKeyId, occurredAt, ...payload } = usageEventSchema.parse(event);
+      const { id, kind, occurredAt, ...payload } = usageEventSchema.parse(event);
       delete payload.exportedAt;
       await query(
         pool,
         signal,
-        `INSERT INTO scholarly.usage_events (id, kind, api_key_id, occurred_at, payload)
-         VALUES ($1, $2, $3, $4, $5) ON CONFLICT (id) DO NOTHING`,
-        [id, kind, apiKeyId, occurredAt, JSON.stringify(payload)],
+        `INSERT INTO scholarly.usage_events (id, kind, occurred_at, payload)
+         VALUES ($1, $2, $3, $4) ON CONFLICT (id) DO NOTHING`,
+        [id, kind, occurredAt, JSON.stringify(payload)],
       );
     },
     claim: async (limit, now, leaseUntil, signal) => {
@@ -87,13 +86,11 @@ export function createPostgresUsageOutbox(pool: Pool): UsageOutbox {
         `SELECT * FROM scholarly.usage_events
          WHERE ($1::timestamptz IS NULL OR occurred_at >= $1)
            AND ($2::timestamptz IS NULL OR occurred_at < $2)
-           AND ($3::text IS NULL OR api_key_id = $3)
-           AND ($4::timestamptz IS NULL OR (occurred_at, id) > ($4, $5::text COLLATE "C"))
-         ORDER BY occurred_at, id LIMIT $6`,
+           AND ($3::timestamptz IS NULL OR (occurred_at, id) > ($3, $4::text COLLATE "C"))
+         ORDER BY occurred_at, id LIMIT $5`,
         [
           filters.from ?? null,
           filters.to ?? null,
-          filters.apiKeyId ?? null,
           filters.after?.occurredAt ?? null,
           filters.after?.id ?? null,
           Math.max(0, filters.limit),
@@ -119,7 +116,6 @@ function eventFromRow(row: UsageRow): UsageEvent {
     ...row.payload,
     id: row.id,
     kind: row.kind,
-    apiKeyId: row.api_key_id,
     occurredAt: row.occurred_at,
     ...(row.exported_at !== null && { exportedAt: row.exported_at }),
   });

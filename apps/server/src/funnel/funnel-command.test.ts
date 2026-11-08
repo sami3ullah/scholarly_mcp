@@ -29,7 +29,6 @@ function aCall(id: string, day: string): UsageEvent {
   return {
     kind: 'tool_call',
     id,
-    apiKeyId: 'key_a',
     tool: 'search_articles',
     resultCount: 2,
     latencyMs: 5,
@@ -110,7 +109,6 @@ describe('scholarly-mcp funnel', () => {
     const event: UsageEvent = {
       kind: 'tool_call',
       id: 'e1',
-      apiKeyId: 'key_a',
       tool: 'search_articles',
       resultCount: 2,
       latencyMs: 5,
@@ -127,13 +125,12 @@ describe('scholarly-mcp funnel', () => {
     expect(readFileSync(join(dir, 'f.html'), 'utf8')).toContain('2 unreadable lines skipped');
   });
 
-  it('filters by day and client', async () => {
+  it('filters by day', async () => {
     const dir = workdir();
     const file = join(dir, 'usage.jsonl');
-    const at = (day: string, apiKeyId: string, id: string): UsageEvent => ({
+    const at = (day: string, id: string): UsageEvent => ({
       kind: 'tool_call',
       id,
-      apiKeyId,
       tool: 'search_articles',
       resultCount: 0,
       latencyMs: 1,
@@ -142,11 +139,7 @@ describe('scholarly-mcp funnel', () => {
       cardsByJournal: [],
       occurredAt: new Date(`${day}T10:00:00Z`),
     });
-    const events = [
-      at('2026-11-01', 'a', '1'),
-      at('2026-11-02', 'a', '2'),
-      at('2026-11-02', 'b', '3'),
-    ];
+    const events = [at('2026-11-01', '1'), at('2026-11-02', '2'), at('2026-11-03', '3')];
     writeFileSync(file, events.map((e) => `${JSON.stringify(toWireEvent(e))}\n`).join(''));
     const { lines } = await run([
       '--from',
@@ -157,8 +150,6 @@ describe('scholarly-mcp funnel', () => {
       '2026-11-02',
       '--until',
       '2026-11-03',
-      '--key',
-      'a',
     ]);
     expect(lines[0]).toMatch(/^1 events: 1 searches/);
   });

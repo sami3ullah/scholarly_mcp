@@ -22,7 +22,6 @@ function session(overrides: Partial<LandingSession> = {}): LandingSession {
     results: [{ doi: a1001 }, { doi: a1002 }],
     language: 'any',
     tool: 'search_articles',
-    apiKeyId: 'key_test',
     createdAt: created,
     expiresAt: new Date(created.getTime() + LANDING_SESSION_TTL_MS),
     visitCount: 0,
@@ -50,7 +49,6 @@ describe('recording landing referrals', () => {
     const event = await live.referrals.record(visit, signal);
     expect(event).toMatchObject({
       kind: 'landing_visit',
-      apiKeyId: 'key_test',
       tool: 'search_articles',
       doi: '10.1055/a-1001',
       journal: 'Thrombosis and Haemostasis',
@@ -171,7 +169,7 @@ describe('recording landing referrals', () => {
     expect(await referrals.record(visit, signal)).toBeUndefined();
   });
 
-  it('attributes a visit from a real search link to the tool and key that made it', async () => {
+  it('attributes a visit from a real search link to the tool that made it', async () => {
     harness = await startHarness();
     const result = structured(await harness.call('search_articles', { query: 'rivaroxaban' }));
     const [card] = result['cards'] as { url: string; doi: string }[];
@@ -181,6 +179,6 @@ describe('recording landing referrals', () => {
       { kind: 'landing_visit', token: linkToken, doi: doi(card?.doi ?? '') },
       signal,
     );
-    expect(event).toMatchObject({ tool: 'search_articles', apiKeyId: 'local' });
+    expect(event).toMatchObject({ tool: 'search_articles' });
   });
 });

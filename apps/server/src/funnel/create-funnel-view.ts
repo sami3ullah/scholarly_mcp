@@ -114,11 +114,10 @@ async function countFrom(deps: FunnelViewDeps, filters: FunnelOptions): Promise<
 
 /** The request's own filters when it sets any, else the defaults; undefined when invalid. */
 function filtersOf(params: URLSearchParams, defaults: FunnelOptions): FunnelOptions | undefined {
-  if (!['since', 'until', 'key'].some((name) => params.has(name))) return defaults;
+  if (!['since', 'until'].some((name) => params.has(name))) return defaults;
   return funnelFiltersFrom({
     since: params.get('since') ?? undefined,
     until: params.get('until') ?? undefined,
-    key: params.get('key') ?? undefined,
   });
 }
 

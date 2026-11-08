@@ -6,7 +6,6 @@ interface SessionRow {
   readonly results: unknown;
   readonly language: string;
   readonly tool: string | null;
-  readonly api_key_id: string;
   readonly created_at: Date;
   readonly expires_at: Date;
   readonly visit_count: number;
@@ -24,10 +23,10 @@ export function createPostgresSessionStore(pool: Pool): SessionStore {
         pool,
         signal,
         `INSERT INTO scholarly.landing_sessions
-           (token, results, language, tool, api_key_id, created_at, expires_at, visit_count)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+           (token, results, language, tool, created_at, expires_at, visit_count)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
          ON CONFLICT (token) DO UPDATE SET results = excluded.results,
-           language = excluded.language, tool = excluded.tool, api_key_id = excluded.api_key_id,
+           language = excluded.language, tool = excluded.tool,
            created_at = excluded.created_at, expires_at = excluded.expires_at,
            visit_count = excluded.visit_count`,
         [
@@ -35,7 +34,6 @@ export function createPostgresSessionStore(pool: Pool): SessionStore {
           JSON.stringify(session.results),
           session.language,
           session.tool ?? null,
-          session.apiKeyId,
           session.createdAt,
           session.expiresAt,
           session.visitCount,
@@ -77,7 +75,6 @@ function sessionFromRow(row: SessionRow): LandingSession {
     token: row.token,
     results: row.results,
     language: row.language,
-    apiKeyId: row.api_key_id,
     createdAt: row.created_at,
     expiresAt: row.expires_at,
     visitCount: row.visit_count,

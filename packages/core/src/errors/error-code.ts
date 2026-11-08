@@ -9,7 +9,6 @@ export const errorCodeSchema = z.enum([
   'NOT_FOUND',
   'CURSOR_STALE',
   'RATE_LIMITED',
-  'UNAUTHORIZED',
   'TIMEOUT',
   'INDEX_UNAVAILABLE',
   'SOURCE_UNAVAILABLE',

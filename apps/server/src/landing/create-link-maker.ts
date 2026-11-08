@@ -1,7 +1,6 @@
 import {
   LANDING_SESSION_TTL_MS,
   buildLandingUrl,
-  type Caller,
   type Clock,
   type Doi,
   type LandingSession,
@@ -25,7 +24,6 @@ export interface LinkRequest {
   readonly tool: ToolName;
   readonly language: LandingSession['language'];
   readonly results: readonly { readonly doi: Doi; readonly matchedChunkId?: string }[];
-  readonly caller: Caller;
 }
 
 /** Makes landing links, storing the session they point to. */
@@ -78,7 +76,6 @@ export function createLinkMaker(deps: LinkMakerDeps): LinkMaker {
           })),
           language: request.language,
           tool: request.tool,
-          apiKeyId: request.caller.apiKeyId,
           createdAt,
           expiresAt: new Date(createdAt.getTime() + LANDING_SESSION_TTL_MS),
           visitCount: 0,

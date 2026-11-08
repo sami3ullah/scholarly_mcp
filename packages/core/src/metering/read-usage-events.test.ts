@@ -9,7 +9,6 @@ function anEvent(id: string, minute: number): UsageEvent {
   return {
     kind: 'tool_call',
     id,
-    apiKeyId: 'key_a',
     tool: 'cite',
     resultCount: 1,
     latencyMs: 1,
@@ -53,16 +52,16 @@ describe('readUsageEvents', () => {
     const events = [anEvent('a', 0), anEvent('b', 0), anEvent('c', 1), anEvent('d', 2)];
     const outbox = listing(events);
     const from = new Date(Date.UTC(2026, 10, 3));
-    expect(await collect(readUsageEvents(outbox, { from, apiKeyId: 'key_a' }, signal, 2))).toEqual([
+    expect(await collect(readUsageEvents(outbox, { from }, signal, 2))).toEqual([
       'a',
       'b',
       'c',
       'd',
     ]);
     expect(outbox.queries).toEqual([
-      { from, apiKeyId: 'key_a', limit: 2 },
-      { from, apiKeyId: 'key_a', after: { occurredAt: events[1]?.occurredAt, id: 'b' }, limit: 2 },
-      { from, apiKeyId: 'key_a', after: { occurredAt: events[3]?.occurredAt, id: 'd' }, limit: 2 },
+      { from, limit: 2 },
+      { from, after: { occurredAt: events[1]?.occurredAt, id: 'b' }, limit: 2 },
+      { from, after: { occurredAt: events[3]?.occurredAt, id: 'd' }, limit: 2 },
     ]);
   });
 

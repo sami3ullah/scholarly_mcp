@@ -42,9 +42,6 @@ export interface LandingPagesDeps {
   readonly logger: Logger;
 }
 
-/** The anonymous landing visitor; a publisher's entitlement adapter knows its own readers. */
-const VISITOR = { apiKeyId: 'landing' } as const;
-
 /**
  * Builds landing pages (ADR 0032). With a live token the page rebuilds the search: the
  * chosen article (the link's DOI, else the first result), the other results in order, where
@@ -69,7 +66,7 @@ export function createLandingPages(deps: LandingPagesDeps): LandingPages {
   async function access(article: Article, signal: AbortSignal): Promise<LandingAccess> {
     try {
       const decision = await deps.entitlements.check(
-        { doi: article.doi, isOpenAccess: article.isOpenAccess, caller: VISITOR },
+        { doi: article.doi, isOpenAccess: article.isOpenAccess },
         signal,
       );
       return {

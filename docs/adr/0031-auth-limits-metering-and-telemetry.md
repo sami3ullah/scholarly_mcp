@@ -1,6 +1,6 @@
 # 0031 Auth, rate limits, metering and telemetry
 
-- Status: accepted
+- Status: accepted; auth (decision 1, API keys, OAuth) superseded by [0048](0048-public-server-without-auth.md)
 - Date: 2026-11-03
 - Amends: ADR 0025 (decision 1, loopback-only HTTP; decision 5, the local caller)
 - For: ticket SM-10, PLAN.md "Security and privacy", "Edge cases and failure handling"

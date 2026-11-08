@@ -20,7 +20,6 @@ export type LandingAction = z.infer<typeof landingActionSchema>;
 /** What every event has. The id is the idempotency key the exporter and the funnel dedupe on. */
 const envelope = {
   id: z.string().min(1),
-  apiKeyId: z.string().min(1),
   occurredAt: z.date(),
   exportedAt: z.date().optional(),
 };

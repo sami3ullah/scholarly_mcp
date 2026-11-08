@@ -6,7 +6,6 @@ export interface UsageEventQuery {
   readonly from?: Date;
   /** Exclusive. */
   readonly to?: Date;
-  readonly apiKeyId?: string;
   /** The last event of the previous page; this page starts after it. */
   readonly after?: { readonly occurredAt: Date; readonly id: string };
   readonly limit: number;

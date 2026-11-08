@@ -1,4 +1,3 @@
-export { runApiKeyStoreContract } from './contracts/api-key-store-contract.js';
 export { aChunk, type ChunkBuilder } from './builders/a-chunk.js';
 export { aLandingSession, type LandingSessionBuilder } from './builders/a-landing-session.js';
 export { anArticle, type ArticleBuilder } from './builders/an-article.js';
@@ -25,7 +24,6 @@ export { runSourceContract, type SourceContractOptions } from './contracts/sourc
 export { runSyncStateStoreContract } from './contracts/sync-state-store-contract.js';
 export { TEST_EMBEDDING_DIMENSIONS, createFakeEmbedder } from './fakes/fake-embedder.js';
 export { createFakeClock, type FakeClock } from './fakes/fake-clock.js';
-export { createInMemoryApiKeyStore } from './fakes/in-memory-api-key-store.js';
 export {
   createInMemoryArticleStore,
   type InMemoryArticleStore,

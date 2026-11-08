@@ -62,14 +62,6 @@ export {
   fulltextConfigSchema,
   type FulltextConfig,
 } from './config/fulltext-config.js';
-export {
-  API_KEY_PREFIX,
-  apiKeyIdSchema,
-  apiKeySchema,
-  parseApiKey,
-  type ApiKey,
-  type ApiKeyId,
-} from './auth/api-key.js';
 export { landingConfigSchema, type LandingConfig } from './config/landing-config.js';
 export { storeConfigSchema, type StoreConfig } from './config/store-config.js';
 export { parseConfig, type Env } from './config/parse-config.js';
@@ -126,7 +118,6 @@ export {
   createFunnelCounter,
   type Funnel,
   type FunnelCounter,
-  type FunnelClientRow,
   type FunnelDayRow,
   type FunnelJournalRow,
   type FunnelOptions,
@@ -163,10 +154,9 @@ export type {
   VectorQuery,
 } from './ports/article-search.js';
 export type { ArticleRecord, ArticleWriter } from './ports/article-writer.js';
-export type { ApiKeyStore } from './ports/api-key-store.js';
 export type { Clock } from './ports/clock.js';
 export type { Embedder } from './ports/embedder.js';
-export type { AccessDecision, Caller, Entitlements } from './ports/entitlements.js';
+export type { AccessDecision, Entitlements } from './ports/entitlements.js';
 export type { IndexReader } from './ports/index-reader.js';
 export type {
   BuildKind,

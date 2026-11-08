@@ -1,6 +1,7 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { toNodeHandler, type NodeIncomingMessageLike } from '@modelcontextprotocol/node';
 import type { Logger } from '@scholarly-mcp/core';
+import { CLIENT_ADDRESS_HEADER, type ClientAddressResolver } from '../http/client-address.js';
 import { MCP_PATH, type HttpHandler } from '../http/create-http-handler.js';
 
 /** Largest request body accepted; tool arguments are small (PLAN.md security: body limits). */
@@ -13,6 +14,8 @@ export interface HttpServerOptions {
   readonly logger: Logger;
   /** What the log calls this server; the MCP server unless set. */
   readonly name?: string;
+  /** Resolves each request's client address for the handler; the socket peer when unset. */
+  readonly clientAddress?: ClientAddressResolver;
   /** Told when requests start and finish, for the in-flight gauge. */
   readonly onInFlight?: (count: number) => void;
 }
@@ -34,6 +37,7 @@ export interface HttpServer {
  * Serves the HTTP handler on a Node server with tight limits: 16 KB of headers, a 64 KB
  * body, 10 s to send headers and 60 s per request. While draining, every response asks
  * the client to close its connection, so keep-alive connections end with their request.
+ * Each request reaches the handler with its client address in `CLIENT_ADDRESS_HEADER`.
  */
 export async function serveHttp(options: HttpServerOptions): Promise<HttpServer> {
   const node = toNodeHandler(
@@ -63,6 +67,13 @@ export async function serveHttp(options: HttpServerOptions): Promise<HttpServer>
         options.onInFlight?.(inFlight);
         if (draining && inFlight === 0) drained?.();
       });
+      // Only this server sets the client address header; a client's own value is dropped.
+      Reflect.deleteProperty(req.headers, CLIENT_ADDRESS_HEADER);
+      const peer = req.socket.remoteAddress;
+      const address = options.clientAddress
+        ? options.clientAddress(peer, req.headers['x-forwarded-for'])
+        : peer;
+      if (address !== undefined) req.headers[CLIENT_ADDRESS_HEADER] = address;
       // Node types `method` as optional; on a server request it is always set.
       node(req as NodeIncomingMessageLike, res).catch((error: unknown) => {
         options.logger.error({ err: error }, 'HTTP request failed');

@@ -1,6 +1,6 @@
 # 0047 API keys and OAuth in one deployment
 
-- Status: accepted
+- Status: superseded by [0048](0048-public-server-without-auth.md) the same day: the server became public and the key and OAuth code was removed
 - Date: 2026-11-08
 - Records: SM-15; extends ADR 0031 (auth modes) and ADR 0045 (self-hosting bundle)
 

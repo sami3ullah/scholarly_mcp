@@ -61,7 +61,7 @@ export function createSearchArticlesTool(deps: ToolDeps) {
     input,
     output,
     ui: CARD_VIEW_URI,
-    async run(args, { signal, caller }) {
+    async run(args, { signal }) {
       const filters = await filtersOf(deps, args, signal);
       const result = await deps.search.search(
         {
@@ -76,7 +76,6 @@ export function createSearchArticlesTool(deps: ToolDeps) {
         {
           tool: 'search_articles',
           language: args.language,
-          caller,
           results: result.hits.map(({ article, matchedChunkId }) => ({
             doi: article.doi,
             ...(matchedChunkId !== undefined && { matchedChunkId }),

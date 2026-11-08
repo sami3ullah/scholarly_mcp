@@ -21,15 +21,12 @@ describe('serverConfigSchema', () => {
     expect(() => parseConfig(serverConfigSchema, {})).toThrow(/LANDING_BASE_URL/);
   });
 
-  it('refuses HTTP beyond loopback without auth and a Host allowlist', () => {
+  it('refuses HTTP beyond loopback without a Host allowlist', () => {
     const exposed = { ...base, MCP_TRANSPORT: 'http', HTTP_HOST: '0.0.0.0' };
-    expect(() => parseConfig(serverConfigSchema, exposed)).toThrow(
-      /AUTH_MODE: HTTP beyond loopback needs AUTH_MODE api-key, oauth or api-key\+oauth[\s\S]*HTTP_ALLOWED_HOSTS/,
-    );
+    expect(() => parseConfig(serverConfigSchema, exposed)).toThrow(/HTTP_ALLOWED_HOSTS/);
     expect(
       parseConfig(serverConfigSchema, {
         ...exposed,
-        AUTH_MODE: 'api-key',
         LANDING_API_SECRET: 's'.repeat(32),
         HTTP_ALLOWED_HOSTS: 'mcp.example.org, ',
         HTTP_ALLOWED_ORIGINS: 'app.example.org',
@@ -45,7 +42,6 @@ describe('serverConfigSchema', () => {
       ...base,
       MCP_TRANSPORT: 'http',
       HTTP_HOST: '0.0.0.0',
-      AUTH_MODE: 'api-key',
       HTTP_ALLOWED_HOSTS: 'mcp.example.org',
     };
     expect(() => parseConfig(serverConfigSchema, exposed)).toThrow(/LANDING_API_SECRET/);
@@ -55,7 +51,7 @@ describe('serverConfigSchema', () => {
   });
 
   it('guards a landing API on its own port by where that port listens', () => {
-    const http = { ...base, MCP_TRANSPORT: 'http', AUTH_MODE: 'api-key' };
+    const http = { ...base, MCP_TRANSPORT: 'http' };
     expect(parseConfig(serverConfigSchema, { ...http, LANDING_API_PORT: '8081' })).toMatchObject({
       LANDING_API_HOST: '127.0.0.1',
       LANDING_API_PORT: 8081,
@@ -98,28 +94,25 @@ describe('serverConfigSchema', () => {
   });
 
   it('allows stdio with any HTTP_HOST, since nothing listens', () => {
-    expect(parseConfig(serverConfigSchema, { ...base, HTTP_HOST: '0.0.0.0' }).AUTH_MODE).toBe(
-      'none',
+    expect(parseConfig(serverConfigSchema, { ...base, HTTP_HOST: '0.0.0.0' }).HTTP_HOST).toBe(
+      '0.0.0.0',
     );
   });
 
-  it('needs issuer, audience and key set URL for OAuth', () => {
-    expect(() => parseConfig(serverConfigSchema, { ...base, AUTH_MODE: 'oauth' })).toThrow(
-      /OAUTH_ISSUER[\s\S]*OAUTH_AUDIENCE[\s\S]*OAUTH_JWKS_URL/,
-    );
+  it('reads trusted proxies as addresses or CIDR ranges and refuses anything else', () => {
+    expect(
+      parseConfig(serverConfigSchema, { ...base, HTTP_TRUSTED_PROXIES: '10.0.0.5, fd00::/8' })
+        .HTTP_TRUSTED_PROXIES,
+    ).toEqual(['10.0.0.5', 'fd00::/8']);
+    expect(() =>
+      parseConfig(serverConfigSchema, { ...base, HTTP_TRUSTED_PROXIES: '10.0.0.0/33' }),
+    ).toThrow(/HTTP_TRUSTED_PROXIES[\s\S]*10\.0\.0\.0\/33/);
   });
 
-  it('needs the same OAuth settings when API keys and OAuth are both accepted', () => {
-    expect(() => parseConfig(serverConfigSchema, { ...base, AUTH_MODE: 'api-key+oauth' })).toThrow(
-      /api-key\+oauth needs OAUTH_ISSUER[\s\S]*OAUTH_AUDIENCE[\s\S]*OAUTH_JWKS_URL/,
-    );
-  });
-
-  it('defaults rate limits, metering and auth cache, and checks the webhook secret length', () => {
+  it('defaults rate limits and metering, and checks the webhook secret length', () => {
     expect(parseConfig(serverConfigSchema, base)).toMatchObject({
       RATE_LIMIT_PER_MINUTE: 60,
       RATE_LIMIT_BURST: 20,
-      AUTH_CACHE_MS: 5000,
       METER_JSONL_PATH: 'data/usage.jsonl',
       METER_EXPORT_MS: 5000,
       SHUTDOWN_TIMEOUT_MS: 10_000,

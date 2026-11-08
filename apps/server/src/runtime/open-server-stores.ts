@@ -1,7 +1,6 @@
 import { existsSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import type {
-  ApiKeyStore,
   IndexReader,
   RateBucketStore,
   SessionStore,
@@ -13,7 +12,6 @@ import { createMemoryBucketStore } from '../limits/create-memory-bucket-store.js
 import {
   assertMigrated,
   createPool,
-  createPostgresApiKeyStore,
   createPostgresBucketStore,
   createPostgresSessionStore,
   createPostgresUsageOutbox,
@@ -22,7 +20,6 @@ import {
   type PostgresConfig,
 } from '@scholarly-mcp/store-postgres';
 import {
-  createSqliteApiKeyStore,
   createSqliteSessionStore,
   createSqliteUsageOutbox,
   openIndexReader,
@@ -47,7 +44,7 @@ export function storeSelectionFrom(
 }
 
 /**
- * What the server keeps outside the process: the index, sessions, the outbox, keys and,
+ * What the server keeps outside the process: the index, sessions, the outbox and,
  * on Postgres, rate-limit buckets shared by replicas (ADR 0036). With SQLite there is one
  * process, so its buckets stay in memory.
  */
@@ -56,7 +53,6 @@ export interface ServerStores {
   openIndex(signal: AbortSignal): Promise<IndexReader>;
   readonly sessions: SessionStore;
   readonly outbox: UsageOutbox;
-  readonly keys: ApiKeyStore;
   readonly buckets: RateBucketStore;
   close(): Promise<void>;
 }
@@ -81,7 +77,6 @@ export async function openServerStores(
         }),
       sessions: createSqliteSessionStore(db),
       outbox: createSqliteUsageOutbox(db),
-      keys: createSqliteApiKeyStore(db),
       buckets: createMemoryBucketStore(),
       close() {
         db.close();
@@ -95,34 +90,9 @@ export async function openServerStores(
     openIndex: (openSignal) => openPostgresIndexReader(pool, modelVersion, openSignal),
     sessions: createPostgresSessionStore(pool),
     outbox: createPostgresUsageOutbox(pool),
-    keys: createPostgresApiKeyStore(pool),
     buckets: createPostgresBucketStore(pool),
     close: () => pool.end(),
   };
-}
-
-/**
- * The keys command's store. On Postgres it connects with `DATABASE_URL` as given, which
- * must be the writer role: the server's role may only read keys.
- */
-export async function openKeyStore(
-  selection: StoreSelection,
-  signal: AbortSignal,
-): Promise<{ readonly keys: ApiKeyStore; close(): Promise<void> }> {
-  if (selection.store === 'sqlite') {
-    const { RUNTIME_DB_PATH } = selection.config;
-    mkdirSync(dirname(RUNTIME_DB_PATH), { recursive: true });
-    const db = openRuntimeDatabase(RUNTIME_DB_PATH);
-    return {
-      keys: createSqliteApiKeyStore(db),
-      close() {
-        db.close();
-        return Promise.resolve();
-      },
-    };
-  }
-  const pool = await migratedPool(selection.config, 'scholarly-mcp-keys', 1, signal);
-  return { keys: createPostgresApiKeyStore(pool), close: () => pool.end() };
 }
 
 /**

@@ -22,7 +22,6 @@ function anEvent(id: string, minute = 0): UsageEvent {
   return {
     kind: 'tool_call',
     id,
-    apiKeyId: 'key_aaaaaaaaaaaa',
     tool: 'search_articles',
     resultCount: 3,
     latencyMs: 40,

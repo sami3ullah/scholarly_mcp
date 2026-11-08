@@ -5,7 +5,6 @@ import { withSignal } from '../with-signal.js';
 interface ListParams {
   readonly from: string | null;
   readonly to: string | null;
-  readonly key: string | null;
   readonly after: string | null;
   readonly afterId: string | null;
   readonly limit: number;
@@ -14,7 +13,6 @@ interface ListParams {
 interface UsageRow {
   readonly id: string;
   readonly kind: string;
-  readonly api_key_id: string;
   readonly occurred_at: string;
   readonly exported_at: string | null;
   readonly claimed_until: string | null;
@@ -23,14 +21,14 @@ interface UsageRow {
 
 /**
  * The metering outbox on the runtime database's `usage_events` table (ADR 0022, ADR 0033).
- * A row is an envelope (id, kind, key id, times) plus the kind's fields as JSON; none of
+ * A row is an envelope (id, kind, times) plus the kind's fields as JSON; none of
  * them holds query text or a landing token. Several server processes may share the file;
  * each insert is one small WAL write, and a claim leases its rows (ADR 0034).
  */
 export function createSqliteUsageOutbox(db: Db): UsageOutbox {
   const insert = db.prepare(
-    `INSERT OR IGNORE INTO usage_events (id, kind, api_key_id, occurred_at, payload)
-     VALUES (?, ?, ?, ?, ?)`,
+    `INSERT OR IGNORE INTO usage_events (id, kind, occurred_at, payload)
+     VALUES (?, ?, ?, ?)`,
   );
   // One statement, so the write lock makes the claim atomic across processes sharing the file.
   const claim = db.prepare<[string, string, number], UsageRow>(
@@ -57,7 +55,6 @@ export function createSqliteUsageOutbox(db: Db): UsageOutbox {
     `SELECT * FROM usage_events
      WHERE (@from IS NULL OR occurred_at >= @from)
        AND (@to IS NULL OR occurred_at < @to)
-       AND (@key IS NULL OR api_key_id = @key)
        AND (@after IS NULL OR occurred_at > @after OR (occurred_at = @after AND id > @afterId))
      ORDER BY occurred_at, id LIMIT @limit`,
   );
@@ -71,9 +68,9 @@ export function createSqliteUsageOutbox(db: Db): UsageOutbox {
   return {
     append: (event, signal) =>
       withSignal(signal, () => {
-        const { id, kind, apiKeyId, occurredAt, ...payload } = usageEventSchema.parse(event);
+        const { id, kind, occurredAt, ...payload } = usageEventSchema.parse(event);
         delete payload.exportedAt;
-        insert.run(id, kind, apiKeyId, occurredAt.toISOString(), JSON.stringify(payload));
+        insert.run(id, kind, occurredAt.toISOString(), JSON.stringify(payload));
       }),
     claim: (limit, now, leaseUntil, signal) =>
       withSignal(signal, () =>
@@ -96,7 +93,6 @@ export function createSqliteUsageOutbox(db: Db): UsageOutbox {
           .all({
             from: query.from?.toISOString() ?? null,
             to: query.to?.toISOString() ?? null,
-            key: query.apiKeyId ?? null,
             after: query.after?.occurredAt.toISOString() ?? null,
             afterId: query.after?.id ?? null,
             limit: Math.max(0, query.limit),
@@ -116,7 +112,6 @@ function eventFromRow(row: UsageRow): UsageEvent {
     ...(JSON.parse(row.payload) as object),
     id: row.id,
     kind: row.kind,
-    apiKeyId: row.api_key_id,
     occurredAt: new Date(row.occurred_at),
     ...(row.exported_at !== null && { exportedAt: new Date(row.exported_at) }),
   });

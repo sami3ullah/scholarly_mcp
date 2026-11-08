@@ -35,7 +35,6 @@ function session(
     token,
     results,
     language: 'any',
-    apiKeyId: 'key_test',
     createdAt: created,
     expiresAt: new Date(created.getTime() + LANDING_SESSION_TTL_MS),
     visitCount: 0,

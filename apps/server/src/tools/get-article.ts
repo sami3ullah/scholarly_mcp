@@ -46,10 +46,10 @@ export function createGetArticleTool(deps: ToolDeps) {
     ].join(' '),
     input,
     output,
-    async run({ doi }, { signal, caller }) {
+    async run({ doi }, { signal }) {
       const article = await findArticle(deps.reader, doi, signal);
       const links = await deps.links.links(
-        { tool: 'get_article', language: 'any', caller, results: [{ doi: article.doi }] },
+        { tool: 'get_article', language: 'any', results: [{ doi: article.doi }] },
         signal,
       );
       const card = buildCard(

@@ -5,7 +5,6 @@ import type { LandingAction, UsageEvent } from './usage-event.js';
 export interface FunnelOptions {
   readonly from?: Date;
   readonly to?: Date;
-  readonly apiKeyId?: string;
 }
 
 /** The four funnel steps (PLAN.md metering dashboard). */
@@ -38,11 +37,6 @@ export interface FunnelToolRow {
   readonly visits: number;
 }
 
-export interface FunnelClientRow extends FunnelSteps {
-  readonly apiKeyId: string;
-  readonly clickThrough: number | undefined;
-}
-
 export interface FunnelDayRow extends FunnelSteps {
   /** UTC day, `YYYY-MM-DD`. */
   readonly day: string;
@@ -59,7 +53,6 @@ export interface Funnel {
   /** Most cards shown first. */
   readonly byJournal: readonly FunnelJournalRow[];
   readonly byTool: readonly FunnelToolRow[];
-  readonly byClient: readonly FunnelClientRow[];
   /** Every landing action, most clicked first, zeros included. */
   readonly byAction: readonly { readonly action: LandingAction; readonly count: number }[];
   /** Oldest first, only days with events. */
@@ -112,7 +105,6 @@ export function createFunnelCounter(options: FunnelOptions = {}): FunnelCounter 
   const totals = noSteps();
   const journals = new Map<string, { cardsShown: number; visits: number; actions: number }>();
   const tools = new Map<ToolName | 'unknown', Mutable<Omit<FunnelToolRow, 'tool'>>>();
-  const clients = new Map<string, Steps>();
   const days = new Map<string, Steps>();
   const actions = new Map<LandingAction, number>(ACTIONS.map((action) => [action, 0]));
 
@@ -122,7 +114,6 @@ export function createFunnelCounter(options: FunnelOptions = {}): FunnelCounter 
     getOrAdd(tools, name, () => ({ calls: 0, failedCalls: 0, cardsShown: 0, visits: 0 }));
   const bump = (event: UsageEvent, step: keyof Steps, by = 1) => {
     totals[step] += by;
-    getOrAdd(clients, event.apiKeyId, noSteps)[step] += by;
     getOrAdd(days, event.occurredAt.toISOString().slice(0, 10), noSteps)[step] += by;
   };
 
@@ -180,13 +171,6 @@ export function createFunnelCounter(options: FunnelOptions = {}): FunnelCounter 
     byTool: [...tools]
       .map(([name, row]) => ({ tool: name, ...row }))
       .sort((a, b) => b.calls - a.calls || a.tool.localeCompare(b.tool)),
-    byClient: [...clients]
-      .map(([apiKeyId, row]) => ({
-        apiKeyId,
-        ...row,
-        clickThrough: rate(row.visits, row.cardsShown),
-      }))
-      .sort((a, b) => b.cardsShown - a.cardsShown || a.apiKeyId.localeCompare(b.apiKeyId)),
     byAction: [...actions]
       .map(([action, count]) => ({ action, count }))
       .sort((a, b) => b.count - a.count || ACTIONS.indexOf(a.action) - ACTIONS.indexOf(b.action)),
@@ -199,7 +183,6 @@ export function createFunnelCounter(options: FunnelOptions = {}): FunnelCounter 
 }
 
 function covers(options: FunnelOptions, event: UsageEvent): boolean {
-  if (options.apiKeyId !== undefined && event.apiKeyId !== options.apiKeyId) return false;
   if (options.from !== undefined && event.occurredAt < options.from) return false;
   if (options.to !== undefined && event.occurredAt >= options.to) return false;
   return true;

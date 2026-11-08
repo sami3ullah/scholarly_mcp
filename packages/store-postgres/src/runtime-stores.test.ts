@@ -1,11 +1,9 @@
 import {
-  runApiKeyStoreContract,
   runRateBucketStoreContract,
   runSessionStoreContract,
   runUsageOutboxContract,
 } from '@scholarly-mcp/testkit';
 import { describe, expect, it } from 'vitest';
-import { createPostgresApiKeyStore } from './auth/create-postgres-api-key-store.js';
 import {
   RUNTIME_SCHEMA_VERSION,
   assertMigrated,
@@ -26,9 +24,6 @@ async function migratedPool() {
 
 runSessionStoreContract('Postgres session store', async () =>
   createPostgresSessionStore(await migratedPool()),
-);
-runApiKeyStoreContract('Postgres API key store', async () =>
-  createPostgresApiKeyStore(await migratedPool()),
 );
 runUsageOutboxContract('Postgres usage outbox', async () =>
   createPostgresUsageOutbox(await migratedPool()),

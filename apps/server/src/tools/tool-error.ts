@@ -23,7 +23,6 @@ const FIXED_MESSAGES: Partial<Record<ToolErrorCode, string>> = {
   CURSOR_STALE: 'The index was updated since that page; rerun the search without a cursor',
   INDEX_UNAVAILABLE: 'The search index is not available right now; retry shortly',
   SOURCE_UNAVAILABLE: 'The search index is not available right now; retry shortly',
-  UNAUTHORIZED: 'The API key is missing, invalid or revoked; connect again with a valid key',
   INTERNAL: 'Something went wrong on the server; retry, and if it persists report it',
 };
 

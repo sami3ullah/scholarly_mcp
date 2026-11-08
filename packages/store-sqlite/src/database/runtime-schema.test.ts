@@ -21,8 +21,11 @@ describe('runtime database migrations', () => {
     first.close();
 
     const db = openRuntimeDatabase(path);
-    expect(db.pragma('user_version', { simple: true })).toBe(5);
-    expect(db.prepare('SELECT count(*) AS n FROM api_keys').get()).toEqual({ n: 0 });
+    expect(db.pragma('user_version', { simple: true })).toBe(6);
+    const tables = db
+      .prepare<[], { name: string }>("SELECT name FROM sqlite_master WHERE type = 'table'")
+      .all();
+    expect(tables.map((table) => table.name)).not.toContain('api_keys');
     const signal = new AbortController().signal;
     const now = new Date('2026-11-03T12:00:00Z');
     const outbox = createSqliteUsageOutbox(db);
@@ -30,7 +33,6 @@ describe('runtime database migrations', () => {
       {
         kind: 'tool_call',
         id: 'e1',
-        apiKeyId: 'local',
         tool: 'cite',
         resultCount: 1,
         latencyMs: 3,
@@ -41,6 +43,6 @@ describe('runtime database migrations', () => {
       },
     ]);
     db.close();
-    expect(openRuntimeDatabase(path).pragma('user_version', { simple: true })).toBe(5);
+    expect(openRuntimeDatabase(path).pragma('user_version', { simple: true })).toBe(6);
   });
 });

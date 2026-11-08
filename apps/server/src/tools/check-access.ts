@@ -24,7 +24,7 @@ const STATUS_TEXT = {
   unknown: 'Access could not be determined.',
 };
 
-/** `check_access`: what this caller can read (PLAN.md tool contracts; mock adapter in the demo). */
+/** `check_access`: whether an article can be read and where to sign in or buy (PLAN.md tool contracts; mock adapter in the demo). */
 export function createCheckAccessTool(deps: ToolDeps) {
   return defineTool({
     name: 'check_access',
@@ -35,10 +35,10 @@ export function createCheckAccessTool(deps: ToolDeps) {
     ].join(' '),
     input,
     output,
-    async run({ doi }, { signal, caller }) {
+    async run({ doi }, { signal }) {
       const article = await findArticle(deps.reader, doi, signal);
       const decision = await deps.entitlements.check(
-        { doi: article.doi, isOpenAccess: article.isOpenAccess, caller },
+        { doi: article.doi, isOpenAccess: article.isOpenAccess },
         signal,
       );
       const structured = {

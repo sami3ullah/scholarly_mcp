@@ -48,7 +48,6 @@ export function aLandingSession(draft: Draft = DEFAULTS): LandingSessionBuilder 
         results: draft.dois.map((doi) => ({ doi, matchedChunkId: `${doi}#0` })),
         language: 'any',
         ...(draft.tool !== undefined && { tool: draft.tool }),
-        apiKeyId: 'key_test',
         createdAt: draft.createdAt,
         expiresAt: new Date(draft.createdAt.getTime() + LANDING_SESSION_TTL_MS),
         visitCount: draft.visitCount,

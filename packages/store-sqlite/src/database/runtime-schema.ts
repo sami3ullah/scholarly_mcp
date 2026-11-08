@@ -66,6 +66,10 @@ const MIGRATIONS: readonly string[] = [
   `ALTER TABLE usage_events ADD COLUMN claimed_until TEXT;`,
   // SM-13 (ADR 0035): the live funnel pages through all stored events by time.
   `CREATE INDEX usage_events_by_time ON usage_events (occurred_at, id);`,
+  // ADR 0048: the server is public and callers are anonymous, so keys and key ids go.
+  `DROP TABLE api_keys;
+   ALTER TABLE landing_sessions DROP COLUMN api_key_id;
+   ALTER TABLE usage_events DROP COLUMN api_key_id;`,
 ];
 
 /** Brings a runtime database up to the latest schema; safe to call on every start. */

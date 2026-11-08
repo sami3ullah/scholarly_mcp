@@ -63,7 +63,6 @@ function listed(query: UsageEventQuery, event: UsageEvent): boolean {
   const at = event.occurredAt.getTime();
   if (query.from !== undefined && at < query.from.getTime()) return false;
   if (query.to !== undefined && at >= query.to.getTime()) return false;
-  if (query.apiKeyId !== undefined && event.apiKeyId !== query.apiKeyId) return false;
   const { after } = query;
   if (after === undefined) return true;
   const since = after.occurredAt.getTime();

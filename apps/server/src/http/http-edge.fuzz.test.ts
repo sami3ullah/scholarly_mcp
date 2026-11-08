@@ -1,14 +1,8 @@
 import type { McpHttpHandler } from '@modelcontextprotocol/server';
-import {
-  createFakeClock,
-  createInMemoryApiKeyStore,
-  createTestLogger,
-} from '@scholarly-mcp/testkit';
+import { createTestLogger } from '@scholarly-mcp/testkit';
 import fc from 'fast-check';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { generateApiKey } from '../auth/api-key-secrets.js';
-import { httpAuthFromConfig } from '../auth/http-auth-from-config.js';
-import { authConfigSchema } from '../config/auth-config.js';
+import { createClientContext } from '../limits/client-limit-key.js';
 import { createMetrics } from '../telemetry/create-metrics.js';
 import { FULL_TEXT_MARKER, startHarness, textOf, type Harness } from '../testing/server-harness.js';
 import { createHttpHandler, type HttpHandler } from './create-http-handler.js';
@@ -18,15 +12,6 @@ import { createHttpHandler, type HttpHandler } from './create-http-handler.js';
  * answers with a 4xx or a well-formed result, never a 5xx, a thrown error or full text.
  */
 const LOCAL = ['localhost', '127.0.0.1'];
-const clock = createFakeClock(new Date());
-const made = generateApiKey();
-const auth = httpAuthFromConfig(authConfigSchema.parse({ AUTH_MODE: 'api-key' }), {
-  keys: createInMemoryApiKeyStore([
-    { id: made.id, label: 'fuzz', secretHash: made.secretHash, createdAt: clock.now() },
-  ]),
-  clock,
-  logger: createTestLogger(),
-});
 const RUNS = { numRuns: 200 };
 
 let harness: Harness;
@@ -37,7 +22,7 @@ beforeAll(async () => {
       wrap: (mcp: McpHttpHandler) => {
         edge = createHttpHandler({
           mcp,
-          auth,
+          clientContext: createClientContext(),
           allowedHosts: LOCAL,
           allowedOrigins: LOCAL,
           readiness: () => ({ index: true, model: true }),
@@ -47,7 +32,6 @@ beforeAll(async () => {
         });
         return edge;
       },
-      headers: { authorization: `Bearer ${made.key}` },
     },
   });
 });
@@ -56,7 +40,6 @@ afterAll(async () => {
 });
 
 const json = { 'content-type': 'application/json', accept: 'application/json, text/event-stream' };
-const authorized = { ...json, authorization: `Bearer ${made.key}` };
 
 const path = fc.oneof(
   fc.constantFrom('/mcp', '/healthz', '/readyz', '/metrics', '/landing/v1/articles/x', '/'),
@@ -148,7 +131,7 @@ describe('the HTTP edge under fuzzing', () => {
         const response = await edge.fetch(
           new Request('http://localhost/mcp', {
             method: 'POST',
-            headers: authorized,
+            headers: json,
             body: JSON.stringify(message),
           }),
         );

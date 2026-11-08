@@ -5,7 +5,6 @@ import { parseWireEvent, toWireEvent } from './wire-event.js';
 const ok = {
   kind: 'tool_call',
   id: 'req-1',
-  apiKeyId: 'key_demo',
   tool: 'search_articles',
   resultCount: 5,
   latencyMs: 120,
@@ -18,7 +17,6 @@ const ok = {
 const visit = {
   kind: 'landing_visit',
   id: 'v-1',
-  apiKeyId: 'key_demo',
   tool: 'search_articles',
   doi: '10.1055/a-1',
   journal: 'Thrombosis and Haemostasis',

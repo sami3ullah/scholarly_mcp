@@ -30,13 +30,12 @@ export function createFindRelatedTool(deps: ToolDeps) {
     ].join(' '),
     input,
     output,
-    async run({ doi, limit }, { signal, caller }) {
+    async run({ doi, limit }, { signal }) {
       const result = await deps.search.related({ doi, limit }, signal);
       const links = await deps.links.links(
         {
           tool: 'find_related',
           language: 'any',
-          caller,
           results: result.hits.map(({ article, matchedChunkId }) => ({
             doi: article.doi,
             ...(matchedChunkId !== undefined && { matchedChunkId }),

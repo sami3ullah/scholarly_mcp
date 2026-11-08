@@ -1,3 +1,4 @@
+import { createClientContext } from '../limits/client-limit-key.js';
 import {
   LANDING_SESSION_TTL_MS,
   landingPageSchema,
@@ -22,7 +23,6 @@ const live: LandingSession = {
   results: [{ doi: doi('10.1055/a-1001'), matchedChunkId: '10.1055/a-1001#0' }],
   language: 'en',
   tool: 'search_articles',
-  apiKeyId: 'key_test',
   createdAt: created,
   expiresAt: new Date(created.getTime() + LANDING_SESSION_TTL_MS),
   visitCount: 0,
@@ -53,7 +53,7 @@ async function api(options: { secret?: string; burst?: number; session?: Landing
       ...(options.secret !== undefined && { secret: options.secret }),
       metrics,
     }),
-    auth: { mode: 'none' },
+    clientContext: createClientContext(),
     allowedHosts: ['localhost'],
     allowedOrigins: ['localhost'],
     readiness: () => ({}),

@@ -5,11 +5,10 @@ import { createFunnelView, type FunnelViewDeps } from './create-funnel-view.js';
 
 const signal = new AbortController().signal;
 
-function aSearch(id: string, day: string, apiKeyId = 'key_a'): UsageEvent {
+function aSearch(id: string, day: string): UsageEvent {
   return {
     kind: 'tool_call',
     id,
-    apiKeyId,
     tool: 'search_articles',
     resultCount: 2,
     latencyMs: 5,
@@ -70,14 +69,20 @@ describe('live funnel view', () => {
     const view = await aView([
       aSearch('e1', '2026-11-01'),
       aSearch('e2', '2026-11-02'),
-      aSearch('e3', '2026-11-02', 'key_b'),
+      aSearch('e3', '2026-11-03'),
     ]);
-    const response = await view.get('/funnel.json?since=2026-11-02&key=key_a');
+    const response = await view.get('/funnel.json?since=2026-11-02&until=2026-11-03');
     expect(response.headers.get('content-type')).toBe('application/json');
     const funnel = (await response.json()) as Funnel & { filters: object };
     expect(funnel.totals.searches).toBe(1);
-    expect(funnel.filters).toEqual({ from: '2026-11-02T00:00:00.000Z', apiKeyId: 'key_a' });
-    expect(view.lists[0]).toMatchObject({ from: new Date('2026-11-02'), apiKeyId: 'key_a' });
+    expect(funnel.filters).toEqual({
+      from: '2026-11-02T00:00:00.000Z',
+      to: '2026-11-03T00:00:00.000Z',
+    });
+    expect(view.lists[0]).toMatchObject({
+      from: new Date('2026-11-02'),
+      to: new Date('2026-11-03'),
+    });
   });
 
   it('uses the default filters when the request sets none', async () => {

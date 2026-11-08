@@ -10,7 +10,6 @@ export interface ServerMetrics {
   readonly toolCalls: Counter<'tool' | 'status'>;
   readonly toolDuration: Histogram<'tool'>;
   readonly httpRequests: Counter<'route' | 'status'>;
-  readonly authFailures: Counter<'reason'>;
   readonly meterExported: Counter;
   readonly meterExportFailures: Counter;
   readonly meterDropped: Counter;
@@ -46,12 +45,6 @@ export function createMetrics(options: { readonly defaults?: boolean } = {}): Se
       name: 'http_requests_total',
       help: 'HTTP requests by route and status code',
       labelNames: ['route', 'status'],
-      registers,
-    }),
-    authFailures: new Counter({
-      name: 'auth_failures_total',
-      help: 'Refused or failed authentications by OAuth error code',
-      labelNames: ['reason'],
       registers,
     }),
     meterExported: new Counter({

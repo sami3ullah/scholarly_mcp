@@ -7,7 +7,6 @@ const valid = {
   token: 'AAAAAAAAAAAAAAAAAAAAAA',
   results: [{ doi: '10.1055/A-1', matchedChunkId: '10.1055/a-1#2' }, { doi: '10.1055/a-2' }],
   language: 'de',
-  apiKeyId: 'key_demo',
   createdAt,
   expiresAt: new Date(createdAt.getTime() + LANDING_SESSION_TTL_MS),
   visitCount: 0,

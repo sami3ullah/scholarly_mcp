@@ -4,12 +4,11 @@ import type { FunnelOptions } from '@scholarly-mcp/core';
 export interface FunnelFilterText {
   readonly since?: string | undefined;
   readonly until?: string | undefined;
-  readonly key?: string | undefined;
 }
 
 /**
  * The funnel's filters: `since` inclusive and `until` exclusive, both UTC days
- * (`YYYY-MM-DD`), and an API key id. Undefined when a day is malformed.
+ * (`YYYY-MM-DD`). Undefined when a day is malformed.
  */
 export function funnelFiltersFrom(text: FunnelFilterText): FunnelOptions | undefined {
   const since = day(text.since);
@@ -18,7 +17,6 @@ export function funnelFiltersFrom(text: FunnelFilterText): FunnelOptions | undef
   return {
     ...(since !== undefined && { from: since }),
     ...(until !== undefined && { to: until }),
-    ...(text.key !== undefined && text.key !== '' && { apiKeyId: text.key }),
   };
 }
 

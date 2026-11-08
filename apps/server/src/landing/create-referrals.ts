@@ -76,7 +76,6 @@ export function createReferrals(deps: ReferralsDeps): Referrals {
         await sideRead(signal, 'visit count', () => sessions.recordVisit(token, signal));
       }
       const common = {
-        apiKeyId: session.apiKeyId,
         ...(session.tool !== undefined && { tool: session.tool }),
         doi,
         journal: article.journal.name,
