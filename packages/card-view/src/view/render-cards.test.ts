@@ -72,12 +72,10 @@ describe('the card view', () => {
     expect(root.querySelector('.badge')?.textContent).toBe('Abonnement');
   });
 
-  it('adds the collection link when there is one', () => {
+  it('shows no collection link even when the result carries one', () => {
     render({ cards: [card], collectionUrl: 'https://landing.example/mcp/landing?t=x' });
-    const all = root.querySelector<HTMLAnchorElement>('.all');
-    expect(all?.textContent).toBe('All results on one page');
-    all?.click();
-    expect(open).toHaveBeenCalledWith('https://landing.example/mcp/landing?t=x');
+    expect(root.querySelectorAll('a')).toHaveLength(2);
+    expect(root.textContent).not.toContain('All results');
   });
 
   it('treats card text as text, never as HTML', () => {
@@ -95,12 +93,6 @@ describe('the card view', () => {
     render(structured);
     expect(root.textContent).toBe('No articles matched.');
     expect(root.querySelector('a')).toBeNull();
-  });
-
-  it('drops a collection link that is not http(s)', () => {
-    expect(cardListOf({ cards: [card], collectionUrl: 'javascript:x' })).not.toHaveProperty(
-      'collectionUrl',
-    );
   });
 
   it('leaves the badge text but no teaser paragraph for an empty teaser', () => {

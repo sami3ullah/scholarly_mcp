@@ -5,7 +5,6 @@ export interface Labels {
   readonly subscription: string;
   readonly unknownAccess: string;
   readonly noResults: string;
-  readonly allResults: string;
   readonly waiting: string;
 }
 
@@ -15,7 +14,6 @@ const EN: Labels = {
   subscription: 'Subscription',
   unknownAccess: 'Access unknown',
   noResults: 'No articles matched.',
-  allResults: 'All results on one page',
   waiting: 'Loading articles…',
 };
 
@@ -25,7 +23,6 @@ const DE: Labels = {
   subscription: 'Abonnement',
   unknownAccess: 'Zugang unbekannt',
   noResults: 'Keine passenden Artikel gefunden.',
-  allResults: 'Alle Ergebnisse auf einer Seite',
   waiting: 'Artikel werden geladen…',
 };
 

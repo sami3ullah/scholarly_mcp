@@ -10,7 +10,7 @@ CARD_VIEW_URI; // 'ui://scholarly-mcp/cards.html'
 ```
 
 - **Build.** `pnpm --filter @scholarly-mcp/card-view build`. esbuild bundles `src/view` with the MCP Apps SDK (`@modelcontextprotocol/ext-apps`) and inlines the result into `dist/card-view.html`. The page loads nothing from elsewhere.
-- **Links.** The button and the "all results" link open the landing link through the host (`app.openLink`), falling back to `window.open`. Only http(s) links are opened.
+- **Links.** The title and the read button open the landing link through the host (`app.openLink`), falling back to `window.open`. Only http(s) links are opened.
 - **Safety.** Card text is set as text, never as HTML, and a malformed result shows "no articles".
 - **Locale and theme.** Labels follow the host locale (German or English). Colours, fonts and radii follow the host's MCP Apps style variables, with built-in light and dark fallbacks.
 - **Layout.** Browser code lives in `src/view` with its own DOM tsconfig. `src/index.ts` is the Node entry the server imports.

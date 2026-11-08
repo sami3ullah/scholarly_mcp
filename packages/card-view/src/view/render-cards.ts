@@ -4,7 +4,6 @@ import type { Labels } from './labels.js';
 /** What `search_articles` puts in `structuredContent` that the view shows. */
 export interface CardList {
   readonly cards: readonly ArticleCard[];
-  readonly collectionUrl?: string;
 }
 
 export interface RenderOptions {
@@ -21,12 +20,8 @@ export interface RenderOptions {
  */
 export function cardListOf(structured: unknown): CardList {
   if (typeof structured !== 'object' || structured === null) return { cards: [] };
-  const { cards, collectionUrl } = structured as { cards?: unknown; collectionUrl?: unknown };
-  const list = Array.isArray(cards) ? cards.filter(isCard) : [];
-  return {
-    cards: list,
-    ...(typeof collectionUrl === 'string' && isWebUrl(collectionUrl) && { collectionUrl }),
-  };
+  const { cards } = structured as { cards?: unknown };
+  return { cards: Array.isArray(cards) ? cards.filter(isCard) : [] };
 }
 
 /**
@@ -117,9 +112,6 @@ export function renderCards(root: HTMLElement, list: CardList, options: RenderOp
     items.append(item);
   }
   root.append(items);
-  if (list.collectionUrl !== undefined) {
-    root.append(link(list.collectionUrl, 'all', options.labels.allResults, 'external'));
-  }
 }
 
 type Icon = 'external' | 'lock';

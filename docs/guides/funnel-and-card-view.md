@@ -130,7 +130,7 @@ Both routes take the landing API secret and answer 204 whether or not anything w
 
 - **What a card shows.** Title, journal, year, first author, teaser and access badge.
 - **The read button.** A "Read on {publisher}" button (German: "Bei {publisher} lesen") that opens the landing link through the client.
-- **The collection link.** It opens one page with all results.
+- **No collection link.** The view shows only the cards; the plain-text rendering still ends with a link to all results on one page.
 
 Every other client ignores the metadata and shows the same results as text with links, as before.
 
