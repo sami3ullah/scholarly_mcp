@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// The image's one entrypoint: `serve` (default), `keys …` and `funnel …` run the server app,
+// The image's one entrypoint: `serve` (default) and `funnel …` run the server app,
 // `ingest …` the ingest app. Each app reads its own arguments from process.argv[2].
-const USAGE = 'Usage: scholarly-mcp [serve] | keys … | funnel … | ingest …';
+const USAGE = 'Usage: scholarly-mcp [serve] | funnel … | ingest …';
 const [command = 'serve'] = process.argv.slice(2);
 
 // SCHOLARLY_PRESET names a file in /app/presets whose settings apply unless already set, so
@@ -18,7 +18,7 @@ if (preset !== '') {
 if (command === 'ingest' || command === 'serve') process.argv.splice(2, 1);
 if (command === 'ingest') {
   await import('./apps/ingest/dist/main.js');
-} else if (command === 'serve' || command === 'keys' || command === 'funnel') {
+} else if (command === 'serve' || command === 'funnel') {
   await import('./apps/server/dist/main.js');
 } else {
   process.stderr.write(`${USAGE}\n`);

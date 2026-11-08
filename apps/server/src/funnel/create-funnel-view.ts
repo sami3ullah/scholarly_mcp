@@ -40,7 +40,7 @@ const HEADERS = {
 
 /**
  * The live funnel (ADR 0035): `GET /` renders the report over the events in the store now,
- * `GET /funnel.json` gives the same numbers. `?since=YYYY-MM-DD&until=YYYY-MM-DD&key=…`
+ * `GET /funnel.json` gives the same numbers. `?since=YYYY-MM-DD&until=YYYY-MM-DD`
  * replace the default filters. A count is reused for `refreshSeconds`, and requests for
  * the same filters meanwhile share one read, so reloads cannot pile up on the database.
  */
