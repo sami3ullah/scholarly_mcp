@@ -16,9 +16,7 @@ x-server: &server
     additional_contexts:
       index: ${INDEX_DIR:-docker/server/no-index}
   env_file: [presets/thieme.env]
-  environment: &server-env
-    AUTH_MODE: api-key
-    # `server` is how the landing app names it on the landing-api network.
+  environment: &server-env # `server` is how the landing app names it on the landing-api network.
     HTTP_ALLOWED_HOSTS: ${HTTP_ALLOWED_HOSTS:-localhost,127.0.0.1},server
     # The landing API has its own port, reachable only on the landing-api network.
     LANDING_API_HOST: 0.0.0.0

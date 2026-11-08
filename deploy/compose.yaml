@@ -1,7 +1,6 @@
 # Self-hosted deployment (ADR 0045, docs/SELF-HOSTING.md). Published images only, one public
 # hostname, TLS by Caddy. Settings live in .env next to this file (copy .env.example).
 #
-#   docker compose run --rm admin keys create --label me   # an API key
 #   docker compose up -d --wait                           # proxy, landing app, server
 #   docker compose run --rm admin ingest incremental      # refresh the index (schedule it)
 #
@@ -19,12 +18,9 @@ x-app: &app
   environment: &app-env
     SCHOLARLY_PRESET: ${SCHOLARLY_PRESET:-thieme}
     STORE: ${STORE:-sqlite}
-    AUTH_MODE: ${AUTH_MODE:-api-key}
-    OAUTH_ISSUER: ${OAUTH_ISSUER:-}
-    OAUTH_AUDIENCE: ${OAUTH_AUDIENCE:-}
-    OAUTH_JWKS_URL: ${OAUTH_JWKS_URL:-}
-    OAUTH_REQUIRED_SCOPES: ${OAUTH_REQUIRED_SCOPES:-}
-    OAUTH_INSTITUTION_CLAIM: ${OAUTH_INSTITUTION_CLAIM:-}
+    # The server is reached only through Caddy on the internal networks, so the private
+    # ranges it connects from are trusted to name the client (per-client rate limits).
+    HTTP_TRUSTED_PROXIES: 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,fc00::/7
     # `server` is how the landing app names the server on the internal landing-api network.
     HTTP_ALLOWED_HOSTS: ${PUBLIC_HOST:?set PUBLIC_HOST in .env},server
     LANDING_BASE_URL: https://${PUBLIC_HOST}
@@ -41,7 +37,7 @@ x-app: &app
   secrets: [landing_api_secret]
   volumes:
     # SQLite: the index (seeded from the image's demo index on first use) and the runtime
-    # database (keys, landing sessions, usage outbox). Unused, and empty, on Postgres.
+    # database (landing sessions, usage outbox). Unused, and empty, on Postgres.
     - index:/data
     - state:/var/lib/scholarly
 
@@ -114,7 +110,7 @@ services:
     depends_on:
       postgres: { condition: service_healthy, required: false }
 
-  # Commands run as the writer: `keys …`, `ingest …`, `funnel …`. Never started by `up`.
+  # Commands run as the writer: `ingest …`, `funnel …`. Never started by `up`.
   admin:
     <<: *app
     profiles: [tools]

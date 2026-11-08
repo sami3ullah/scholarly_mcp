@@ -4,7 +4,8 @@
 # are published as 80 and 443, so the proxy runs without root.
 #
 # With no trusted proxies, Caddy drops any X-Forwarded-For a client sends and sets the
-# client's own address, which the landing app's per-reader limit uses (ADR 0038). Behind a
+# client's own address, which the landing app's per-reader limit (ADR 0038) and the server's
+# per-client limit (ADR 0048) use. Behind a
 # tunnel or load balancer, TRUSTED_PROXIES lists the ranges it connects from.
 {
 	admin off
@@ -21,9 +22,10 @@
 {$SITE_ADDRESS} {
 	encode zstd gzip
 
-	# The MCP endpoint, its probes for uptime checks, and the OAuth metadata clients read when
-	# AUTH_MODE is oauth or api-key+oauth. Metrics and the landing API are not on the server's public port.
-	@mcp path /mcp /healthz /readyz /.well-known/oauth-protected-resource /.well-known/oauth-protected-resource/*
+	# The public MCP endpoint and its probes for uptime checks. Metrics and the landing API
+	# are not on the server's public port. Caddy passes the client's address on in
+	# X-Forwarded-For, which the server's per-client rate limit reads (ADR 0048).
+	@mcp path /mcp /healthz /readyz
 	handle @mcp {
 		reverse_proxy server:8080
 	}

@@ -86,15 +86,12 @@ COPY --from=build --chown=nonroot:nonroot /out/state /var/lib/scholarly
 # The ingest writes builds next to the index, so /data belongs to the app user too.
 COPY --from=build --chown=nonroot:nonroot /out/data /data
 COPY --from=index --chown=nonroot:nonroot / /data/
-# API keys and a local Host allowlist by default, as the server listens beyond loopback;
-# set HTTP_ALLOWED_HOSTS to the hostname clients use in a deployment. The landing API has
+# A public MCP endpoint with a local Host allowlist by default; set HTTP_ALLOWED_HOSTS to
+# the hostname clients use in a deployment, and HTTP_TRUSTED_PROXIES behind a proxy. The landing API has
 # its own port, on loopback until LANDING_API_HOST and LANDING_API_SECRET open it (ADR 0038).
 # SCHOLARLY_PRESET applies presets/<name>.env under explicit settings; empty turns it off.
-# AUTH_MODE names an auth mode, not a secret (Trivy matches "AUTH" in the name).
-# trivy:ignore:DS-0031
 ENV NODE_ENV=production \
     SCHOLARLY_PRESET=thieme \
-    AUTH_MODE=api-key \
     HTTP_ALLOWED_HOSTS=localhost,127.0.0.1 \
     LANDING_API_PORT=8081 \
     MCP_TRANSPORT=http \

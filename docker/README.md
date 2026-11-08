@@ -30,7 +30,6 @@ One entrypoint runs every command, with the same settings and volumes:
 | Command                  | What it does                                                                                |
 | ------------------------ | ------------------------------------------------------------------------------------------- |
 | `serve` (default)        | The MCP server over Streamable HTTP on port 8080                                            |
-| `keys create --label …`  | Makes an API key ([operating guide](../docs/guides/operating-the-server.md))                |
 | `funnel …`               | The funnel report or its live view ([funnel guide](../docs/guides/funnel-and-card-view.md)) |
 | `ingest full`, `verify`… | The ingest CLI ([ingestion guide](../docs/guides/ingestion.md))                             |
 
@@ -43,7 +42,7 @@ One entrypoint runs every command, with the same settings and volumes:
 | `tools`    | `ingest`, for one-off ingest commands on SQLite                          | `docker compose --profile tools run --rm ingest full`            |
 | `landing`  | `landing` app and `landing-proxy` (Caddy); add to `sqlite` or `postgres` | `docker compose --profile sqlite --profile landing up -d --wait` |
 
-Make a key in the profile you run: `docker compose run --rm server keys create --label me` on SQLite. On Postgres keys are written by the writer role: `docker compose run --rm -e DATABASE_URL=postgres://scholarly_ingest:ingest-local@postgres:5432/scholarly server-pg keys create --label me`.
+The MCP endpoint needs no key: connect a client to `http://localhost:8080/mcp` ([ADR 0048](../docs/adr/0048-public-server-without-auth.md)).
 
 Settings come from `presets/thieme.env` plus the compose file; put your own values in `.env` next to `compose.yaml`:
 
@@ -71,11 +70,11 @@ INDEX_DIR=/tmp/demo-index docker compose --profile sqlite build
 
 ## Tests
 
-| Script                                          | What it does                                                                                                            |
-| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `docker/e2e/smoke.sh [sqlite\|postgres]`        | Both images with the demo index, the stack with the landing app, a key, every tool over HTTP, a card link via the proxy |
-| `docker/e2e/deploy-smoke.sh [sqlite\|postgres]` | The self-hosting bundle (`deploy/`) on those images, `PUBLIC_HOST=localhost`, every tool over HTTPS through Caddy       |
-| `docker/e2e/load.sh <dir with index.sqlite>`    | Cold start, then tool calls at `LOAD_RATE` (20) a second for `LOAD_SECONDS` (60): p50/p95/p99, errors, memory           |
+| Script                                          | What it does                                                                                                      |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `docker/e2e/smoke.sh [sqlite\|postgres]`        | Both images with the demo index, the stack with the landing app, every tool over HTTP, a card link via the proxy  |
+| `docker/e2e/deploy-smoke.sh [sqlite\|postgres]` | The self-hosting bundle (`deploy/`) on those images, `PUBLIC_HOST=localhost`, every tool over HTTPS through Caddy |
+| `docker/e2e/load.sh <dir with index.sqlite>`    | Cold start, then tool calls at `LOAD_RATE` (20) a second for `LOAD_SECONDS` (60): p50/p95/p99, errors, memory     |
 
 The smoke test builds the demo index first unless `SMOKE_INDEX_DIR` names one; `SMOKE_KEEP=1` leaves the stack up. CI runs both scripts on both stores. Load results are in [OPERATIONS.md](../docs/OPERATIONS.md#capacity).
 
@@ -85,7 +84,7 @@ Pushing a tag `v1.2.3` runs `.github/workflows/release.yml`: it builds the demo 
 
 ## What the image guarantees
 
-- Defaults to `AUTH_MODE=api-key`, `HTTP_ALLOWED_HOSTS=localhost,127.0.0.1` and the landing API on port 8081 on loopback, so a bare `docker run` starts and refuses calls without a key; set the hostname clients use in a deployment, and `LANDING_API_HOST` with `LANDING_API_SECRET` to serve a landing app.
+- Defaults to a public MCP endpoint ([ADR 0048](../docs/adr/0048-public-server-without-auth.md)), `HTTP_ALLOWED_HOSTS=localhost,127.0.0.1` and the landing API on port 8081 on loopback, so a bare `docker run -p 8080:8080` starts and answers tool calls with no key, rate limited per client address; set the hostname clients use in a deployment, `HTTP_TRUSTED_PROXIES` behind a proxy, and `LANDING_API_HOST` with `LANDING_API_SECRET` to serve a landing app.
 - Runs as uid 65532 (`nonroot`); the root filesystem can be mounted read-only. It writes only to `/var/lib/scholarly` (runtime database) and `/data` (index).
 - The embedding model is in the image (`/models`) and `EMBEDDER_ALLOW_REMOTE=false`, so it needs no network access to start.
 - `/metrics` is served on port 9464 only (`METRICS_PORT`); port 8080 answers 404 for it. Publish 8080, keep 9464 on the internal network.

@@ -2,13 +2,12 @@
 // Load test (SM-14): tool calls at a fixed rate against a running server, run by
 // docker/e2e/load.sh. Seven in ten calls search, the rest look up or relate one of the demo
 // articles. Prints p50/p95/p99 latency, throughput and failures as JSON.
-//   LOAD_MCP_URL=http://127.0.0.1:18081 LOAD_KEY=smk_… [LOAD_RATE=20] [LOAD_SECONDS=60] \
+//   LOAD_MCP_URL=http://127.0.0.1:18081 [LOAD_RATE=20] [LOAD_SECONDS=60] \
 //   node docker/e2e/load.mjs
 import { readFileSync } from 'node:fs';
 import autocannon from 'autocannon';
 
 const url = new URL('/mcp', required('LOAD_MCP_URL'));
-const key = required('LOAD_KEY');
 const rate = Number(process.env.LOAD_RATE ?? 20);
 const seconds = Number(process.env.LOAD_SECONDS ?? 60);
 
@@ -51,7 +50,6 @@ const instance = autocannon({
   duration: seconds,
   timeout: 30,
   headers: {
-    authorization: `Bearer ${key}`,
     'content-type': 'application/json',
     accept: 'application/json, text/event-stream',
     'mcp-protocol-version': '2025-06-18',

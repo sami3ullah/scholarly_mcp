@@ -1,14 +1,13 @@
 #!/usr/bin/env node
 // The end-to-end smoke checks (SM-14), run by docker/e2e/smoke.sh against a compose stack on
-// the demo index: the HTTP edge, every MCP tool over Streamable HTTP with an API key, and a
+// the demo index: the HTTP edge, every MCP tool over Streamable HTTP with no credentials, and a
 // card link through the landing proxy. Plain fetch, so it needs only Node 24 on the host.
 //   SMOKE_MCP_URL=http://127.0.0.1:18080 SMOKE_LANDING_URL=http://127.0.0.1:13000 \
-//   SMOKE_KEY=smk_… node docker/e2e/smoke.mjs
+//   node docker/e2e/smoke.mjs
 import assert from 'node:assert/strict';
 
 const mcpBase = required('SMOKE_MCP_URL');
 const landingBase = required('SMOKE_LANDING_URL');
-const key = required('SMOKE_KEY');
 
 const TOOLS = [
   'search_articles',
@@ -40,7 +39,7 @@ function required(name) {
 }
 
 /** A minimal Streamable HTTP client: JSON-RPC over POST, answers as JSON or one SSE event. */
-function createMcpClient(url, token) {
+function createMcpClient(url) {
   let id = 0;
   let session;
   let protocol;
@@ -48,7 +47,6 @@ function createMcpClient(url, token) {
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        authorization: `Bearer ${token}`,
         'content-type': 'application/json',
         accept: `application/json, ${EVENT_STREAM}`,
         ...(session && { 'mcp-session-id': session }),
@@ -124,17 +122,12 @@ await check('readyz reports ready', async () => {
   assert.equal(response.status, 200);
 });
 
-await check('/mcp refuses a request without a key', async () => {
-  const response = await fetch(mcpUrl, { method: 'POST', body: '{}' });
-  assert.equal(response.status, 401);
-});
-
 await check('the public port hides metrics and the landing API', async () => {
   assert.equal((await fetch(new URL('/metrics', mcpBase))).status, 404);
   assert.equal((await fetch(new URL('/landing/v1/articles/x', mcpBase))).status, 404);
 });
 
-const client = createMcpClient(mcpUrl, key);
+const client = createMcpClient(mcpUrl);
 
 await check('initialize', async () => {
   const result = await client.initialize();

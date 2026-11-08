@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # End-to-end smoke test (SM-14): builds both images with the demo index baked in, starts the
-# compose stack (server on SQLite or Postgres, landing app behind its proxy), makes an API
-# key and runs docker/e2e/smoke.mjs, which calls every tool over HTTP. Tears the stack down
+# compose stack (server on SQLite or Postgres, landing app behind its proxy) and runs
+# docker/e2e/smoke.mjs, which calls every tool over HTTP with no credentials. Tears the stack down
 # afterwards, unless SMOKE_KEEP=1.
 #   docker/e2e/smoke.sh [sqlite|postgres]
 # SMOKE_INDEX_DIR names a directory holding a demo index.sqlite to reuse; without it the
@@ -57,19 +57,9 @@ fi
 step "Stack up ($store, landing)"
 "${compose[@]}" up -d --wait
 
-step "API key"
-key_env=()
-if [ "$store" = postgres ]; then
-  # Keys are written by the writer role (docker/README.md).
-  key_env=(-e "DATABASE_URL=postgres://scholarly_ingest:${PG_INGEST_PASSWORD:-ingest-local}@postgres:5432/scholarly")
-fi
-key=$("${compose[@]}" run --rm --no-deps ${key_env[@]+"${key_env[@]}"} "$server" keys create --label smoke | tail -n 1)
-case "$key" in smk_*) ;; *) echo "keys create printed no key" >&2; exit 1 ;; esac
-
 step "Smoke checks"
 SMOKE_MCP_URL=http://127.0.0.1:$HTTP_PORT \
   SMOKE_LANDING_URL=http://127.0.0.1:$LANDING_PORT \
-  SMOKE_KEY=$key \
   node docker/e2e/smoke.mjs
 
 step "Usage export on the read-only image"

@@ -1,5 +1,5 @@
 # Test fixtures gitleaks flags as generic API keys: sample landing tokens and a malformed
-# API key. Ignored by fingerprint (commit:file:rule:line), so new findings still fail.
+# API key (a file since removed, still in history). Ignored by fingerprint (commit:file:rule:line), so new findings still fail.
 81160efde3a14ec28fea46790f045969c67c0176:apps/landing/src/features/landing/components/landing-view.test.tsx:generic-api-key:13
 81160efde3a14ec28fea46790f045969c67c0176:apps/landing/src/features/landing/server/landing-api.test.ts:generic-api-key:91
 81160efde3a14ec28fea46790f045969c67c0176:apps/landing/src/features/landing/model/model.test.ts:generic-api-key:21

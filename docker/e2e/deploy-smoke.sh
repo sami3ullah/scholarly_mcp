@@ -52,16 +52,11 @@ fi
 step "Stack up ($store)"
 docker compose up -d --wait
 
-step "API key"
-key=$(docker compose run --rm admin keys create --label smoke | tail -n 1)
-case "$key" in smk_*) ;; *) echo "keys create printed no key" >&2; exit 1 ;; esac
-
 step "Smoke checks over HTTPS through Caddy"
 # Caddy's local CA signs the localhost certificate; this check trusts it for the run only.
 NODE_TLS_REJECT_UNAUTHORIZED=0 \
   SMOKE_MCP_URL=https://localhost:$PUBLIC_HTTPS_PORT \
   SMOKE_LANDING_URL=https://localhost:$PUBLIC_HTTPS_PORT \
-  SMOKE_KEY=$key \
   node --no-warnings ../docker/e2e/smoke.mjs
 
 step "Plain HTTP redirects to HTTPS"
