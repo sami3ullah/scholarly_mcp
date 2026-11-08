@@ -14,14 +14,14 @@ Everything beyond the quick start lives here. New guides are added as the featur
 
 ## Run it and build on it
 
-| Document                        | What's inside                                                                                       |
-| ------------------------------- | --------------------------------------------------------------------------------------------------- |
-| [Self-hosting](SELF-HOSTING.md) | Your own HTTPS deployment with Docker Compose: SQLite or Postgres, keys, index, VM, AWS, Cloudflare |
-| [Connectors](CONNECTORS.md)     | Adding a deployed server to Claude and ChatGPT, with API keys or OAuth                              |
-| [Operations](OPERATIONS.md)     | Deploying the image, keeping the index fresh, scaling, capacity, monitoring, backups, upgrades      |
-| [Adapters](ADAPTERS.md)         | The ports, plugging in your own content API, access rules, store, embedding model or billing        |
-| [The landing page](LANDING.md)  | Running the landing app, the landing API contract, rebuilding the page in your own stack, tests     |
-| [Security](SECURITY.md)         | Reporting vulnerabilities, threat model, controls, supply chain checks, known limits                |
+| Document                        | What's inside                                                                                   |
+| ------------------------------- | ----------------------------------------------------------------------------------------------- |
+| [Self-hosting](SELF-HOSTING.md) | Your own HTTPS deployment with Docker Compose: SQLite or Postgres, index, VM, AWS, Cloudflare   |
+| [Connectors](CONNECTORS.md)     | Adding a deployed server to Claude and ChatGPT, URL only, no auth                               |
+| [Operations](OPERATIONS.md)     | Deploying the image, keeping the index fresh, scaling, capacity, monitoring, backups, upgrades  |
+| [Adapters](ADAPTERS.md)         | The ports, plugging in your own content API, access rules, store, embedding model or billing    |
+| [The landing page](LANDING.md)  | Running the landing app, the landing API contract, rebuilding the page in your own stack, tests |
+| [Security](SECURITY.md)         | Reporting vulnerabilities, threat model, controls, supply chain checks, known limits            |
 
 ## Design
 
@@ -53,7 +53,7 @@ Everything beyond the quick start lives here. New guides are added as the featur
 | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | [Ingestion](guides/ingestion.md)                               | Building, refreshing and verifying the index                                                     |
 | [How ingestion works](guides/how-ingestion-works.md)           | Every step from Crossref to a swapped-in index, how full text stays hidden, and how it was built |
-| [Operating the server](guides/operating-the-server.md)         | API keys, OAuth, rate limits, usage metering and webhooks, health, metrics, traces, shutdown     |
+| [Operating the server](guides/operating-the-server.md)         | Public endpoint, rate limits, usage metering and webhooks, health, metrics, traces, shutdown     |
 | [Connecting clients](guides/connecting-clients.md)             | Running the MCP server and connecting Claude Desktop or MCP Inspector, over stdio or HTTP        |
 | [Evaluating search](guides/evaluating-search.md)               | The golden set, its metrics, the eval index and the regression gate for ranking changes          |
 | [The funnel and the card view](guides/funnel-and-card-view.md) | What the funnel counts, the report and the live view, the beacons, the MCP Apps card view        |

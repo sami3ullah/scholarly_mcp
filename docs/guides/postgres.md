@@ -18,10 +18,10 @@ Passwords default to local-only values. Set `PG_SUPERUSER_PASSWORD`, `PG_INGEST_
 
 Each process connects with the least it needs (ADR 0034 decision 7). `DATABASE_URL` names the role.
 
-| Role               | Used by            | May                                                                                                                       |
-| ------------------ | ------------------ | ------------------------------------------------------------------------------------------------------------------------- |
-| `scholarly_ingest` | `ingest`, `keys`   | Owns the database: runs migrations, creates a schema per build, writes API keys                                           |
-| `scholarly_server` | the server, `eval` | Reads live builds, API keys and the index pointer; reads and writes landing sessions, usage events and rate-limit buckets |
+| Role               | Used by            | May                                                                                                             |
+| ------------------ | ------------------ | --------------------------------------------------------------------------------------------------------------- |
+| `scholarly_ingest` | `ingest`           | Owns the database: runs migrations, creates a schema per build                                                  |
+| `scholarly_server` | the server, `eval` | Reads live builds and the index pointer; reads and writes landing sessions, usage events and rate-limit buckets |
 
 The server role gets its grants from `ingest migrate` (runtime tables) and from each committed build (the build's schema), so name it in `PG_SERVER_ROLE` for the ingest. A build in progress stays invisible to it.
 
@@ -59,12 +59,7 @@ STORE=postgres DATABASE_URL=postgres://scholarly_server:server-local@127.0.0.1:5
   node --env-file=presets/thieme.env apps/server/dist/main.js
 ```
 
-At start the server checks that the database is migrated, and refuses to start otherwise (`run "ingest migrate" first`). It follows each committed build on its refresh tick (`INDEX_REFRESH_MS`), as it reopens a swapped SQLite file, and refuses a build of another embedding model while it keeps serving the current one. After an upgrade, run `ingest migrate` again before the servers start: it is idempotent. Replicas share one rate limit per key and per landing visitor through `scholarly.rate_buckets`, an unlogged table ([ADR 0036](../adr/0036-shared-rate-limit-buckets.md)). The live funnel reads `scholarly.usage_events` as the server role (`funnel --store --serve`, [The funnel and the card view](funnel-and-card-view.md#the-live-view)). API keys are made with the writer:
-
-```bash
-STORE=postgres DATABASE_URL=postgres://scholarly_ingest:ingest-local@127.0.0.1:5432/scholarly \
-  node apps/server/dist/main.js keys create --label "pilot clinic"
-```
+At start the server checks that the database is migrated, and refuses to start otherwise (`run "ingest migrate" first`). It follows each committed build on its refresh tick (`INDEX_REFRESH_MS`), as it reopens a swapped SQLite file, and refuses a build of another embedding model while it keeps serving the current one. After an upgrade, run `ingest migrate` again before the servers start: it is idempotent. Replicas share one rate limit per client address and per landing visitor through `scholarly.rate_buckets`, an unlogged table ([ADR 0036](../adr/0036-shared-rate-limit-buckets.md)). The live funnel reads `scholarly.usage_events` as the server role (`funnel --store --serve`, [The funnel and the card view](funnel-and-card-view.md#the-live-view)).
 
 ## Configuration
 
@@ -114,7 +109,6 @@ STORE=postgres DATABASE_URL=postgres://scholarly_server:server-local@127.0.0.1:5
 | Message                                                            | What to do                                                                                    |
 | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
 | `The database schema is at version 0, not 2; run "ingest migrate"` | Run `pnpm ingest migrate` as the writer, then start the server                                |
-| `permission denied for table api_keys`                             | `keys create` and `revoke` need the writer's `DATABASE_URL`                                   |
 | `permission denied to create extension "vector"`                   | Create the extensions as a superuser first (above); the migration then skips them             |
 | `INDEX_UNAVAILABLE` from the server or `eval`                      | No build is live yet, or it was made with another `EMBEDDER_MODEL`; run `copy` or `full`      |
 | `permission denied for schema index_…`                             | The build was committed without `PG_SERVER_ROLE`; set it and run `pnpm ingest full` or `copy` |

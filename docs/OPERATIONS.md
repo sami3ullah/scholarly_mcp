@@ -2,21 +2,22 @@
 
 [← Docs index](README.md) · [Main README](../README.md)
 
-How to deploy, refresh, scale and watch scholarly-mcp. For a complete HTTPS deployment with Docker Compose on a VM, AWS or Cloudflare, follow the [self-hosting guide](SELF-HOSTING.md); this page covers the image itself. Settings for auth, keys, rate limits, metering and probes are in the [operating guide](guides/operating-the-server.md); the image and compose details in [docker/README.md](../docker/README.md).
+How to deploy, refresh, scale and watch scholarly-mcp. For a complete HTTPS deployment with Docker Compose on a VM, AWS or Cloudflare, follow the [self-hosting guide](SELF-HOSTING.md); this page covers the image itself. Settings for rate limits, metering and probes are in the [operating guide](guides/operating-the-server.md); the image and compose details in [docker/README.md](../docker/README.md).
 
 ## Deploy
 
-One image, `ghcr.io/sami3ullah/scholarly-mcp`, runs the server and every command (`serve`, `keys`, `funnel`, `ingest`). Release images carry the CC BY demo index ([ADR 0039](adr/0039-demo-index-from-a-cc-by-doi-list.md)); for the real corpus, build an index with `ingest full` or bake one into a private image ([docker/README.md](../docker/README.md#build)).
+One image, `ghcr.io/sami3ullah/scholarly-mcp`, runs the server and every command (`serve`, `funnel`, `ingest`). Release images carry the CC BY demo index ([ADR 0039](adr/0039-demo-index-from-a-cc-by-doi-list.md)); for the real corpus, build an index with `ingest full` or bake one into a private image ([docker/README.md](../docker/README.md#build)).
 
-| Need               | Set                                                                                                                     |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------- |
-| Public hostname    | `HTTP_ALLOWED_HOSTS=mcp.example.org` (and `HTTP_ALLOWED_ORIGINS` for browser clients)                                   |
-| Auth               | `AUTH_MODE=api-key` (image default), `oauth` or `api-key+oauth` with `OAUTH_ISSUER`, `OAUTH_AUDIENCE`, `OAUTH_JWKS_URL` |
-| Card links         | `LANDING_BASE_URL` to your landing page ([LANDING.md](LANDING.md))                                                      |
-| Publisher settings | the preset, e.g. `--env-file presets/thieme.env`                                                                        |
-| Runtime state      | a volume at `/var/lib/scholarly` (SQLite) or `STORE=postgres` with `DATABASE_URL`                                       |
-| Secrets            | `LANDING_API_SECRET_FILE`, `METER_WEBHOOK_SECRET_FILE`, `DATABASE_URL_FILE` from the secret store                       |
-| Usage export       | `METER_WEBHOOK_URL` and its secret ([operating guide](guides/operating-the-server.md#usage-metering))                   |
+| Need               | Set                                                                                                   |
+| ------------------ | ----------------------------------------------------------------------------------------------------- |
+| Public hostname    | `HTTP_ALLOWED_HOSTS=mcp.example.org` (and `HTTP_ALLOWED_ORIGINS` for browser clients)                 |
+| Behind a proxy     | `HTTP_TRUSTED_PROXIES` with its addresses or CIDR ranges, so rate limits see the client address       |
+| Rate limits        | `RATE_LIMIT_PER_MINUTE` (60) and `RATE_LIMIT_BURST` (20) per client address                           |
+| Card links         | `LANDING_BASE_URL` to your landing page ([LANDING.md](LANDING.md))                                    |
+| Publisher settings | the preset, e.g. `--env-file presets/thieme.env`                                                      |
+| Runtime state      | a volume at `/var/lib/scholarly` (SQLite) or `STORE=postgres` with `DATABASE_URL`                     |
+| Secrets            | `LANDING_API_SECRET_FILE`, `METER_WEBHOOK_SECRET_FILE`, `DATABASE_URL_FILE` from the secret store     |
+| Usage export       | `METER_WEBHOOK_URL` and its secret ([operating guide](guides/operating-the-server.md#usage-metering)) |
 
 Publish port 8080 behind a TLS-terminating proxy; keep 9464 (`/metrics`) and 8081 (landing API, when `LANDING_API_PORT` is set) on the internal network. Probe `/healthz` for liveness and `/readyz` for readiness, and give the container at least 15 s to stop (`SHUTDOWN_TIMEOUT_MS` plus 5 s), so requests in flight drain and the usage outbox is flushed.
 
@@ -25,8 +26,9 @@ docker run -d --name scholarly-mcp --read-only --tmpfs /tmp \
   -p 127.0.0.1:8080:8080 -v scholarly-state:/var/lib/scholarly \
   --env-file presets/thieme.env -e HTTP_ALLOWED_HOSTS=mcp.example.org \
   ghcr.io/sami3ullah/scholarly-mcp:latest
-docker exec scholarly-mcp /nodejs/bin/node /app/scholarly-mcp.mjs keys create --label acme
 ```
+
+`/mcp` is public: clients connect with the URL alone, and tool calls are rate limited per client address ([ADR 0048](adr/0048-public-server-without-auth.md), [operating guide](guides/operating-the-server.md#public-endpoint-and-rate-limits)).
 
 Verify an image before you run it: `gh attestation verify oci://ghcr.io/sami3ullah/scholarly-mcp:<version> --owner sami3ullah`. Each release also carries an SPDX SBOM per image.
 
@@ -44,12 +46,12 @@ Set `CROSSREF_MAILTO` so Crossref serves the polite pool. A first full run of th
 
 ## Scale
 
-| Setup                       | Replicas | Notes                                                                                                                                                                                                         |
-| --------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| SQLite (default)            | 1        | Index and runtime files on one volume. Enough for a pilot; see the capacity numbers below.                                                                                                                    |
-| Postgres (`STORE=postgres`) | many     | Sessions, keys, usage outbox and rate-limit buckets are shared, so replicas behind a load balancer agree ([ADR 0034](adr/0034-postgres-store-adapter.md), [ADR 0036](adr/0036-shared-rate-limit-buckets.md)). |
+| Setup                       | Replicas | Notes                                                                                                                                                                                                   |
+| --------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SQLite (default)            | 1        | Index and runtime files on one volume. Enough for a pilot; see the capacity numbers below.                                                                                                              |
+| Postgres (`STORE=postgres`) | many     | Sessions, usage outbox and rate-limit buckets are shared, so replicas behind a load balancer agree ([ADR 0034](adr/0034-postgres-store-adapter.md), [ADR 0036](adr/0036-shared-rate-limit-buckets.md)). |
 
-Each replica holds the embedding model and runs queries on its own CPU, so throughput grows with replicas until the database is the limit. Keep `PG_POOL_MAX` times the replica count under the database's connection limit.
+Each replica holds the embedding model and runs queries on its own CPU, so throughput grows with replicas until the database is the limit. Each replica keys its rate-limit buckets with its own in-memory secret, so a client spread over several replicas can get up to one bucket per replica. Keep `PG_POOL_MAX` times the replica count under the database's connection limit.
 
 ## Capacity
 
@@ -88,35 +90,34 @@ The fuzz tests (`apps/server/src/http/http-edge.fuzz.test.ts`) and the E2E smoke
 | -------------------------------------------------------------------- | ----------------------------------------------------------- |
 | `index_ready == 0` for more than a minute                            | No index open: the server answers `503` on `/readyz`        |
 | p95 of `mcp_tool_duration_seconds{tool="search_articles"}` above 1 s | Overloaded, or the host is short of CPU                     |
-| `mcp_tool_calls_total{status!="ok"}` rate rising                     | Errors by code; `RATE_LIMITED` means a caller hit its limit |
-| `auth_failures_total` rate rising                                    | Bad or revoked keys, or someone guessing                    |
+| `mcp_tool_calls_total{status!="ok"}` rate rising                     | Errors by code; `RATE_LIMITED` means a client hit its limit |
 | `meter_outbox_pending` growing, `meter_export_failures_total` rising | The billing webhook is down; events wait in the outbox      |
 | `meter_events_dropped_total` above 0                                 | Usage events lost: investigate at once                      |
 | An ingest run exiting non-zero                                       | The live index is unchanged but getting stale               |
 
-Logs are JSON lines on stdout, with query text and secrets redacted. Traces go to `OTEL_EXPORTER_OTLP_ENDPOINT` when set.
+Logs are JSON lines on stdout, with query text and secrets redacted, and no client addresses. Traces go to `OTEL_EXPORTER_OTLP_ENDPOINT` when set.
 
 ## Back up
 
-| Data                                     | Where                                           | Back up?                                         |
-| ---------------------------------------- | ----------------------------------------------- | ------------------------------------------------ |
-| API keys, landing sessions, usage outbox | `runtime.sqlite` or the Postgres runtime tables | Yes: keys and unexported usage cannot be rebuilt |
-| The index                                | `index.sqlite` or the Postgres build schemas    | Optional: `ingest full` rebuilds it, in hours    |
+| Data                           | Where                                           | Back up?                                      |
+| ------------------------------ | ----------------------------------------------- | --------------------------------------------- |
+| Landing sessions, usage outbox | `runtime.sqlite` or the Postgres runtime tables | Yes: unexported usage cannot be rebuilt       |
+| The index                      | `index.sqlite` or the Postgres build schemas    | Optional: `ingest full` rebuilds it, in hours |
 
 For SQLite, copy `runtime.sqlite` with `sqlite3 runtime.sqlite ".backup backup.sqlite"` rather than copying the file under a running server.
 
 ## Upgrade and roll back
 
-Release tags (`v1.2.3`) publish `1.2.3`, `1.2` and `latest`. Pin a version in production. Runtime migrations run on start for SQLite and with `ingest migrate` for Postgres, and only add, so the previous version keeps working on a migrated database: roll back by running the previous tag. An index built with another embedding model is refused and the current one stays open.
+Release tags (`v1.2.3`) publish `1.2.3`, `1.2` and `latest`. Pin a version in production. Runtime migrations run on start for SQLite and with `ingest migrate` for Postgres, and almost always only add, so the previous version keeps working on a migrated database: roll back by running the previous tag. The exception is the migration that removes API keys ([ADR 0048](adr/0048-public-server-without-auth.md)): it drops the key table and columns, so a version from before it needs the runtime backup taken before the upgrade. An index built with another embedding model is refused and the current one stays open.
 
 ## Troubleshooting
 
-| Symptom                                                       | Cause and fix                                                                                     |
-| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| Exits at start with `AUTH_MODE: HTTP beyond loopback needs …` | Set `AUTH_MODE=api-key`, `oauth` or `api-key+oauth`, and `HTTP_ALLOWED_HOSTS`                     |
-| `421` or `403` from `/mcp`                                    | The `Host` or `Origin` the client sends is not on `HTTP_ALLOWED_HOSTS` / `HTTP_ALLOWED_ORIGINS`   |
-| `/readyz` stays `503`                                         | No index at `INDEX_PATH` or no live Postgres build: bake one in, run `ingest full` or `copy`      |
-| `401` with a key you just made                                | The key was made against another runtime database than the server uses (volume or `DATABASE_URL`) |
-| Card links open the wrong host                                | `LANDING_BASE_URL`                                                                                |
+| Symptom                                            | Cause and fix                                                                                   |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Exits at start with `HTTP beyond loopback needs …` | Set `HTTP_ALLOWED_HOSTS` (and `LANDING_API_SECRET` when the landing API is exposed)             |
+| `421` or `403` from `/mcp`                         | The `Host` or `Origin` the client sends is not on `HTTP_ALLOWED_HOSTS` / `HTTP_ALLOWED_ORIGINS` |
+| `/readyz` stays `503`                              | No index at `INDEX_PATH` or no live Postgres build: bake one in, run `ingest full` or `copy`    |
+| `RATE_LIMITED` for every client at once            | The server sees the proxy's address: list the proxy in `HTTP_TRUSTED_PROXIES`                   |
+| Card links open the wrong host                     | `LANDING_BASE_URL`                                                                              |
 
 More for Postgres in its [guide](guides/postgres.md#troubleshooting).

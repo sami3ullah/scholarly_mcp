@@ -5,10 +5,9 @@ Recording checklist and talking points for the SM-15 video. The five demo questi
 ## Before recording
 
 1. Full index running locally: `docker compose --profile sqlite --profile landing up -d --wait` with the full `data/index.sqlite` baked in (`INDEX_DIR`, [docker README](../../docker/README.md#build)), or the dev server against `data/index.sqlite`.
-2. A key: `docker compose run --rm server keys create --label loom`.
-3. Claude Desktop or Claude Code connected ([connectors](../CONNECTORS.md)); start a new chat; check that the six tools are on.
-4. A browser tab ready for the landing page (`http://localhost:3000`).
-5. Do one dry run of every question; the answers vary a little between runs.
+2. Claude Desktop or Claude Code connected with the URL alone, no key ([connectors](../CONNECTORS.md)); start a new chat; check that the six tools are on.
+3. A browser tab ready for the landing page (`http://localhost:3000`).
+4. Do one dry run of every question; the answers vary a little between runs.
 
 ## Script
 
@@ -20,7 +19,7 @@ Recording checklist and talking points for the SM-15 video. The five demo questi
 | 1:45-2:15 | Question 2, then 4: _"Can I read the Endoscopy 2026 cold vs hot snare study in full?"_                                        | Paywalled: the assistant gets a teaser and the subscription, login and purchase links, never the article.              |
 | 2:15-2:30 | Question 5: _"Can I cite 10.1055/a-2458-7088 for a talk on lung adenocarcinoma?"_                                             | Retracted papers are left out of search and flagged when asked about.                                                  |
 | 2:30-3:30 | The README architecture diagram, then `docs/SELF-HOSTING.md`.                                                                 | One container; adapters for Thieme's content API, entitlements, Postgres; self-hosted on a VM, AWS or Cloudflare.      |
-| 3:30-4:15 | The funnel report (`funnel --store --out funnel.html`).                                                                       | Every search, card and visit is counted per key, without storing the question: usage-based billing, institutions.      |
+| 3:30-4:15 | The funnel report (`funnel --store --out funnel.html`).                                                                       | Every search, card and visit is counted by journal and tool, without storing the question: usage-based billing.        |
 | 4:15-4:45 | Back to the chat.                                                                                                             | What production needs (Thieme's content API, entitlements, a pilot), and the ask: 15 minutes of feedback.              |
 
 Keep it under 5 minutes; cut the funnel part first if it runs long.

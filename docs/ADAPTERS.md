@@ -8,10 +8,10 @@ scholarly-mcp is built as ports and adapters. `packages/core` defines the ports 
 
 Only the composition roots create concrete adapters ([PLAN.md](PLAN.md#engineering-standards)):
 
-| App    | Composition root                                                           | Wires                                                                                                      |
-| ------ | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| Ingest | `apps/ingest/src/main.ts`                                                  | `Source`, `ArticleEnricher`, `IndexStorage`, `Embedder`                                                    |
-| Server | `apps/server/src/main.ts`, `apps/server/src/runtime/open-server-stores.ts` | `IndexReader`, `Embedder`, `SessionStore`, `ApiKeyStore`, `RateBucketStore`, `UsageOutbox`, `Entitlements` |
+| App    | Composition root                                                           | Wires                                                                                       |
+| ------ | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Ingest | `apps/ingest/src/main.ts`                                                  | `Source`, `ArticleEnricher`, `IndexStorage`, `Embedder`                                     |
+| Server | `apps/server/src/main.ts`, `apps/server/src/runtime/open-server-stores.ts` | `IndexReader`, `Embedder`, `SessionStore`, `RateBucketStore`, `UsageOutbox`, `Entitlements` |
 
 The layering rules (`pnpm depcruise`) keep it that way: an adapter package depends on `core` only, never on another adapter or an app.
 
@@ -25,11 +25,10 @@ The layering rules (`pnpm depcruise`) keep it that way: an adapter package depen
 | `IndexStorage`    | Builds an index next to the live one, verifies it and swaps it in         | SQLite (`store-sqlite`), Postgres (`store-postgres`) | `runIndexStorageContract`, `runArticleStoreContract` |
 | `IndexReader`     | The server's read-only view of the live index, following swaps            | SQLite, Postgres                                     | `runArticleStoreContract`                            |
 | `SessionStore`    | Landing sessions behind the link tokens, 24 h                             | SQLite, Postgres                                     | `runSessionStoreContract`                            |
-| `ApiKeyStore`     | Hashed API keys                                                           | SQLite, Postgres                                     | `runApiKeyStoreContract`                             |
 | `RateBucketStore` | Token buckets for rate limits, shared across replicas on Postgres         | In memory, Postgres                                  | `runRateBucketStoreContract`                         |
 | `UsageOutbox`     | Usage events waiting to be exported to billing                            | SQLite, Postgres                                     | `runUsageOutboxContract`                             |
 | `SyncStateStore`  | Where the last ingest run stopped                                         | SQLite, Postgres                                     | `runSyncStateStoreContract`                          |
-| `Entitlements`    | Whether a caller may read an article, and where to log in or buy          | Mock (`apps/server/src/access`)                      | none yet                                             |
+| `Entitlements`    | Whether an article can be read, and where to log in or buy                | Mock (`apps/server/src/access`)                      | none yet                                             |
 | `Meter`           | Records usage without blocking a request; flushed on shutdown             | Outbox meter with a webhook exporter                 | none                                                 |
 
 Every contract suite runs against each adapter of its port, so a new adapter is correct when its suite passes.
@@ -80,25 +79,23 @@ Full text stays matching-only whatever the source: chunks are searched but never
 
 ## Your own access rules
 
-`check_access` and the access field on every card come from `Entitlements`. The default mock treats open access articles as open and everything else as subscription, with an institution from the API key or OAuth claim granting access. A publisher replaces it with a call to its entitlement service:
+`check_access` and the access field on every card come from `Entitlements`. The default mock treats open access articles as open and everything else as subscription. Callers are anonymous ([ADR 0048](adr/0048-public-server-without-auth.md)), so `check` gets only the DOI and the open access flag. A publisher replaces it with a call to its entitlement service:
 
 ```ts
 const entitlements: Entitlements = {
-  async check({ doi, isOpenAccess, caller }, signal) {
+  async check({ doi, isOpenAccess }, signal) {
     if (isOpenAccess) return { status: 'open' };
-    const access = await acmeEntitlements.lookup(caller.institutionId, doi, signal);
-    return access
-      ? { status: 'institution' }
-      : { status: 'subscription', loginUrl: '…', purchaseUrl: '…' };
+    const offer = await acmeEntitlements.offer(doi, signal);
+    return { status: 'subscription', loginUrl: offer.loginUrl, purchaseUrl: offer.purchaseUrl };
   },
 };
 ```
 
-Pass it as `entitlements` to `createApp` in `apps/server/src/main.ts`. The caller carries only the API key id and institution, never query text.
+Pass it as `entitlements` to `createApp` in `apps/server/src/main.ts`. It never sees query text. The `institution` status stays available for an adapter that can recognise a reader's institution by other means, such as institutional IP ranges; that needs a new ADR, as the server records no caller identity today.
 
 ## Your own store
 
-The server and ingest choose SQLite or Postgres with `STORE` ([ADR 0034](adr/0034-postgres-store-adapter.md)). Another database means implementing `IndexStorage` and `IndexReader` (the index), plus the runtime ports (`SessionStore`, `ApiKeyStore`, `RateBucketStore`, `UsageOutbox`, `SyncStateStore`), and passing their contract suites. `packages/store-postgres` is the worked example: schema-per-build swaps, a writer and a read-only role, versioned migrations.
+The server and ingest choose SQLite or Postgres with `STORE` ([ADR 0034](adr/0034-postgres-store-adapter.md)). Another database means implementing `IndexStorage` and `IndexReader` (the index), plus the runtime ports (`SessionStore`, `RateBucketStore`, `UsageOutbox`, `SyncStateStore`), and passing their contract suites. `packages/store-postgres` is the worked example: schema-per-build swaps, a writer and a read-only role, versioned migrations.
 
 ## Your own embedding model
 

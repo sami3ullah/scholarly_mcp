@@ -69,7 +69,7 @@ DATABASE_URL=postgres://scholarly_server:…@db.internal:5432/scholarly?sslmode=
 ADMIN_DATABASE_URL=postgres://scholarly_ingest:…@db.internal:5432/scholarly?sslmode=require
 ```
 
-The server connects as `scholarly_server`, which can read the index but not change it; index builds and key commands use `scholarly_ingest` ([roles](guides/postgres.md#roles)). Leave room for three copies of the index (live, previous, the build): about 4 GB for the Thieme corpus. Set `maintenance_work_mem` to 512 MB or more (an RDS parameter group) so full builds make their vector index in memory.
+The server connects as `scholarly_server`, which can read the index but not change it; index builds and the funnel report use `scholarly_ingest` ([roles](guides/postgres.md#roles)). Leave room for three copies of the index (live, previous, the build): about 4 GB for the Thieme corpus. Set `maintenance_work_mem` to 512 MB or more (an RDS parameter group) so full builds make their vector index in memory.
 
 ## 3. Start
 
@@ -84,32 +84,22 @@ Then:
 ```bash
 docker compose up -d --wait
 docker compose ps
-curl -fsS https://mcp.example.org/mcp -o /dev/null -w '%{http_code}\n'   # 401: up, and wants a key
+curl -fsS https://mcp.example.org/readyz                                 # 200: up, with an index open
 ```
 
 `--wait` returns when the server is ready, Caddy has its certificate in a few seconds after that. `init` runs `ingest migrate` on every `up` and exits; that is expected.
 
-## 4. API keys
+The MCP endpoint is public: anyone who knows the URL can connect, with no key ([ADR 0048](adr/0048-public-server-without-auth.md)). Each client address may make `RATE_LIMIT_PER_MINUTE` tool calls a minute (default 60, bursts of `RATE_LIMIT_BURST`, default 20); raise both in `.env` when many readers share one address, such as a hospital network. The bundle sets `HTTP_TRUSTED_PROXIES` to the private ranges, as only Caddy reaches the server, so the limit applies to the reader's address that Caddy passes on. Addresses are never stored or logged.
 
-One key per person, team or customer, so you can see usage per key and revoke one without touching the others:
-
-```bash
-docker compose run --rm admin keys create --label "Clinic Nord" --institution clinic-nord   # prints smk_… once
-docker compose run --rm admin keys list
-docker compose run --rm admin keys revoke key_abcdefgh2345
-```
-
-The full key is shown only when it is made; the database keeps its hash. `--institution` is optional and passed to `check_access`. A revoked key stops working within 5 seconds. Usage per key (searches, cards shown, landing visits, click-through) as JSON; drop `--key` for everyone, add `--since 2026-11-01` for a period:
+Usage (searches, cards shown, landing visits, click-through) as JSON; add `--since 2026-11-01` for a period:
 
 ```bash
-docker compose run --rm admin funnel --store --key key_abcdefgh2345 --out /tmp/funnel.html --json /dev/stdout
+docker compose run --rm admin funnel --store --out /tmp/funnel.html --json /dev/stdout
 ```
 
-The [funnel guide](guides/funnel-and-card-view.md) explains the numbers and the live view. For billing, a webhook sends every usage event to your system (`METER_WEBHOOK_URL`, `METER_WEBHOOK_SECRET`; [metering](guides/operating-the-server.md#usage-metering)).
+The [funnel guide](guides/funnel-and-card-view.md) explains the numbers and the live view. For billing, a webhook sends every usage event to your system (`METER_WEBHOOK_URL`, `METER_WEBHOOK_SECRET`; [metering](guides/operating-the-server.md#usage-metering)). How readers connect Claude and ChatGPT: [CONNECTORS.md](CONNECTORS.md).
 
-How readers connect Claude and ChatGPT, and when you need OAuth instead of keys: [CONNECTORS.md](CONNECTORS.md).
-
-## 5. The full index
+## 4. The full index
 
 The image carries about 200 open access articles so a new install answers at once. Build the whole corpus of your preset (the Thieme preset: DOI prefix 10.1055 from 2024, about 71,000 articles):
 
@@ -142,7 +132,7 @@ git -C /opt/scholarly-mcp pull
 docker compose pull && docker compose up -d --wait
 ```
 
-Migrations only add, so rolling back is setting the previous version and `up` again. Back up the runtime data before an upgrade: on SQLite `docker compose run --rm --entrypoint /nodejs/bin/node admin -e "new (require('node:sqlite').DatabaseSync)('/var/lib/scholarly/runtime.sqlite').exec(\"VACUUM INTO '/data/runtime-backup.sqlite'\")"` writes a copy onto the index volume (on the host under `/var/lib/docker/volumes/scholarly_index/_data/`, to copy off the machine); on Postgres, the database's own backups. The index can always be rebuilt ([backups](OPERATIONS.md#back-up)).
+Migrations almost always only add, so rolling back is setting the previous version and `up` again. The exception is the migration that removes API keys ([ADR 0048](adr/0048-public-server-without-auth.md)), which drops their table and columns: rolling back past it needs the backup below. Back up the runtime data before an upgrade: on SQLite `docker compose run --rm --entrypoint /nodejs/bin/node admin -e "new (require('node:sqlite').DatabaseSync)('/var/lib/scholarly/runtime.sqlite').exec(\"VACUUM INTO '/data/runtime-backup.sqlite'\")"` writes a copy onto the index volume (on the host under `/var/lib/docker/volumes/scholarly_index/_data/`, to copy off the machine); on Postgres, the database's own backups. The index can always be rebuilt ([backups](OPERATIONS.md#back-up)).
 
 ## Where to run it
 
@@ -154,9 +144,9 @@ Exactly the steps above. Open ports 80 and 443 (`ufw allow 80,443/tcp`), point t
 
 **EC2 (simplest).** An `m7g.large` (arm64, 2 vCPUs, 8 GiB) or `m7i.large`, Ubuntu 24.04, 30 GB gp3. Security group: 80 and 443 from anywhere, 22 from your network only. An Elastic IP, and a Route 53 (or other) A record for `PUBLIC_HOST`. Then the steps above. For SQLite take EBS snapshots of the volume (Data Lifecycle Manager).
 
-**With RDS Postgres.** Create an RDS for PostgreSQL 16+ instance (`db.t4g.medium` is enough for a pilot, `db.m7g.large` for 20 calls a second) in the same VPC, reachable only from the EC2 security group. Run the role SQL from step 2, use block C in `.env` with `sslmode=require`. RDS backups then cover keys and usage.
+**With RDS Postgres.** Create an RDS for PostgreSQL 16+ instance (`db.t4g.medium` is enough for a pilot, `db.m7g.large` for 20 calls a second) in the same VPC, reachable only from the EC2 security group. Run the role SQL from step 2, use block C in `.env` with `sslmode=require`. RDS backups then cover usage and landing sessions.
 
-**Several replicas (ECS or EKS).** Run the image without this bundle: one service with `serve` behind an Application Load Balancer (HTTPS with an ACM certificate, health check `/readyz` on 8080), `STORE=postgres` on RDS, secrets from Secrets Manager as files (`DATABASE_URL_FILE`, `LANDING_API_SECRET_FILE`), and `ingest incremental` as a scheduled task. Settings are in [OPERATIONS.md](OPERATIONS.md#deploy); the ALB must route `/mcp` to the server and the rest to the landing image, and its subnets go in the landing proxy's trusted ranges, or put Caddy behind it as below.
+**Several replicas (ECS or EKS).** Run the image without this bundle: one service with `serve` behind an Application Load Balancer (HTTPS with an ACM certificate, health check `/readyz` on 8080), `STORE=postgres` on RDS, secrets from Secrets Manager as files (`DATABASE_URL_FILE`, `LANDING_API_SECRET_FILE`), and `ingest incremental` as a scheduled task. Settings are in [OPERATIONS.md](OPERATIONS.md#deploy); the ALB must route `/mcp` to the server and the rest to the landing image, and its subnets go in the landing proxy's trusted ranges and in the server's `HTTP_TRUSTED_PROXIES` (so rate limits apply per reader, not to the load balancer), or put Caddy behind it as below.
 
 ### Cloudflare
 
@@ -175,7 +165,7 @@ Cloudflare cannot run this as Workers or Pages: the server holds an embedding mo
 
 3. `docker compose up -d --wait`.
 
-In Cloudflare, leave caching off for `/mcp` (the default for its responses) and keep WAF rules from challenging it: AI clients cannot solve a browser challenge. Behind any other proxy or load balancer that ends TLS, the last three settings are the same, with its address ranges in `TRUSTED_PROXIES`.
+In Cloudflare, leave caching off for `/mcp` (the default for its responses) and keep WAF rules from challenging it: AI clients cannot solve a browser challenge. Behind any other proxy or load balancer that ends TLS, the last three settings are the same, with its address ranges in `TRUSTED_PROXIES`. The server's `HTTP_TRUSTED_PROXIES` stays as the bundle sets it, as Caddy still passes the reader address on. Rate limits apply per client address; for limits across many addresses, use Cloudflare's own rate limiting rules in front.
 
 ## Check it
 
@@ -185,10 +175,10 @@ The repository's end-to-end check runs every tool through the public hostname, a
 docker compose run --rm --entrypoint /nodejs/bin/node \
   -v "$PWD/../docker/e2e/smoke.mjs:/check/smoke.mjs:ro" \
   -e SMOKE_MCP_URL=https://mcp.example.org -e SMOKE_LANDING_URL=https://mcp.example.org \
-  -e SMOKE_KEY=smk_… admin /check/smoke.mjs
+  admin /check/smoke.mjs
 ```
 
-It prints one `ok` line per check and ends with `13 checks passed`. Then add the server to Claude ([CONNECTORS.md](CONNECTORS.md)) and ask _"Find recent articles on cold snare polypectomy"_; each title links to a landing page on `https://mcp.example.org/mcp/landing`. For uptime monitoring, probe `https://mcp.example.org/readyz` (200 when an index is open).
+It prints one `ok` line per check and ends with `12 checks passed`. Then add the server to Claude ([CONNECTORS.md](CONNECTORS.md)) and ask _"Find recent articles on cold snare polypectomy"_; each title links to a landing page on `https://mcp.example.org/mcp/landing`. For uptime monitoring, probe `https://mcp.example.org/readyz` (200 when an index is open).
 
 ## Troubleshooting
 

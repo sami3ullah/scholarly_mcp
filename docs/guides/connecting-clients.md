@@ -19,12 +19,12 @@ The server reads environment variables, validated at boot ([server README](../..
 | Variable                | Default               | Meaning                                                                                                  |
 | ----------------------- | --------------------- | -------------------------------------------------------------------------------------------------------- |
 | `MCP_TRANSPORT`         | `stdio`               | `stdio` for a local client, `http` for Streamable HTTP                                                   |
-| `HTTP_HOST`             | `127.0.0.1`           | Beyond loopback needs `AUTH_MODE` and `HTTP_ALLOWED_HOSTS` ([operating guide](operating-the-server.md))  |
+| `HTTP_HOST`             | `127.0.0.1`           | Beyond loopback needs `HTTP_ALLOWED_HOSTS` ([operating guide](operating-the-server.md))                  |
 | `HTTP_PORT`             | `8080`                | HTTP port; the endpoint is `/mcp`                                                                        |
 | `INDEX_PATH`            | `data/index.sqlite`   | The index the ingest builds; reopened when a new build lands                                             |
-| `RUNTIME_DB_PATH`       | `data/runtime.sqlite` | Landing sessions, API keys and the usage outbox; created when missing                                    |
+| `RUNTIME_DB_PATH`       | `data/runtime.sqlite` | Landing sessions and the usage outbox; created when missing                                              |
 | `SQLITE_SEARCH_WORKERS` | `2`                   | Threads that run searches on the SQLite index; about one per CPU ([capacity](../OPERATIONS.md#capacity)) |
-| `AUTH_MODE`             | `none`                | `none`, `api-key`, `oauth` or `api-key+oauth` for HTTP ([operating guide](operating-the-server.md))      |
+| `HTTP_TRUSTED_PROXIES`  | unset                 | Proxies whose `X-Forwarded-For` names the client, for per-client rate limits                             |
 | `EMBEDDER_CACHE_DIR`    | the library default   | Where the model is cached, e.g. `.cache/models`                                                          |
 | `LANDING_BASE_URL`      | required              | Where card links point                                                                                   |
 | `PUBLISHER_NAME`        | `the publisher`       | Named in descriptions and the notice                                                                     |
@@ -90,7 +90,7 @@ MCP_TRANSPORT=http EMBEDDER_CACHE_DIR=.cache/models \
   node --env-file=presets/thieme.env apps/server/dist/main.js
 ```
 
-By default the HTTP endpoint accepts only local `Host` and `Origin` headers and no auth (`AUTH_MODE=none`), which config allows on loopback only. To require API keys or OAuth, expose it beyond this machine, or meter usage, see [Operating the server](operating-the-server.md).
+By default the HTTP endpoint accepts only local `Host` and `Origin` headers. It needs no credentials anywhere ([ADR 0048](../adr/0048-public-server-without-auth.md)). To expose it beyond this machine, tune rate limits or meter usage, see [Operating the server](operating-the-server.md).
 
 ## What to expect
 

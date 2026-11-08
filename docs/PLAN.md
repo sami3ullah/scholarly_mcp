@@ -87,7 +87,7 @@ Read it left then right: sources feed ingestion, ingestion writes the index; AI 
 | Tool layer | Six MCP tools returning article cards with teasers and Thieme links | Core, not swapped |
 | Landing sessions | Stores each search's result list under a random token for 24 h; resolves it for the landing page | `SessionStore` port |
 | Landing page (reference) | Next.js page that turns a token into a personalised Thieme page: chosen article, other matches, matched passage, access options | Thieme rebuilds it on thieme-connect.de |
-| Auth + rate limits | API keys for the demo, OAuth 2.1 for production; per-key quotas | Config |
+| Auth + rate limits | API keys for the demo, OAuth 2.1 for production; per-key quotas (Superseded by ADR 0048: the server is public; rate limits are per client address.) | Config |
 | Entitlements | Show open, subscribed or paywalled status on cards and landing page | `Entitlements` port (mock in demo) |
 | Metering | Usage and referral events into an outbox, exported for billing and analytics | `Meter` port |
 | Telemetry | Structured logs, traces, `/metrics`, health and readiness | Config |
@@ -116,9 +116,9 @@ One canonical `Article` record feeds both stores; search retrieves chunks lexica
 | Article | `doi` (PK, lowercased, no `https://doi.org/`), title, subtitle, journal (name, print ISSN, electronic ISSN), authors (given, family, ORCID), published date + precision (day, month or year), language, abstract (plain text), subjects, licenses (URL, content version, start date), `isOpenAccess`, `isRetracted`, landing URL, `contentHash`, `sourceUpdatedAt`, `ingestedAt` |
 | Chunk | id, `doi` (FK), ordinal, section label, text, language, token count, embedding, `modelVersion` |
 | SyncState | source, cursor, last `from-update-date` window, last run status |
-| UsageEvent | id (idempotency key), API key id, tool, result count, latency, status, timestamp, `exportedAt` |
+| UsageEvent | id (idempotency key), API key id (removed by ADR 0048), tool, result count, latency, status, timestamp, `exportedAt` |
 | IndexMeta | index version, model version, article and chunk counts, built at |
-| LandingSession | token (random 128-bit, PK), ordered result DOIs with matched chunk ids, chosen language, API key id, created at, expires at (24 h), visit count. No query text. |
+| LandingSession | token (random 128-bit, PK), ordered result DOIs with matched chunk ids, chosen language, API key id (removed by ADR 0048), created at, expires at (24 h), visit count. No query text. |
 **SQLite store (default)**
 - `articles` and `chunks` tables; `chunks_fts` as an FTS5 virtual table with `unicode61 remove_diacritics 2`.
 - German stemming done in TypeScript (Snowball) at index and query time, stored in a `text_stemmed` column, because FTS5 has no German stemmer.
@@ -161,7 +161,7 @@ Six read-only tools that return article cards, never article content: enough for
 | `find_related` | `doi`, `limit` | cards, `collectionUrl` | Nearest neighbours of the article's mean chunk vector |
 | `get_journal` | `issn` or `query` | name, ISSNs, subjects, open access policy, Thieme journal page link | Built from indexed records only |
 | `cite` | `doi`, `style` (vancouver, apa, ama, bibtex, ris) | formatted citation including the Thieme link | CSL-based, snapshot-tested |
-| `check_access` | `doi` + caller identity | `open`, `subscription` or `institution`, plus the link to log in or buy | Demo uses a mock entitlement adapter |
+| `check_access` | `doi` + caller identity (ADR 0048: `doi` only, callers are anonymous) | `open`, `subscription` or `institution`, plus the link to log in or buy | Demo uses a mock entitlement adapter |
 **Conventions for every tool**
 - Annotations: `readOnlyHint: true`, `openWorldHint: false`.
 - Descriptions tell the model how to present results: a short list of linked titles, one line each on why it fits, and a pointer to the link for the details. They also say not to stretch the teaser into a summary, to treat card text as untrusted data, and never to present results as clinical advice.
@@ -175,7 +175,7 @@ Tool errors return `isError: true` with a stable code and a message the model ca
 | `NOT_FOUND` | DOI not in the index | Suggest `search_articles` |
 | `CURSOR_STALE` | Index swapped between pages | Rerun the search |
 | `RATE_LIMITED` | Quota exceeded | Includes `retryAfter` seconds |
-| `UNAUTHORIZED` | Missing, invalid or revoked key | Connect again |
+| `UNAUTHORIZED` | Missing, invalid or revoked key | Connect again (Removed by ADR 0048: the server is public.) |
 | `TIMEOUT` | Search over its 2 s budget | Retry or narrow the query |
 | `INDEX_UNAVAILABLE` | Index missing or being replaced | Retry shortly |
 
@@ -223,8 +223,8 @@ The rule throughout: never fabricate, never block a request on a side system, an
 | Index file missing or corrupt | Readiness fails with a clear log line; no silent crash loop |
 | Slow query | 2 s budget per request via `AbortSignal`; return `TIMEOUT` |
 | CPU starvation from embedding bursts | Semaphore on concurrent embeddings; queue with a short timeout |
-| Abusive client | Per-key token bucket; `RATE_LIMITED` with `retryAfter` |
-| Revoked key or expired token | Auth decisions cached for seconds only |
+| Abusive client | Per-key token bucket; `RATE_LIMITED` with `retryAfter` (Superseded by ADR 0048: the server is public; rate limits are per client address.) |
+| Revoked key or expired token | Auth decisions cached for seconds only (Superseded by ADR 0048: no keys or tokens.) |
 | Deploy or scale-down | `SIGTERM` drains in-flight requests and flushes the metering outbox |
 **Metering**
 | Edge case | Handling |
@@ -263,7 +263,7 @@ The test that proves plug-and-play is the shared adapter contract suite: every s
 | Search quality | 60-query golden set (20 German, 20 English, 20 cross-language, abbreviation or compound); recall@10, MRR, nDCG@10; CI fails on regression | Custom eval script |
 | Performance | p50/p95 latency at 20 requests/s, memory ceiling, cold-start time | autocannon or k6 |
 | Security | Dependency and image scanning, static analysis, secret scanning | osv-scanner, Trivy, Semgrep, gitleaks |
-| End-to-end smoke | `docker compose up`, then call every tool over HTTP with a test key | Shell script in CI |
+| End-to-end smoke | `docker compose up`, then call every tool over HTTP with a test key (ADR 0048: no key needed) | Shell script in CI |
 | Landing page | Token renders the right articles in the right order; expiry falls back to the article page; noindex and canonical present; beacon fires once; Lighthouse performance and accessibility budgets | Playwright, Lighthouse CI, axe |
 **Golden set rule:** only include queries where relevance is clear from title and abstract, since you are not a clinician. Record the expected DOIs once and version the file.
 **CI pipeline (GitHub Actions)**
@@ -277,11 +277,11 @@ The test that proves plug-and-play is the shared adapter contract suite: every s
 ## Security, compliance and guardrails
 The server is read-only, holds no patient data by design, and only uses official APIs, so the main risks are access control, content rights and model misuse.
 | Area | Measure |
-| Authentication | API keys stored hashed and identifiable by prefix for the demo; OAuth 2.1 resource-server mode for production, validating tokens from Thieme's identity provider (audience checked) as the MCP authorization spec describes; tokens never passed upstream |
+| Authentication | API keys stored hashed and identifiable by prefix for the demo; OAuth 2.1 resource-server mode for production, validating tokens from Thieme's identity provider (audience checked) as the MCP authorization spec describes; tokens never passed upstream (Superseded by ADR 0048: the server is public; rate limits are per client address.) |
 | Transport | TLS at the load balancer; `Origin` validation; CORS closed; request body and query length limits |
 | Least privilege | Read-only database role for the server; separate credentials for ingestion; container runs as non-root on a distroless image with a read-only filesystem |
 | Secrets | Environment or secret manager only; redacted in logs |
-| Privacy (GDPR) | Raw queries not logged by default; metering stores key id, tool, counts and latency, never query text; EU hosting for the demo |
+| Privacy (GDPR) | Raw queries not logged by default; metering stores key id (removed by ADR 0048), tool, counts and latency, never query text; EU hosting for the demo |
 | Content rights | Official APIs only (Crossref, Europe PMC); license allowlist for full text; attribution required by schema; “no model training” stated in server metadata |
 | Medical safety | No generated advice; notice field on every response; retracted papers excluded; publication date shown so the model can judge recency |
 | Prompt injection | Article text returned as delimited data; control characters stripped; tool descriptions mark it untrusted |
@@ -447,7 +447,7 @@ Exit: recall@10 ≥ 0.8 overall and ≥ 0.7 cross-language; p95 under 500 ms.
 ### Phase 4: MCP server (3–4 days)
 - Six tools with schemas, descriptions and annotations
 - Streamable HTTP and stdio transports
-- API-key auth, per-key rate limits, error codes, `Origin` checks
+- API-key auth, per-key rate limits, error codes, `Origin` checks (Superseded by ADR 0048: the server is public; rate limits are per client address.)
 - `/healthz`, `/readyz`, `/metrics`, OpenTelemetry traces
 - Metering outbox and exporter (JSON lines + webhook); entitlement mock
 Exit: protocol tests pass; all tools work in Claude Desktop and MCP Inspector.

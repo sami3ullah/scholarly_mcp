@@ -4,7 +4,7 @@
 
 - **No hosted demo.** The owner runs the demo locally; Thieme gets a guide to host it themselves. This replaces the plan's "host in the EU with HTTPS" and its "public URL stable for 7 days" exit.
 - **Self-hosting target:** Docker Compose, hassle-free, deployable on AWS, Cloudflare or similar, and easy to adopt with an existing Postgres database.
-- **Keys:** the guide shows how to issue one API key per user or team, revoke one, and read per-key metering.
+- **Keys:** the guide shows how to issue one API key per user or team, revoke one, and read per-key metering. Superseded on 2026-11-08: the server is public, with no keys (ADR 0048).
 - **Demo index:** the full Thieme index (70,989 articles), local only, so the paywalled and retraction questions work. Not published.
 - **Specialties:** the agent picks them from the index (strong DE and EN coverage, a paywalled hit, a retraction) and proposes 5 questions for approval.
 - **Nothing paid (2026-11-07).** The demo runs only in Docker on the owner's machine; no VM, domain or cloud account. The self-hosting bundle is verified in Docker locally and by `docker/e2e/deploy-smoke.sh` in CI on every push, not on a paid VM; Thieme runs it on its own infrastructure.
@@ -25,10 +25,10 @@ Owner follow-ups from the review: cards show closed articles as `subscription` (
 ## Tasks
 
 - [x] 5 demo questions (DE, EN, cross-language, paywalled, retraction), proposed and approved (2026-11-03, below)
-- [x] Self-hosting guide: Compose deployment with TLS, SQLite or Postgres (bundled or existing, with pgvector and pg_trgm), per-user keys, index build and refresh (ADR 0045, `deploy/`, `docs/SELF-HOSTING.md`, 2026-11-07)
+- [x] Self-hosting guide: Compose deployment with TLS, SQLite or Postgres (bundled or existing, with pgvector and pg_trgm), per-user keys (removed by ADR 0048), index build and refresh (ADR 0045, `deploy/`, `docs/SELF-HOSTING.md`, 2026-11-07)
 - [x] Deployment notes for AWS and Cloudflare (and the general VM case) (`docs/SELF-HOSTING.md#where-to-run-it`; Cloudflare Tunnel as a compose profile)
-- [x] Connector instructions for Claude and ChatGPT (`docs/CONNECTORS.md`; ChatGPT and most claude.ai organisations need OAuth)
-- [x] API keys and OAuth in one deployment, `AUTH_MODE=api-key+oauth` (owner left the choice to the agent, ADR 0047, 2026-11-08)
+- [x] Connector instructions for Claude and ChatGPT (`docs/CONNECTORS.md`; every client connects with the URL alone, no auth)
+- [x] Public server, no API keys or OAuth; per-client rate limits (owner decision, ADR 0048, 2026-11-08)
 - [x] One-page memo drafted (`docs/outreach/memo.md`; Loom link and contact to fill in)
 - [ ] Release v0.2.0, so the bundle's default `SCHOLARLY_VERSION` exists (owner approval)
 - [ ] Loom recording (user; script in `docs/outreach/loom-script.md`)
@@ -40,4 +40,4 @@ The self-hosting bundle passes the smoke checks on SQLite, the bundled Postgres 
 
 ## Verification (2026-11-07)
 
-`deploy/` run from a copy holding only `deploy/`, `docker/postgres/init` and `docker/e2e/smoke.mjs`, with images built from `main` and `PUBLIC_HOST=localhost` (Caddy's local CA): all 13 smoke checks pass over HTTPS on SQLite, on the bundled Postgres (after `admin ingest copy`) and on a separate Postgres prepared with the guide's role SQL alone. Tunnel settings (`SITE_ADDRESS=:8080`, loopback bind, trusted private ranges) serve `/readyz` and `/mcp` on plain HTTP. Keys, `funnel --store` and the runtime backup command work through `admin`. Not yet done: Let's Encrypt on a public hostname, published v0.2.0 images, a real Cloudflare tunnel.
+`deploy/` run from a copy holding only `deploy/`, `docker/postgres/init` and `docker/e2e/smoke.mjs`, with images built from `main` and `PUBLIC_HOST=localhost` (Caddy's local CA): all 13 smoke checks (before ADR 0048; 12 now) pass over HTTPS on SQLite, on the bundled Postgres (after `admin ingest copy`) and on a separate Postgres prepared with the guide's role SQL alone. Tunnel settings (`SITE_ADDRESS=:8080`, loopback bind, trusted private ranges) serve `/readyz` and `/mcp` on plain HTTP. Keys (before ADR 0048), `funnel --store` and the runtime backup command work through `admin`. Not yet done: Let's Encrypt on a public hostname, published v0.2.0 images, a real Cloudflare tunnel.

@@ -29,13 +29,12 @@ Requirements: Docker. The image carries a small demo index of open access (CC BY
 
 ```bash
 docker run -d --name scholarly-mcp -p 127.0.0.1:8080:8080 ghcr.io/sami3ullah/scholarly-mcp:latest
-docker exec scholarly-mcp /nodejs/bin/node /app/scholarly-mcp.mjs keys create --label me   # prints smk_…
 ```
 
-Connect Claude Code (or any MCP client that speaks Streamable HTTP) with the printed key:
+Connect Claude Code (or any MCP client that speaks Streamable HTTP). The server is public, so no key is needed:
 
 ```bash
-claude mcp add --transport http scholarly http://localhost:8080/mcp --header "Authorization: Bearer smk_…"
+claude mcp add --transport http scholarly http://localhost:8080/mcp
 ```
 
 Then ask, for example, _"Find recent articles on stroke thrombolysis"_ or _"Welche Artikel gibt es zur Sepsis bei Kindern?"_. Claude Desktop, MCP Inspector and stdio are in the [client guide](docs/guides/connecting-clients.md).
@@ -47,7 +46,6 @@ Then ask, for example, _"Find recent articles on stroke thrombolysis"_ or _"Welc
 git clone https://github.com/sami3ullah/scholarly_mcp.git && cd scholarly_mcp
 export SCHOLARLY_IMAGE=ghcr.io/sami3ullah/scholarly-mcp:latest LANDING_IMAGE=ghcr.io/sami3ullah/scholarly-mcp-landing:latest
 docker compose --profile sqlite --profile landing up -d --wait     # MCP on :8080, landing page on :3000
-docker compose run --rm server keys create --label me
 ```
 
 Swap `sqlite` for `postgres` to run on Postgres. The demo index has about 200 articles; for the whole Thieme corpus build the full index with `ingest full` ([ingestion guide](docs/guides/ingestion.md), a few hours). Deploying for others, with TLS on your own hostname: [self-hosting guide](docs/SELF-HOSTING.md); connecting Claude and ChatGPT to it: [connectors](docs/CONNECTORS.md).
@@ -58,14 +56,14 @@ Swap `sqlite` for `postgres` to run on Postgres. The demo index has about 200 ar
 
 Six read-only MCP tools. Every one returns article cards, never article content.
 
-| Tool              | Purpose                                                             |
-| ----------------- | ------------------------------------------------------------------- |
-| `search_articles` | Hybrid search with language, journal, year and open access filters  |
-| `get_article`     | One card for a known DOI                                            |
-| `find_related`    | Nearest neighbours of an article                                    |
-| `get_journal`     | Journal details and its page link                                   |
-| `cite`            | Formatted citation (Vancouver, APA, AMA, BibTeX, RIS)               |
-| `check_access`    | Open, subscription or institutional access, plus login or buy links |
+| Tool              | Purpose                                                            |
+| ----------------- | ------------------------------------------------------------------ |
+| `search_articles` | Hybrid search with language, journal, year and open access filters |
+| `get_article`     | One card for a known DOI                                           |
+| `find_related`    | Nearest neighbours of an article                                   |
+| `get_journal`     | Journal details and its page link                                  |
+| `cite`            | Formatted citation (Vancouver, APA, AMA, BibTeX, RIS)              |
+| `check_access`    | Open or subscription access, plus login or buy links               |
 
 <details>
 <summary><b>What an article card looks like</b></summary>
@@ -89,7 +87,7 @@ Every response also carries `"notice": "Evidence pointers, not clinical advice. 
 
 </details>
 
-All six tools work over stdio and Streamable HTTP, with API keys or OAuth, rate limits, usage metering, health checks, Prometheus metrics and traces ([operating guide](docs/guides/operating-the-server.md)).
+All six tools work over stdio and Streamable HTTP, as a public endpoint with per-client rate limits, usage metering, health checks, Prometheus metrics and traces ([operating guide](docs/guides/operating-the-server.md)).
 
 ## Your own content API
 
@@ -242,7 +240,7 @@ Everything lives in [`docs/`](docs/README.md):
 | [Architecture decisions](docs/adr/README.md) | Why things are the way they are                             |
 | [Phase 0 results](docs/spike-results.md)     | Data coverage and model checks                              |
 | [Self-hosting](docs/SELF-HOSTING.md)         | Your own HTTPS deployment: VM, AWS, Cloudflare, Postgres    |
-| [Connectors](docs/CONNECTORS.md)             | Adding the server to Claude and ChatGPT, keys or OAuth      |
+| [Connectors](docs/CONNECTORS.md)             | Adding the server to Claude and ChatGPT, URL only, no auth  |
 | [Operations](docs/OPERATIONS.md)             | Deploying, refreshing, scaling, capacity, monitoring        |
 | [Adapters](docs/ADAPTERS.md)                 | Plugging in your own content API, access rules or store     |
 | [The landing page](docs/LANDING.md)          | The landing API and building the page in your own stack     |

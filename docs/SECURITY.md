@@ -10,13 +10,13 @@ scholarly-mcp is an independent prototype, not affiliated with Thieme or any oth
 
 ## What there is to protect
 
-| Asset                | Why it matters                                                                                                                                        |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| What readers ask     | A clinician may type patient details into a question. Query text must never be stored or leave the process.                                           |
-| Licensed content     | Abstracts and CC BY-NC-ND full text may be used for matching but not redistributed ([ADR 0003](adr/0003-cc-by-nc-nd-full-text-for-matching-only.md)). |
-| API keys and secrets | Keys meter and rate-limit callers; the landing API secret and webhook secret guard internal endpoints.                                                |
-| Usage records        | Feed billing, so they must be complete and not forgeable.                                                                                             |
-| The service itself   | One caller must not starve the others.                                                                                                                |
+| Asset              | Why it matters                                                                                                                                        |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| What readers ask   | A clinician may type patient details into a question. Query text must never be stored or leave the process.                                           |
+| Licensed content   | Abstracts and CC BY-NC-ND full text may be used for matching but not redistributed ([ADR 0003](adr/0003-cc-by-nc-nd-full-text-for-matching-only.md)). |
+| Secrets            | The landing API secret and webhook secret guard internal endpoints.                                                                                   |
+| Usage records      | Feed billing, so they must be complete and not forgeable.                                                                                             |
+| The service itself | One client must not starve the others.                                                                                                                |
 
 ## Controls
 
@@ -34,9 +34,9 @@ scholarly-mcp is an independent prototype, not affiliated with Thieme or any oth
 
 ### The HTTP edge
 
-- **Authentication** by API key (`smk_…`, stored as a SHA-256 hash and compared in constant time) or OAuth 2.1 access tokens checked against the issuer's JWKS, asymmetric signatures only ([ADR 0031](adr/0031-auth-limits-metering-and-telemetry.md)); `api-key+oauth` accepts both, routing each token to one verifier by its `smk_` prefix ([ADR 0047](adr/0047-api-keys-and-oauth-in-one-deployment.md)). `AUTH_MODE=none` is refused beyond loopback; the image defaults to API keys.
+- **Public by design.** `/mcp` needs no credentials and records no caller identity ([ADR 0048](adr/0048-public-server-without-auth.md)): it hands out only discovery data (metadata, teasers of at most 280 characters, links), and access to the article is decided on the publisher's site. HTTP beyond loopback still needs `HTTP_ALLOWED_HOSTS`, and `LANDING_API_SECRET` when the landing API is exposed. The protections below stay.
 - **DNS rebinding:** `/mcp` and the landing API accept only `Host` values on `HTTP_ALLOWED_HOSTS`, and `/mcp` only browser `Origin`s on its allowlist. No route sends CORS headers.
-- **Rate limits** per caller (token buckets, shared across replicas on Postgres, [ADR 0036](adr/0036-shared-rate-limit-buckets.md)) and per landing visitor.
+- **Rate limits** per client address (token buckets, shared across replicas on Postgres, [ADR 0036](adr/0036-shared-rate-limit-buckets.md)) and per landing visitor. The bucket key is an HMAC of the address under a secret held only in memory, IPv6 grouped by /64, so addresses are never stored or logged. `X-Forwarded-For` is believed only from `HTTP_TRUSTED_PROXIES`, taking the right-most untrusted hop, so a client cannot pick its bucket.
 - **Limits on every request:** 64 KB bodies, 16 KB of headers, 10 s to send headers, 60 s per request; all tool inputs are parsed with zod schemas, strict about unknown fields.
 - **Internal endpoints on internal ports:** `/metrics` and the landing API have their own listeners and answer 404 on the public port; the landing API also needs its secret ([ADR 0037](adr/0037-container-image-and-compose-profiles.md), [ADR 0038](adr/0038-landing-image-proxy-and-secret-files.md)).
 - **Errors** carry a stable code and a short message, never a stack trace.
@@ -72,7 +72,7 @@ Advisories that only touch development tools are ignored in `osv-scanner.toml`, 
 
 ## Known limits
 
-- **API keys are bearer secrets.** Anyone holding one can call the tools as that key until it is revoked (`keys revoke`). Use OAuth for anything beyond a pilot.
+- **Anyone can call the tools.** The endpoint is public, so the only brake is the per-address rate limit. Many readers behind one address share one bucket, and a client spread over many addresses is not limited as a whole; put a CDN or WAF in front for that. Usage cannot be attributed to a customer.
 - **The landing page is reachable by anyone with a link.** A token shows only what the search returned (public metadata and teasers), for 24 h.
-- **The mock `Entitlements`** decides access from open access status and the caller's institution only. A deployment replaces it with the publisher's entitlement service ([adapters](ADAPTERS.md#your-own-access-rules)).
+- **The mock `Entitlements`** decides access from open access status only. A deployment replaces it with the publisher's entitlement service ([adapters](ADAPTERS.md#your-own-access-rules)).
 - **TLS** ends at the platform's proxy or the compose Caddy; the containers speak plain HTTP on internal networks.

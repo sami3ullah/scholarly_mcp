@@ -23,16 +23,16 @@ flowchart LR
 | **Landing visits** | A reader's browser opens one result of a live search on the landing page                        | `landing_visit`  |
 | **Next actions**   | A reader clicks an access button on that page                                                   | `landing_action` |
 
-Click-through is visits per card shown. A client whose cards are shown but almost never opened probably hides or rewrites the links (PLAN.md risks), and the report shows click-through per client so you can see it.
+Click-through is visits per card shown. A client whose cards are shown but almost never opened probably hides or rewrites the links (PLAN.md risks). Callers are anonymous ([ADR 0048](../adr/0048-public-server-without-auth.md)), so the report counts all clients together; a click-through well below the usual rate across all traffic is the sign to look for.
 
 ### What is in an event
 
 Every event goes through the metering outbox and its exporters ([Operating the server](operating-the-server.md#usage-metering)):
 
 ```json
-{"id":"9a97…","apiKeyId":"key_…","kind":"tool_call","tool":"search_articles","resultCount":5,"latencyMs":958,"status":"ok","billable":true,"cardsByJournal":[{"journal":"DMW - Deutsche Medizinische Wochenschrift","cards":3},{"journal":"Pneumologie","cards":2}],"occurredAt":"2026-11-03T08:26:55.360Z"}
-{"id":"BD-o…","apiKeyId":"key_…","kind":"landing_visit","tool":"search_articles","doi":"10.1055/a-2646-5752","journal":"DMW - Deutsche Medizinische Wochenschrift","billable":false,"occurredAt":"2026-11-03T08:26:56.340Z"}
-{"id":"wGJU…","apiKeyId":"key_…","kind":"landing_action","action":"read","tool":"search_articles","doi":"10.1055/a-2646-5752","journal":"DMW - Deutsche Medizinische Wochenschrift","billable":false,"occurredAt":"2026-11-03T08:26:56.345Z"}
+{"id":"9a97…","kind":"tool_call","tool":"search_articles","resultCount":5,"latencyMs":958,"status":"ok","billable":true,"cardsByJournal":[{"journal":"DMW - Deutsche Medizinische Wochenschrift","cards":3},{"journal":"Pneumologie","cards":2}],"occurredAt":"2026-11-03T08:26:55.360Z"}
+{"id":"BD-o…","kind":"landing_visit","tool":"search_articles","doi":"10.1055/a-2646-5752","journal":"DMW - Deutsche Medizinische Wochenschrift","billable":false,"occurredAt":"2026-11-03T08:26:56.340Z"}
+{"id":"wGJU…","kind":"landing_action","action":"read","tool":"search_articles","doi":"10.1055/a-2646-5752","journal":"DMW - Deutsche Medizinische Wochenschrift","billable":false,"occurredAt":"2026-11-03T08:26:56.345Z"}
 ```
 
 - **No query text, no token.** A visit or action id is a SHA-256 of kind, token, DOI and action. The same visit from a second tab or a retried beacon gets the same id, so it is stored and counted once.
@@ -61,9 +61,9 @@ pnpm --filter @scholarly-mcp/server build
 node --env-file=presets/thieme.env apps/server/dist/main.js funnel \
   --from data/usage.jsonl --out data/funnel.html --json data/funnel.json
 
-# One client, one week (UTC days; --since inclusive, --until exclusive)
-node apps/server/dist/main.js funnel --from data/usage.jsonl --out data/funnel-claude.html \
-  --since 2026-11-01 --until 2026-11-08 --key key_abc123def456
+# One week (UTC days; --since inclusive, --until exclusive)
+node apps/server/dist/main.js funnel --from data/usage.jsonl --out data/funnel-week.html \
+  --since 2026-11-01 --until 2026-11-08
 ```
 
 The command prints the four totals and writes:
@@ -78,7 +78,6 @@ Lines that are not events (for example a write torn by a crash) are skipped and 
 | Totals       | The four steps and overall click-through                                         |
 | Funnel       | Each step with its rate from the step before (cards per search, visits per card) |
 | By journal   | Cards, visits, click-through and actions per journal                             |
-| By client    | The same per API key: the place to spot a client that drops links                |
 | Next actions | Clicks per access button                                                         |
 | By tool      | Calls, failures, cards and visits per tool                                       |
 | By day       | The steps per UTC day                                                            |
@@ -105,15 +104,15 @@ STORE=postgres DATABASE_URL=postgres://scholarly_server:server-local@127.0.0.1:5
 # Live funnel at http://127.0.0.1:8092/ (Ctrl+C stops it)
 ```
 
-| Route                    | Answers                                          |
-| ------------------------ | ------------------------------------------------ |
-| `GET /`                  | The report, which reloads itself every 60 s      |
-| `GET /funnel.json`       | The same numbers as JSON                         |
-| `?since=…&until=…&key=…` | Filters for either route, as on the command line |
+| Route              | Answers                                          |
+| ------------------ | ------------------------------------------------ |
+| `GET /`            | The report, which reloads itself every 60 s      |
+| `GET /funnel.json` | The same numbers as JSON                         |
+| `?since=…&until=…` | Filters for either route, as on the command line |
 
-- **Options.** `--host` (default `127.0.0.1`), `--port` (8092) and `--refresh` (60 s, 5 to 3600). `--since`, `--until` and `--key` set the filters for requests that bring none.
+- **Options.** `--host` (default `127.0.0.1`), `--port` (8092) and `--refresh` (60 s, 5 to 3600). `--since` and `--until` set the filters for requests that bring none.
 - **Load.** A count is reused for `--refresh` seconds per filter set, and requests meanwhile share one read, so open tabs do not pile up on the database. A failed read answers 503 and is retried on the next request.
-- **No login.** The view has none, and it shows click-through per client. Keep it on loopback and reach it with `ssh -L 8092:127.0.0.1:8092 <host>`, or put it behind a proxy with its own login. It warns when bound to another address.
+- **No login.** The view has none, and it shows your usage numbers. Keep it on loopback and reach it with `ssh -L 8092:127.0.0.1:8092 <host>`, or put it behind a proxy with its own login. It warns when bound to another address.
 - **Separate process.** It is not a route of the MCP server, whose HTTP surface is public. It needs only read access to the events and stops on SIGINT or SIGTERM.
 
 ## The landing page side

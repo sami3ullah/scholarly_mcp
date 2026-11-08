@@ -2,71 +2,38 @@
 
 [← Back to the docs index](../README.md)
 
-How to expose the MCP server over HTTP safely: API keys or OAuth, rate limits, usage metering, health, metrics, traces and shutdown. The design and its reasons are in [ADR 0031](../adr/0031-auth-limits-metering-and-telemetry.md). Connecting a client is in the [client guide](connecting-clients.md).
+How to expose the MCP server over HTTP safely: the public endpoint, rate limits, usage metering, health, metrics, traces and shutdown. The design and its reasons are in [ADR 0031](../adr/0031-auth-limits-metering-and-telemetry.md) and, for the public endpoint, [ADR 0048](../adr/0048-public-server-without-auth.md). Connecting a client is in the [client guide](connecting-clients.md).
 
 Every command below assumes `source ~/.nvm/nvm.sh && nvm use` and `pnpm build`.
 
-## Auth modes
+## Public endpoint and rate limits
 
-| `AUTH_MODE`     | Who may call `/mcp`                                                                                                                                        | Use it for                                          |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
-| `none`          | Anyone who reaches the port, as the caller `local`. Only allowed on loopback                                                                               | Your own machine, MCP Inspector                     |
-| `api-key`       | Requests with `Authorization: Bearer smk_…` of an active key                                                                                               | The demo and pilots                                 |
-| `oauth`         | Requests with a JWT access token issued for this server by your IdP                                                                                        | Production behind the publisher's identity          |
-| `api-key+oauth` | Either of the two above; `smk_…` tokens go to the key store, all others to the JWT check ([ADR 0047](../adr/0047-api-keys-and-oauth-in-one-deployment.md)) | ChatGPT and claude.ai readers alongside key holders |
+`/mcp` is public: no credential is read or checked, and an `Authorization` header is ignored ([ADR 0048](../adr/0048-public-server-without-auth.md)). The server only returns discovery data (metadata, a teaser of at most 280 characters and links); access to the article is decided on the publisher's site. Usage events, logs and landing sessions record no caller identity.
 
-Stdio never authenticates: the client starts the server as its own process.
-
-HTTP beyond loopback (`HTTP_HOST=0.0.0.0`) is refused at boot unless `AUTH_MODE` is `api-key`, `oauth` or `api-key+oauth` and `HTTP_ALLOWED_HOSTS` lists the public hostnames, for example `mcp.example.org`. `HTTP_ALLOWED_ORIGINS` lists the hostnames whose browser pages may call `/mcp`; requests without an `Origin` header, as MCP clients send them, always pass. Both default to `localhost`, `127.0.0.1` and `[::1]`. No route sends CORS headers.
-
-## API keys
-
-Keys live in the runtime database (`RUNTIME_DB_PATH`), stored as the SHA-256 of their secret. The full key is printed once, when it is made.
+HTTP beyond loopback (`HTTP_HOST=0.0.0.0`) is refused at boot unless `HTTP_ALLOWED_HOSTS` lists the public hostnames, for example `mcp.example.org`. `HTTP_ALLOWED_ORIGINS` lists the hostnames whose browser pages may call `/mcp`; requests without an `Origin` header, as MCP clients send them, always pass. Both default to `localhost`, `127.0.0.1` and `[::1]`. No route sends CORS headers.
 
 ```bash
-node apps/server/dist/main.js keys create --label "pilot clinic" --institution clinic-42
-node apps/server/dist/main.js keys list
-node apps/server/dist/main.js keys revoke key_abcdefgh2345
-```
-
-`--institution` is optional; it is passed to entitlements, so `check_access` answers `institution` for that key's callers. A revoked key stops working within `AUTH_CACHE_MS` (5 s). Usage events, logs and landing sessions name the caller by key id, never by key.
-
-Start the server with keys required:
-
-```bash
-MCP_TRANSPORT=http AUTH_MODE=api-key EMBEDDER_CACHE_DIR=.cache/models \
+MCP_TRANSPORT=http EMBEDDER_CACHE_DIR=.cache/models \
   node --env-file=presets/thieme.env apps/server/dist/main.js
 ```
 
-A client sends the key as a bearer token. Without one, or with a wrong or revoked one, `/mcp` answers `401` with a `WWW-Authenticate: Bearer` challenge.
+Each client address has a token bucket: `RATE_LIMIT_PER_MINUTE` tool calls a minute (default 60), in bursts of up to `RATE_LIMIT_BURST` (default 20). When it is empty, the tool answers `RATE_LIMITED` with `retryAfter` in seconds. IPv6 clients are grouped by their /64. The bucket key is an HMAC-SHA-256 of the address under a secret made at start and held only in memory, so no address is stored or logged. With `STORE=postgres` the buckets live in Postgres, shared by replicas; with SQLite (one process) they stay in memory ([ADR 0036](../adr/0036-shared-rate-limit-buckets.md)). Each replica has its own secret, so a client spread over replicas can get up to one bucket per replica. If the bucket store fails, calls are allowed and a warning is logged. Stdio has one local bucket.
 
-## OAuth
+Many readers behind one address (a hospital network, a NAT) share one bucket: raise the limits for such deployments. Clients spread over many addresses are not limited as a whole; a CDN or WAF in front is the place for that.
 
-Set `AUTH_MODE=oauth` (or `api-key+oauth` to keep accepting keys) and:
+### Behind a proxy
 
-| Variable                  | Meaning                                                                    |
-| ------------------------- | -------------------------------------------------------------------------- |
-| `OAUTH_ISSUER`            | The identity provider's issuer URL; tokens must carry it as `iss`          |
-| `OAUTH_AUDIENCE`          | This server's public `/mcp` URL; tokens must carry it in `aud`             |
-| `OAUTH_JWKS_URL`          | The provider's JSON Web Key Set                                            |
-| `OAUTH_REQUIRED_SCOPES`   | Optional comma-separated scopes every token needs (`403` otherwise)        |
-| `OAUTH_INSTITUTION_CLAIM` | Optional claim holding the reader's institution, passed on to entitlements |
-
-The server publishes Protected Resource Metadata at `/.well-known/oauth-protected-resource/mcp`, naming the issuer, and points to it in every `401`, so MCP clients can find where to log in. Only asymmetric signatures are accepted. The caller is `oauth:<client id>`. With `api-key+oauth` an accepted key counts as issued for `OAUTH_AUDIENCE` with every scope in `OAUTH_REQUIRED_SCOPES`, and its caller stays the key id.
-
-## Rate limits
-
-Each caller (key id or OAuth client) has a token bucket: `RATE_LIMIT_PER_MINUTE` tool calls a minute (default 60), in bursts of up to `RATE_LIMIT_BURST` (default 20). When it is empty, the tool answers `RATE_LIMITED` with `retryAfter` in seconds. With `STORE=postgres` the buckets live in Postgres, so every replica shares one limit per caller; with SQLite (one process) they stay in memory ([ADR 0036](../adr/0036-shared-rate-limit-buckets.md)). If the bucket store fails, calls are allowed and a warning is logged.
+The client address is the socket's peer, unless that peer is in `HTTP_TRUSTED_PROXIES` (comma-separated addresses or CIDR ranges). Then it is the right-most `X-Forwarded-For` hop that is not itself trusted; hops to its left could have been written by the client. Behind a proxy or load balancer without it, every client shares the proxy's bucket. The [self-hosting bundle](../SELF-HOSTING.md) sets `10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,fc00::/7`, as only Caddy reaches the server; behind a load balancer directly, set it to the load balancer's ranges.
 
 ### Landing API
 
-The landing API (`/landing/v1/page`, `/landing/v1/visits`, [landing guide](../LANDING.md)) has its own bucket per landing visitor: `LANDING_RATE_LIMIT_PER_MINUTE` (default 120) in bursts of `LANDING_RATE_LIMIT_BURST` (default 30). It takes `LANDING_API_SECRET` as a bearer token instead of API keys, and the server refuses to start with HTTP beyond loopback without it. Give the landing app the same secret, and keep the API on the internal network: only the landing app's server calls it. `LANDING_API_PORT` moves it to its own listener on `LANDING_API_HOST`, so the public port answers 404 for it.
+The landing API (`/landing/v1/page`, `/landing/v1/visits`, [landing guide](../LANDING.md)) has its own bucket per landing visitor: `LANDING_RATE_LIMIT_PER_MINUTE` (default 120) in bursts of `LANDING_RATE_LIMIT_BURST` (default 30). It takes `LANDING_API_SECRET` as a bearer token, and the server refuses to start with HTTP beyond loopback without it. Give the landing app the same secret, and keep the API on the internal network: only the landing app's server calls it. `LANDING_API_PORT` moves it to its own listener on `LANDING_API_HOST`, so the public port answers 404 for it.
 
 Secrets can come from mounted files instead of the environment: `LANDING_API_SECRET_FILE`, `METER_WEBHOOK_SECRET_FILE` and `DATABASE_URL_FILE` name a file whose contents (one trailing newline dropped) become the variable. Set one form, not both ([ADR 0038](../adr/0038-landing-image-proxy-and-secret-files.md)).
 
 ## Usage metering
 
-Every tool call writes one event to the outbox (`usage_events` in the runtime database): id, key id, tool, result count, latency, status, cards shown per journal and whether it is billable. Only successful calls are billable. Landing visits and access button clicks are events too (`kind` `landing_visit` and `landing_action`, never billable), so the funnel survives session cleanup ([The funnel and the card view](funnel-and-card-view.md)). Events never hold query text or a landing token, and writing them never fails or slows a call.
+Every tool call writes one event to the outbox (`usage_events` in the runtime database): id, tool, result count, latency, status, cards shown per journal and whether it is billable. Only successful calls are billable. Landing visits and access button clicks are events too (`kind` `landing_visit` and `landing_action`, never billable), so the funnel survives session cleanup ([The funnel and the card view](funnel-and-card-view.md)). Events never hold query text or a landing token, and writing them never fails or slows a call.
 
 Every exported event carries `kind`. A billing consumer that sums `billable` events needs no change; one that assumed every line is a tool call should filter on `kind: "tool_call"`.
 
@@ -107,13 +74,13 @@ function verify(rawBody, timestamp, signature, secret) {
 
 ## Health, metrics and traces
 
-| Route      | Answers                                                                                                                         |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `/healthz` | `200 {"status":"ok"}` while the process runs: the liveness probe                                                                |
-| `/readyz`  | `200` when the index is open, the model loaded and the server not draining, `503` otherwise                                     |
-| `/metrics` | Prometheus text: tool calls, durations, HTTP requests, auth failures, metering, landing pages, visits and actions, Node runtime |
+| Route      | Answers                                                                                                          |
+| ---------- | ---------------------------------------------------------------------------------------------------------------- |
+| `/healthz` | `200 {"status":"ok"}` while the process runs: the liveness probe                                                 |
+| `/readyz`  | `200` when the index is open, the model loaded and the server not draining, `503` otherwise                      |
+| `/metrics` | Prometheus text: tool calls, durations, HTTP requests, metering, landing pages, visits and actions, Node runtime |
 
-These routes skip the `Host`, `Origin` and auth checks so probes can reach the pod by address. They hold no article data, but keep `/metrics` internal at the load balancer. No metric label carries a key id or query text.
+These routes skip the `Host` and `Origin` checks so probes can reach the pod by address. They hold no article data, but keep `/metrics` internal at the load balancer. No metric label carries a client address or query text.
 
 Traces are off until `OTEL_EXPORTER_OTLP_ENDPOINT` is set, e.g. `http://localhost:4318`. Each HTTP request is a span, with a child span per tool call carrying the tool name, status and result count. `OTEL_SERVICE_NAME` defaults to `scholarly-mcp`; the other standard `OTEL_EXPORTER_OTLP_*` variables, such as headers, work as usual.
 
@@ -124,16 +91,13 @@ On SIGTERM or SIGINT the server turns `/readyz` to `503`, stops accepting connec
 ## Check it end to end
 
 ```bash
-node apps/server/dist/main.js keys create --label smoke        # copy the printed smk_… key
-MCP_TRANSPORT=http AUTH_MODE=api-key METER_EXPORT_MS=1000 EMBEDDER_CACHE_DIR=.cache/models \
+MCP_TRANSPORT=http METER_EXPORT_MS=1000 EMBEDDER_CACHE_DIR=.cache/models \
   node --env-file=presets/thieme.env apps/server/dist/main.js &
 curl -s localhost:8080/readyz                                   # {"status":"ready",...}
-curl -s -o /dev/null -w '%{http_code}\n' -X POST localhost:8080/mcp -d '{}'   # 401
-(cd apps/server && MCP_KEY=smk_… node --input-type=module -e "
+(cd apps/server && node --input-type=module -e "
 import { Client, StreamableHTTPClientTransport } from '@modelcontextprotocol/client';
 const client = new Client({ name: 'check', version: '0' });
-await client.connect(new StreamableHTTPClientTransport(new URL('http://127.0.0.1:8080/mcp'),
-  { requestInit: { headers: { authorization: 'Bearer ' + process.env.MCP_KEY } } }));
+await client.connect(new StreamableHTTPClientTransport(new URL('http://127.0.0.1:8080/mcp')));
 const result = await client.callTool({ name: 'search_articles', arguments: { query: 'Sepsis Intensivstation', limit: 2 } });
 console.log(result.content[0].text.split('\\n')[0]);                 // 2 articles found.
 await client.close();")
