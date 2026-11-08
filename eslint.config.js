@@ -5,7 +5,7 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import nextPlugin from '@next/eslint-plugin-next';
 
 export default tseslint.config(
-  { ignores: ['**/dist/**', '**/coverage/**', '**/.turbo/**', '**/.next/**', 'spikes/**'] },
+  { ignores: ['**/dist/**', '**/coverage/**', '**/.turbo/**', '**/.next/**'] },
   js.configs.recommended,
   ...tseslint.configs.strictTypeChecked,
   {

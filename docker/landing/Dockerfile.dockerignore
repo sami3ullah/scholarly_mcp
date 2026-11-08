@@ -12,5 +12,4 @@
 .env
 .env.*
 data
-spikes
 **/*.log

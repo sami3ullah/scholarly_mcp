@@ -1,6 +1,6 @@
 name: Security
 
-# Supply chain and code scans (SM-14): dependencies (osv-scanner), both images and the
+# Supply chain and code scans: dependencies (osv-scanner), both images and the
 # Dockerfiles (Trivy), the code (Semgrep), the git history (gitleaks), and an SBOM of each
 # image. Weekly as well, because new advisories appear without any change here. Third-party
 # actions are pinned by commit and tools by digest; Dependabot keeps them current.
@@ -86,7 +86,6 @@ jobs:
           version: v0.76.1
           scan-type: config
           scan-ref: .
-          # Throwaway spikes are not shipped.
-          skip-dirs: spikes,node_modules
+          skip-dirs: node_modules
           severity: HIGH,CRITICAL
           exit-code: '1'

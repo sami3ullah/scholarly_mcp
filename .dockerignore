@@ -12,6 +12,5 @@
 .env
 .env.*
 data
-spikes
 apps/landing
 **/*.log
