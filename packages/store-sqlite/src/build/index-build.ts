@@ -32,10 +32,10 @@ export interface IndexBuild {
 export const buildPathOf = (indexPath: string): string => `${indexPath}.building`;
 
 /**
- * Starts or resumes a build of the index at `indexPath` (PLAN.md "SQLite store"). A leftover
- * build of the same kind, schema and vector size is resumed, so its checkpoint and its rows
- * carry on together; any other leftover is discarded. An incremental build copies the live index with
- * `VACUUM INTO`, which is consistent even while the server reads it.
+ * Starts or resumes a build of the index at `indexPath` (ARCHITECTURE.md "SQLite store"). A
+ * leftover build of the same kind, schema and vector size is resumed, so its checkpoint and its
+ * rows carry on together; any other leftover is discarded. An incremental build copies the live
+ * index with `VACUUM INTO`, which is consistent even while the server reads it.
  */
 export function beginIndexBuild(options: {
   readonly indexPath: string;

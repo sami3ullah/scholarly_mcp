@@ -6,8 +6,8 @@ import { subjectSchema } from '../article/subject.js';
 export const JOURNAL_SUBJECT_LIMIT = 10;
 
 /**
- * A journal as the index sees it, built from indexed articles only (PLAN.md tool contracts):
- * no claim about the journal goes beyond what its indexed records show.
+ * A journal as the index sees it, built from indexed articles only (ARCHITECTURE.md tool
+ * contracts): no claim about the journal goes beyond what its indexed records show.
  */
 export const journalSummarySchema = z.object({
   /** The name most of its indexed articles carry. */

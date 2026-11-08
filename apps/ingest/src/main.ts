@@ -58,7 +58,7 @@ const USAGE = `Usage:
   ingest reembed --from <index> --out <index>`;
 
 /**
- * The composition root (PLAN.md "Backend conventions"): reads config, creates the real
+ * The composition root (ARCHITECTURE.md "Backend conventions"): reads config, creates the real
  * adapters and runs one command. `subset` writes only to its `--out` path, never to
  * `INDEX_PATH`, so it cannot replace the live index by mistake; so does `reembed`, which
  * embeds a copy of an index with `EMBEDDER_MODEL` (ADR 0028); both read and write SQLite

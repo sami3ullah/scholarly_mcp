@@ -12,7 +12,7 @@ export interface UsageEventQuery {
 }
 
 /**
- * The durable metering outbox (PLAN.md: metering). Events wait here until every exporter
+ * The durable metering outbox (ARCHITECTURE.md: metering). Events wait here until every exporter
  * has taken them, so an exporter outage loses nothing. Several exporters may share one
  * outbox: each claims a batch for a lease, so none resends another's batch (ADR 0034).
  */

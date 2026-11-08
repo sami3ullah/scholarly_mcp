@@ -32,7 +32,7 @@ const recordOf = (doi: Doi, article = anArticle().withDoi(doi), chunkCount = 2) 
 });
 
 /**
- * The behaviour every article store must share (Liskov, PLAN.md "Testing strategy"). Run it
+ * The behaviour every article store must share (Liskov, ARCHITECTURE.md "Testing strategy"). Run it
  * from each adapter's tests with a factory that returns a fresh, empty store.
  */
 export function runArticleStoreContract(

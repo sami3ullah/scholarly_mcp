@@ -35,7 +35,7 @@ const output = z.object({ journals: z.array(journalOutput).max(JOURNAL_MATCH_LIM
 
 type JournalOutput = z.input<typeof journalOutput>;
 
-/** `get_journal`: a journal as its indexed articles show it (PLAN.md tool contracts). */
+/** `get_journal`: a journal as its indexed articles show it (ARCHITECTURE.md tool contracts). */
 export function createGetJournalTool(deps: ToolDeps) {
   return defineTool({
     name: 'get_journal',

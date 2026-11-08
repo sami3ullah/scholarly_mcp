@@ -34,7 +34,7 @@ export interface UsageExporter {
 }
 
 /**
- * The metering exporter (PLAN.md: exporter down → events wait and retry with backoff).
+ * The metering exporter (ARCHITECTURE.md: exporter down → events wait and retry with backoff).
  * Each batch goes to every sink and is marked exported only when all of them took it, so
  * delivery is at least once and receivers dedupe on the event id. Failures back off
  * exponentially with full jitter up to `backoffMaxMs`; nothing here ever blocks a request.

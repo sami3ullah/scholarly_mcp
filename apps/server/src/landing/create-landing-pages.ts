@@ -46,7 +46,7 @@ export interface LandingPagesDeps {
  * Builds landing pages (ADR 0032). With a live token the page rebuilds the search: the
  * chosen article (the link's DOI, else the first result), the other results in order, where
  * the chosen one matched, and topics from their subjects. Without one it falls back to the
- * article by its DOI (PLAN.md: no error page). Access and related reading come from side
+ * article by its DOI (ARCHITECTURE.md: no error page). Access and related reading come from side
  * systems; when they fail the page goes without them rather than failing.
  */
 export function createLandingPages(deps: LandingPagesDeps): LandingPages {

@@ -15,7 +15,7 @@ const TIMEOUT_MS = 300_000;
 const signal = new AbortController().signal;
 
 /**
- * The candidate models of SM-16 are hundreds of MB each, so their contract runs only when
+ * The candidate models of ADR 0027 are hundreds of MB each, so their contract runs only when
  * asked for, e.g. `EMBEDDER_CANDIDATE_TESTS=bge-m3,multilingual-e5-base`.
  */
 const CANDIDATES = (process.env['EMBEDDER_CANDIDATE_TESTS'] ?? '')

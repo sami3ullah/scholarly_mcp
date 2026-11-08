@@ -6,7 +6,7 @@ import type { GoldenSummary } from './run-golden.js';
 const NOISE = 0.0005;
 const METRICS = ['recall', 'mrr', 'ndcg'] as const;
 
-/** Golden scores on one corpus, committed so a change that lowers them fails (SM-08). */
+/** Golden scores on one corpus, committed so a change that lowers them fails (ADR 0026). */
 export interface GoldenBaseline {
   readonly golden: number;
   /** The eval index the scores were measured on; scores on another corpus do not compare. */

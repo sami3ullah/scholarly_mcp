@@ -56,11 +56,11 @@ export interface RelatedResult {
   readonly indexVersion: string;
 }
 
-/** Tuning knobs; SM-08 sets them from the golden set, not by feel. */
+/** Tuning knobs, set from the golden set, not by feel (ADR 0026). */
 export interface SearchOptions {
-  /** Time budget per search (PLAN.md: 2 s). */
+  /** Time budget per search (ARCHITECTURE.md: 2 s). */
   readonly budgetMs: number;
-  /** Chunks fetched from each side before fusion (PLAN.md: top 50). */
+  /** Chunks fetched from each side before fusion (ARCHITECTURE.md: top 50). */
   readonly candidates: number;
   /** Query embeddings kept in the LRU cache. */
   readonly cacheSize: number;
@@ -68,7 +68,7 @@ export interface SearchOptions {
   readonly rrfK: number;
   /**
    * The weight of the lexical list in fusion; the vector list counts 1. Above 1, an exact
-   * word match beats a neighbour by meaning at the same rank (SM-08).
+   * word match beats a neighbour by meaning at the same rank (ADR 0026).
    */
   readonly lexicalWeight: number;
   /** Vector hits less similar than the best one of any lane by more than this are left out. */
@@ -85,7 +85,7 @@ export interface SearchServiceDeps {
   readonly options?: Partial<SearchOptions>;
 }
 
-/** Hybrid article search (PLAN.md "Query pipeline", steps 1 to 7 and 9). */
+/** Hybrid article search (ARCHITECTURE.md "Query pipeline"); the tool layer adds the links. */
 export interface SearchService {
   search(request: SearchRequest, signal: AbortSignal): Promise<SearchResult>;
   /** Nearest neighbours of an article by meaning; `NOT_FOUND` for an unknown DOI. */

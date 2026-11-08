@@ -8,7 +8,7 @@ import { FULL_TEXT_MARKER, startHarness, textOf, type Harness } from '../testing
 import { createHttpHandler, type HttpHandler } from './create-http-handler.js';
 
 /**
- * Fuzzing the HTTP edge and the tool inputs (SM-14): whatever a client sends, the server
+ * Fuzzing the HTTP edge and the tool inputs: whatever a client sends, the server
  * answers with a 4xx or a well-formed result, never a 5xx, a thrown error or full text.
  */
 const LOCAL = ['localhost', '127.0.0.1'];

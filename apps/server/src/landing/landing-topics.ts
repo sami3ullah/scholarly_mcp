@@ -1,7 +1,7 @@
 import { LANDING_TOPIC_LIMIT, type Article } from '@scholarly-mcp/core';
 
 /**
- * Names a search's topic from its results' subjects, never from the query (PLAN.md links
+ * Names a search's topic from its results' subjects, never from the query (ARCHITECTURE.md links
  * and landing pages: the query may hold patient details). Labels that several results
  * share come first, most shared first; without shared labels the chosen article's own
  * labels stand in. MeSH and keywords are used before journal-level subjects, which are too

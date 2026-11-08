@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.10
-# The scholarly-mcp image (SM-14): the MCP server and the ingest CLI on a distroless,
+# The scholarly-mcp image (ADR 0037): the MCP server and the ingest CLI on a distroless,
 # non-root Node 24 base. Build from the repository root:
 #   docker build -f docker/server/Dockerfile -t scholarly-mcp .
 # Bake an index in by passing a directory holding index.sqlite as the `index` context:

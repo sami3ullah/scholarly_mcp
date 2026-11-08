@@ -81,7 +81,7 @@ interface Run {
 type Settings = Required<ChunkingOptions>;
 
 /**
- * Splits an article into chunks (PLAN.md "Chunking"). Sections are hard boundaries, and so
+ * Splits an article into chunks (ARCHITECTURE.md "Chunking"). Sections are hard boundaries, and so
  * is a change of language between paragraphs, so every chunk has one section and one
  * language. Within that, paragraphs and then sentences are packed into balanced chunks of at
  * most `maxTokens`; a sentence that alone is too long is split between words. A chunk split

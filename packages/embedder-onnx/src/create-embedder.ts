@@ -19,9 +19,9 @@ export interface EmbedderParts {
 }
 
 /**
- * Builds the `Embedder` around a loaded model. e5 models expect `passage: ` on indexed text
- * and `query: ` on searches (PLAN.md "Query pipeline"); bge-m3 expects nothing. Each batch takes its own semaphore
- * slot, so a query can run between the batches of a long indexing call.
+ * Builds the `Embedder` around a loaded model. e5 models expect `passage: ` on indexed text and
+ * `query: ` on searches (ARCHITECTURE.md "Query pipeline"); bge-m3 expects nothing. Each batch
+ * takes its own semaphore slot, so a query can run between the batches of a long indexing call.
  */
 export function createEmbedder(parts: EmbedderParts): Embedder {
   const { extract, countTokens, modelVersion, dimensions, prefixes, batchSize, concurrency } =

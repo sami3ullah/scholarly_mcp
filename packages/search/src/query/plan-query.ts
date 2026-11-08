@@ -32,7 +32,7 @@ const MIN_TERM_LENGTH = 2;
 /**
  * Decides how to search a normalised query. A DOI anywhere in it goes straight to a lookup.
  * Otherwise stopwords and single characters are left out of the lexical terms, so a query
- * of only stopwords ("die der das") is searched by meaning alone (PLAN.md edge cases), and
+ * of only stopwords ("die der das") is searched by meaning alone (ARCHITECTURE.md edge cases), and
  * known abbreviations are expanded on both sides.
  */
 export function planQuery(query: string): QueryPlan {

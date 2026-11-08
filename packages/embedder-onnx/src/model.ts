@@ -9,7 +9,7 @@ export type Pooling = 'mean' | 'cls';
 export interface EmbeddingModel {
   readonly id: string;
   readonly revision: string;
-  /** 8-bit quantised weights for every model: the variant the Phase 0 spike measured. */
+  /** 8-bit quantised weights for every model: the variant ADR 0002 measured. */
   readonly dtype: 'q8';
   readonly dimensions: number;
   /** Tokens the model reads at most, special tokens included; longer input is truncated. */
@@ -29,7 +29,7 @@ const E5_PREFIXES = { passage: 'passage: ', query: 'query: ' } as const;
 
 /**
  * The models `EMBEDDER_MODEL` can name. multilingual-e5-small is the default (ADR 0002); the
- * others are the candidates of ADR 0027, measured in SM-16.
+ * others are the candidates ADR 0027 measured (ADR 0029).
  */
 export const EMBEDDING_MODELS = {
   'multilingual-e5-small': model({

@@ -5,7 +5,7 @@ import { landingApiDeps } from './landing-api-deps';
 import { sendReferral, type Referral } from './send-referral';
 
 /**
- * The POST handler for a beacon endpoint (PLAN.md links and landing pages): the page posts
+ * The POST handler for a beacon endpoint (ARCHITECTURE.md links and landing pages): the page posts
  * here once a reader's browser has shown it or a button was clicked, and the referral goes
  * on to the landing API. Requests from prefetchers, preview bots and other sites are
  * answered the same way but not counted.

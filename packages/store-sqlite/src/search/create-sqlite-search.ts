@@ -23,7 +23,7 @@ interface TrigramRow extends HitRow {
 /*
  * BM25 column weights for text_stemmed, text_folded and title_stemmed: an exact word scores
  * on top of its stem, and the title, repeated in every chunk's row, counts double.
- * Starting values; SM-08 tunes them against the golden set.
+ * The golden set kept these values (ADR 0026).
  */
 const BM25 = 'bm25(chunks_fts, 1.0, 0.5, 2.0)';
 

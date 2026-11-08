@@ -14,7 +14,7 @@ export type { VerifyCheck, VerifyOptions, VerifyReport };
 const DEFAULT_SAMPLES = 5;
 
 /**
- * Checks an index before it is swapped in (PLAN.md "Crash halfway through a run"): file and
+ * Checks an index before it is swapped in (ARCHITECTURE.md "Crash halfway through a run"): file and
  * FTS integrity, counts that agree across tables, one model version, no unexpected shrink,
  * and sample queries that find articles by their own title words and chunks by their own
  * vector.

@@ -47,7 +47,7 @@ const output = z.object({
   hint: z.string().optional(),
 });
 
-/** `search_articles`: hybrid search returning article cards (PLAN.md tool contracts). */
+/** `search_articles`: hybrid search returning article cards (ARCHITECTURE.md tool contracts). */
 export function createSearchArticlesTool(deps: ToolDeps) {
   return defineTool({
     name: 'search_articles',
@@ -129,7 +129,7 @@ async function filtersOf(deps: ToolDeps, args: Args, signal: AbortSignal): Promi
   };
 }
 
-/** Empty results are an answer, not an error; the hint says what to loosen (PLAN.md). */
+/** Empty results are an answer, not an error; the hint says what to loosen (ARCHITECTURE.md). */
 function emptyHint(args: Args): string {
   const filters = [
     args.language !== 'any' && 'language',

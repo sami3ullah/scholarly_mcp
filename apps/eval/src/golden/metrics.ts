@@ -1,4 +1,4 @@
-/** Results a metric looks at, as one page of search results holds (PLAN.md tool contracts). */
+/** Results a metric looks at: one page of search results (ARCHITECTURE.md tool contracts). */
 export const CUTOFF = 10;
 
 /** How one query's ranking scored. */

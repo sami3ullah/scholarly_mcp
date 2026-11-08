@@ -21,7 +21,7 @@ type AccessMessages = Pick<
 >;
 
 /**
- * How the reader gets to the article (PLAN.md links and landing pages): open access and
+ * How the reader gets to the article (ARCHITECTURE.md links and landing pages): open access and
  * institutional access read on the publisher's page; paywalled articles offer sign-in and
  * purchase; an unknown state sends the reader to check on the publisher's page. Each button
  * names its funnel action (ADR 0033).

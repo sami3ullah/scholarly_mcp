@@ -24,7 +24,7 @@ const STATUS_TEXT = {
   unknown: 'Access could not be determined.',
 };
 
-/** `check_access`: whether an article can be read and where to sign in or buy (PLAN.md tool contracts; mock adapter in the demo). */
+/** `check_access`: whether an article can be read and where to sign in or buy (ARCHITECTURE.md tool contracts). */
 export function createCheckAccessTool(deps: ToolDeps) {
   return defineTool({
     name: 'check_access',

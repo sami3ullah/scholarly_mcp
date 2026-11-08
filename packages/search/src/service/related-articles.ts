@@ -14,7 +14,7 @@ import type {
 } from './search-types.js';
 
 /**
- * Finds the articles nearest to an article's mean chunk vector (PLAN.md tool contracts):
+ * Finds the articles nearest to an article's mean chunk vector (ARCHITECTURE.md tool contracts):
  * vector search only, retracted articles left out, the article itself dropped. Unknown
  * DOIs are `NOT_FOUND`, so the model can fall back to a search.
  */

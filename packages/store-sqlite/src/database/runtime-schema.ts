@@ -17,7 +17,7 @@ const MIGRATIONS: readonly string[] = [
    ) STRICT;
    CREATE INDEX landing_sessions_by_expiry ON landing_sessions (expires_at);
 
-   -- The metering outbox (SM-10): events wait here until exported.
+   -- The metering outbox (ADR 0031): events wait here until exported.
    CREATE TABLE usage_events (
      id TEXT PRIMARY KEY,
      api_key_id TEXT NOT NULL,
@@ -30,7 +30,7 @@ const MIGRATIONS: readonly string[] = [
      exported_at TEXT
    ) STRICT;
    CREATE INDEX usage_events_pending ON usage_events (occurred_at) WHERE exported_at IS NULL;`,
-  // SM-10: API keys, stored as SHA-256 hashes of their secrets; exported events age out.
+  // ADR 0031: API keys, stored as SHA-256 hashes of their secrets; exported events age out.
   `CREATE TABLE api_keys (
      id TEXT PRIMARY KEY,
      label TEXT NOT NULL,
@@ -40,7 +40,7 @@ const MIGRATIONS: readonly string[] = [
      revoked_at TEXT
    ) STRICT;
    CREATE INDEX usage_events_exported ON usage_events (exported_at) WHERE exported_at IS NOT NULL;`,
-  // SM-12 (ADR 0033): sessions know their tool; events become an envelope plus a JSON
+  // ADR 0033: sessions know their tool; events become an envelope plus a JSON
   // payload, so referral events fit without a migration per kind. Old rows are tool calls.
   `ALTER TABLE landing_sessions ADD COLUMN tool TEXT;
 
@@ -62,9 +62,9 @@ const MIGRATIONS: readonly string[] = [
    ALTER TABLE usage_events_v3 RENAME TO usage_events;
    CREATE INDEX usage_events_pending ON usage_events (occurred_at) WHERE exported_at IS NULL;
    CREATE INDEX usage_events_exported ON usage_events (exported_at) WHERE exported_at IS NOT NULL;`,
-  // SM-13 (ADR 0034): exporters claim events for a lease, so two never send the same batch.
+  // ADR 0034: exporters claim events for a lease, so two never send the same batch.
   `ALTER TABLE usage_events ADD COLUMN claimed_until TEXT;`,
-  // SM-13 (ADR 0035): the live funnel pages through all stored events by time.
+  // ADR 0035: the live funnel pages through all stored events by time.
   `CREATE INDEX usage_events_by_time ON usage_events (occurred_at, id);`,
   // ADR 0048: the server is public and callers are anonymous, so keys and key ids go.
   `DROP TABLE api_keys;

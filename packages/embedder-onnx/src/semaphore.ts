@@ -10,7 +10,7 @@ interface Waiter {
 
 /**
  * Creates a semaphore with `limit` slots. Embedding is CPU-bound, so bursts must queue
- * instead of starving the server (PLAN.md "Failure modes"); callers bound the wait with
+ * instead of starving the server (ARCHITECTURE.md edge cases); callers bound the wait with
  * their signal, e.g. `AbortSignal.timeout`.
  */
 export function createSemaphore(limit: number): Semaphore {

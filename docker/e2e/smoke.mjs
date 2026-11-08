@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// The end-to-end smoke checks (SM-14), run by docker/e2e/smoke.sh against a compose stack on
+// The end-to-end smoke checks, run by docker/e2e/smoke.sh against a compose stack on
 // the demo index: the HTTP edge, every MCP tool over Streamable HTTP with no credentials, and a
 // card link through the landing proxy. Plain fetch, so it needs only Node 24 on the host.
 //   SMOKE_MCP_URL=http://127.0.0.1:18080 SMOKE_LANDING_URL=http://127.0.0.1:13000 \

@@ -1,4 +1,4 @@
-# Articles of the SM-08 eval index: every candidate pooled for golden set v1. Build it with
+# Articles of the eval index (ADR 0026): every candidate pooled for golden set v1. Build it with
 # ingest subset --from data/index.sqlite --dois packages/testkit/golden/corpus-dois.txt --out data/eval-index.sqlite
 10.1055/a-1208-9277
 10.1055/a-1526-7143

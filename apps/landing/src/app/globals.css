@@ -1,5 +1,5 @@
 /*
- * Design tokens (PLAN.md React conventions): every colour, size and radius the landing
+ * Design tokens (ARCHITECTURE.md React and Next.js conventions): every colour, size and radius the landing
  * page uses, as CSS variables, so a publisher maps them onto its own design system here.
  * A plain reading page (ADR 0046): neutral background, ink text, one blue accent for links,
  * a serif for the article's own words and the system sans for everything around them. Both stacks are local fonts, so the page loads no web font.

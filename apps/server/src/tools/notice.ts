@@ -1,5 +1,5 @@
 /**
- * The `notice` every response carries (PLAN.md tool conventions). The publisher's name comes
+ * The `notice` every response carries (ARCHITECTURE.md tool contracts). The publisher's name comes
  * from config, so the generic server names whichever publisher its preset is for (ADR 0015).
  */
 export function noticeFor(publisher: string): string {

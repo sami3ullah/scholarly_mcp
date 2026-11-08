@@ -1,6 +1,6 @@
 import { appError, normalizeText } from '@scholarly-mcp/core';
 
-/** The longest query searched; longer input is cut (PLAN.md "Query pipeline"). */
+/** The longest query searched; longer input is cut (ARCHITECTURE.md "Query pipeline"). */
 export const QUERY_MAX_LENGTH = 500;
 
 const WHITESPACE = /\s+/g;

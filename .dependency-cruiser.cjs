@@ -1,4 +1,4 @@
-/** Layering rules from PLAN.md "Repository and layering". */
+/** Layering rules from ARCHITECTURE.md "Repository and layering". */
 module.exports = {
   forbidden: [
     {

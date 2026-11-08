@@ -47,7 +47,7 @@ export function findJournals(journals: readonly JournalSummary[], query: string)
 /**
  * Resolves the `journal` input of a search to one indexed journal. Unknown or ambiguous
  * names are `INVALID_INPUT` on `journal`, naming the candidates and their ISSNs so the
- * model can retry with one (PLAN.md edge cases).
+ * model can retry with one (ARCHITECTURE.md edge cases).
  */
 export function resolveJournal(journals: readonly JournalSummary[], input: string): JournalSummary {
   const found = findJournals(journals, input);

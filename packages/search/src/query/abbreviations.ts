@@ -9,7 +9,7 @@ interface AbbreviationGroup {
  * Common clinical abbreviations with their German and English spellings. Kept small on
  * purpose: semantic search carries most abbreviations, this map covers the frequent ones
  * whose letters differ between the languages (VHF and AF) or that a short query is only
- * made of (PLAN.md edge cases).
+ * made of (ARCHITECTURE.md edge cases).
  */
 const GROUPS: readonly AbbreviationGroup[] = [
   { abbreviations: ['AF', 'VHF'], meanings: ['atrial fibrillation', 'Vorhofflimmern'] },

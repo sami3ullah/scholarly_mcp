@@ -1,4 +1,4 @@
-# Advisories osv-scanner reports in pnpm-lock.yaml that do not reach the images (SM-14).
+# Advisories osv-scanner reports in pnpm-lock.yaml that do not reach the images.
 # Each is in a development tool only (`pnpm why -r --prod <package>` finds nothing), so it
 # never runs on untrusted input. Each ignore expires, so the advisory is looked at again.
 

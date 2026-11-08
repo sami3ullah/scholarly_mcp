@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Load test (SM-14): starts the server image on an index, times the cold start to ready,
+# Load test: starts the server image on an index, times the cold start to ready,
 # runs docker/e2e/load.mjs (20 tool calls a second for 60 s by default) and reports
 # resident memory before and after. The per-client rate limit is lifted for the run, as
 # every call comes from this one client.

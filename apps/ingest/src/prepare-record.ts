@@ -41,14 +41,14 @@ export type Prepared = (
 ) & { readonly fullTextSkipped: boolean };
 
 /**
- * Turns an article into a record ready to upsert (PLAN.md "Phase 2"). It is skipped when the
- * index already holds the same content, and reuses the chunks of `previous` when they were
- * made from the same text and embedded by the same model, so a full rebuild neither
- * re-embeds the corpus nor fetches full text again, even when only metadata the chunks do
- * not hold changed, such as citation fields or subjects. Otherwise the referenced full text is fetched; when it
- * is missing or unusable the reference is dropped and both checks run again, so an article
- * whose text never arrives is not re-indexed on every run. Then it is chunked and embedded,
- * full-text sections as matching-only chunks under the reference's licence (ADR 0003).
+ * Turns an article into a record ready to upsert (ARCHITECTURE.md "Ingestion"). It is skipped when
+ * the index already holds the same content, and reuses the chunks of `previous` when they were made
+ * from the same text and embedded by the same model, so a full rebuild neither re-embeds the corpus
+ * nor fetches full text again, even when only metadata the chunks do not hold changed, such as
+ * citation fields or subjects. Otherwise the referenced full text is fetched; when it is missing or
+ * unusable the reference is dropped and both checks run again, so an article whose text never
+ * arrives is not re-indexed on every run. Then it is chunked and embedded, full-text sections as
+ * matching-only chunks under the reference's licence (ADR 0003).
  */
 export async function prepareRecord(
   article: Article,

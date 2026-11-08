@@ -21,7 +21,7 @@ export interface LiveIndex {
    * A call while one is still running waits for that one instead of starting another.
    */
   refresh(): Promise<void>;
-  /** True once an index is open; readiness checks report it (SM-10). */
+  /** True once an index is open; readiness checks report it (ADR 0031). */
   isReady(): boolean;
   /** The open index's version, for caches keyed on it. */
   version(): string | undefined;
@@ -31,7 +31,7 @@ export interface LiveIndex {
 /**
  * Keeps the server up while the index is missing or being replaced: calls fail with
  * `INDEX_UNAVAILABLE` until `refresh` manages to open it, instead of the process crashing
- * in a loop (PLAN.md edge cases). The model's message never names the file path or schema.
+ * in a loop (ARCHITECTURE.md edge cases). The model's message never names the file path or schema.
  * Each open or refresh is given `timeoutMs`, so a hung database cannot stall the ticks.
  */
 export function createLiveIndex(

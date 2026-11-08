@@ -9,7 +9,7 @@ export interface CardSource {
 }
 
 /**
- * Builds the article card (PLAN.md "The article card"). Only the teaser and `whyMatched`
+ * Builds the article card (ARCHITECTURE.md "The article card"). Only the teaser and `whyMatched`
  * come from article text; everything else is metadata (ADR 0016, ADR 0023).
  */
 export function buildCard(source: CardSource, url: string, now: Date): ArticleCard {

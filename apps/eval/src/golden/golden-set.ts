@@ -19,7 +19,7 @@ const goldenQuerySchema = z.object({
 });
 
 /**
- * The golden set (SM-08): queries with graded judgments made from title and abstract only,
+ * The golden set (ADR 0026): queries with graded judgments made from title and abstract only,
  * over candidates pooled from several retrieval runs. Versioned: a change of queries or
  * judgments bumps `version`, as scores across versions do not compare.
  */

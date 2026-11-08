@@ -1,6 +1,6 @@
 /**
  * The normalised mean of an article's chunk vectors: one vector that stands for the whole
- * article, for "find related" (PLAN.md tool contracts). Undefined for no vectors, or when
+ * article, for "find related" (ARCHITECTURE.md tool contracts). Undefined for no vectors, or when
  * they cancel out, since a zero vector has no direction to search in.
  */
 export function meanVector(vectors: readonly Float32Array[]): Float32Array | undefined {

@@ -49,7 +49,7 @@ const MAX_KEYWORDS = 20;
 /**
  * Picks one hit per requested DOI. A hit counts only when it states that DOI itself: Europe
  * PMC can return a record that matched the query but carries no DOI, and matching is on DOI
- * only (PLAN.md edge cases). Preprints are ignored; a hit with a PMCID beats one without.
+ * only (ARCHITECTURE.md edge cases). Preprints are ignored; a hit with a PMCID beats one without.
  */
 export function chooseHits(
   hits: readonly SearchHit[],

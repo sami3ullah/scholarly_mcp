@@ -58,7 +58,7 @@ export function renderLoading(root: HTMLElement, labels: Labels): void {
   root.replaceChildren(status, list);
 }
 
-/** Replaces the root's content with the cards (PLAN.md tool contracts: MCP Apps). */
+/** Replaces the root's content with the cards (ARCHITECTURE.md tool contracts: MCP Apps). */
 export function renderCards(root: HTMLElement, list: CardList, options: RenderOptions): void {
   const doc = root.ownerDocument;
   const el = <K extends keyof HTMLElementTagNameMap>(tag: K, className?: string, text?: string) => {

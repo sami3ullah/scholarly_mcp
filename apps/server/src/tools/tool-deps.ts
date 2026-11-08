@@ -18,7 +18,7 @@ export interface ToolDeps {
   readonly journalUrl?: (issn: string) => string;
 }
 
-/** How every tool asks the model to present results (PLAN.md tool conventions). */
+/** How every tool asks the model to present results (ARCHITECTURE.md tool contracts). */
 export function presentationRules(publisher: string): string {
   return [
     `Present results as a short list of linked titles (use each card's url, which opens the article's page on ${publisher}'s site), with one line each on why it fits, and point the reader to the links for the details.`,

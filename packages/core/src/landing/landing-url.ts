@@ -2,7 +2,7 @@ import type { Doi } from '../article/doi.js';
 import type { ToolName } from '../metering/tool-name.js';
 import type { Token } from './token.js';
 
-/** The landing page's path below `LANDING_BASE_URL` (PLAN.md "The article card"). */
+/** The landing page's path below `LANDING_BASE_URL` (ARCHITECTURE.md "The article card"). */
 export const LANDING_PATH = '/mcp/landing';
 
 /** What a landing link is built from. Never query text (key design decision 12). */

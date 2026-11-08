@@ -1,4 +1,4 @@
-# Dependency updates (SM-14). Weekly, grouped so a week's updates arrive as a few PRs; each
+# Dependency updates. Weekly, grouped so a week's updates arrive as a few PRs; each
 # runs CI, the E2E smoke test and the security scans before it is merged. A cooldown leaves
 # fresh releases a week to be pulled or fixed before they are proposed.
 version: 2

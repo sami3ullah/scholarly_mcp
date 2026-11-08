@@ -1,9 +1,9 @@
 import { Counter, Gauge, Histogram, Registry, collectDefaultMetrics } from '@prometheus-io/client';
 
 /**
- * The server's Prometheus metrics (PLAN.md telemetry). Labels are tool names, codes and
- * routes only: never key ids, which would leak who uses the server and grow without bound,
- * and never query text.
+ * The server's Prometheus metrics (ARCHITECTURE.md "High-level architecture"). Labels are tool
+ * names, codes and routes only: never key ids, which would leak who uses the server and grow
+ * without bound, and never query text.
  */
 export interface ServerMetrics {
   readonly registry: Registry;

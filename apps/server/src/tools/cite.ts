@@ -19,7 +19,7 @@ const output = z.object({
   retracted: z.boolean(),
 });
 
-/** `cite`: a formatted citation with the publisher link (PLAN.md tool contracts). */
+/** `cite`: a formatted citation with the publisher link (ARCHITECTURE.md tool contracts). */
 export function createCiteTool(deps: ToolDeps) {
   return defineTool({
     name: 'cite',

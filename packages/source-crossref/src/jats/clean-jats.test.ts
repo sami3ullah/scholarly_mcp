@@ -148,7 +148,7 @@ describe('cleanJatsInline', () => {
   });
 });
 
-describe('cleanJatsAbstract on the SM-00 samples', async () => {
+describe('cleanJatsAbstract on the recorded samples', async () => {
   const directory = new URL('../../../testkit/fixtures/jats/', import.meta.url);
   const files = (await readdir(directory)).filter((file) => file.endsWith('.json')).sort();
 

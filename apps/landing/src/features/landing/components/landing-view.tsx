@@ -7,9 +7,9 @@ import { ReferralBeacon } from './referral-beacon';
 import { RelatedReading } from './related-reading';
 
 /**
- * The landing page's layout (PLAN.md React conventions, ADR 0046): one reading column with the
- * chosen article, then related reading. The search's other results stay in the chat, so the
- * page is about one article. Layout only; the parts render themselves.
+ * The landing page's layout (ARCHITECTURE.md React and Next.js conventions, ADR 0046): one reading
+ * column with the chosen article, then related reading. The search's other results stay in the
+ * chat, so the page is about one article. Layout only; the parts render themselves.
  */
 export function LandingView(props: {
   page: LandingPage;

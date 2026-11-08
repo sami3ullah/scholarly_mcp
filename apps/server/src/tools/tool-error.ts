@@ -15,7 +15,7 @@ export interface ToolErrorContent {
 }
 
 /**
- * What the model reads for each code (PLAN.md "Errors"): something it can act on. Codes
+ * What the model reads for each code (ARCHITECTURE.md "Errors"): something it can act on. Codes
  * whose cause is the caller's input keep the specific message; the others use a fixed one,
  * so file paths or low-level details never reach the model.
  */
@@ -28,7 +28,7 @@ const FIXED_MESSAGES: Partial<Record<ToolErrorCode, string>> = {
 
 /**
  * Turns any thrown value into a tool error result with `isError: true`, a stable code and
- * no stack trace: the single place where errors become MCP results (PLAN.md "Errors").
+ * no stack trace: the single place where errors become MCP results (ARCHITECTURE.md "Errors").
  * Unexpected errors are logged with their stack; expected ones only by code.
  */
 export function toolErrorResult(error: unknown, notice: string, logger: Logger): CallToolResult {

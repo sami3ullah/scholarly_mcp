@@ -25,9 +25,9 @@ export function verifyResult(name: string, ok: boolean, detail: string): VerifyC
 }
 
 /**
- * The sample queries every store's verify runs (PLAN.md "Crash halfway through a run"): each
- * sampled article must be found by its own title words, and its first chunk by its own
- * vector, within the first {@link SAMPLE_DEPTH} hits.
+ * The sample queries every store's verify runs (ARCHITECTURE.md "Crash halfway through a run"):
+ * each sampled article must be found by its own title words, and its first chunk by its own vector,
+ * within the first {@link SAMPLE_DEPTH} hits.
  */
 export async function sampleQueryChecks(
   index: { readonly reader: ArticleReader; readonly search: ArticleSearch },

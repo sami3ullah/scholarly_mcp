@@ -1,7 +1,7 @@
 name: Release
 
 # A version tag (v1.2.3) publishes both images to GHCR for amd64 and arm64, each with an SPDX
-# SBOM and build provenance, and a GitHub release carrying the SBOMs (SM-14). The server
+# SBOM and build provenance, and a GitHub release carrying the SBOMs. The server
 # image carries only the demo index (ADR 0039), checked for CC BY 4.0.
 #
 # Laid out for speed (ADR 0049): the demo index comes from the Actions cache; each platform

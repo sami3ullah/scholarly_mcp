@@ -15,7 +15,7 @@ export interface QueryWord {
  * Builds one query per distinct query word, or none when no word is left; the lexical search
  * weighs each by how rare it is and matches any (OR). Raw input never reaches it: every word
  * is reduced to letters and digits and quoted, so `&`, `!`, `:*` or quotes are plain words
- * (PLAN.md edge cases). A word matches its stems in the title (A) or stemmed text (B), its
+ * (ARCHITECTURE.md edge cases). A word matches its stems in the title (A) or stemmed text (B), its
  * folded form in the folded text (C), as the SQLite `MATCH` does per column. Stems are in
  * `language`, or in German and English when it is undefined.
  */

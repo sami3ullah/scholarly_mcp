@@ -17,9 +17,9 @@ export type Take =
 
 /**
  * Takes one token from a bucket that refills `perMinute` tokens a minute up to `burst`
- * (PLAN.md: per-key token bucket). A missing bucket starts full. When empty, the answer
- * says how many whole seconds until the next token. Pure, so time is passed in. The
- * Postgres bucket store does the same sums in SQL.
+ * (ARCHITECTURE.md edge cases; per client since ADR 0048). A missing bucket starts full. When
+ * empty, the answer says how many whole seconds until the next token. Pure, so time is passed in.
+ * The Postgres bucket store does the same sums in SQL.
  */
 export function takeToken(bucket: Bucket | undefined, now: number, policy: BucketPolicy): Take {
   const perMs = policy.perMinute / 60_000;

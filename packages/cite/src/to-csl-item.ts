@@ -20,7 +20,7 @@ export interface CslItem {
 /**
  * Maps an article to CSL-JSON. Only metadata goes in, never the abstract. The date keeps
  * the precision the source gave, so a year-only record cites as "2024" and not a made-up
- * day (PLAN.md edge cases). The language stops English title casing of German titles. The
+ * day (ARCHITECTURE.md edge cases). The language stops English title casing of German titles. The
  * URL is the publisher's landing page, the link the citation points readers to.
  */
 export function toCslItem(article: Article): CslItem {

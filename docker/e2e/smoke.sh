@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# End-to-end smoke test (SM-14): builds both images with the demo index baked in, starts the
+# End-to-end smoke test: builds both images with the demo index baked in, starts the
 # compose stack (server on SQLite or Postgres, landing app behind its proxy) and runs
 # docker/e2e/smoke.mjs, which calls every tool over HTTP with no credentials. Tears the stack down
 # afterwards, unless SMOKE_KEEP=1.

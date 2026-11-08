@@ -53,7 +53,7 @@ export interface IngestReport {
 }
 
 /**
- * Runs one ingestion pass from a source into the index being built (PLAN.md "Phase 2").
+ * Runs one ingestion pass from a source into the index being built (ARCHITECTURE.md "Ingestion").
  * A full run fetches everything; an incremental run fetches what changed since the window
  * `incrementalWindow` picks. A run left `running` or `failed` with a cursor is resumed from
  * that cursor. Unchanged records (same `contentHash`) are skipped, so a repeated run writes

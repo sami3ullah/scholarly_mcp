@@ -13,7 +13,7 @@ export function foldedWords(text: string): string[] {
 
 /**
  * Stems a folded word in the given language, or in both German and English when the language
- * is unknown or neither. FTS5 has no German stemmer, so stemming happens here (PLAN.md
+ * is unknown or neither. FTS5 has no German stemmer, so stemming happens here (ARCHITECTURE.md
  * "SQLite store"). Stemming folded words keeps "Ärzte" and "Aerzte" equal after stemming too.
  */
 export function stemWord(word: string, language: string | undefined): string[] {
@@ -31,7 +31,7 @@ export function stemmedText(text: string, language: string | undefined): string 
 
 /**
  * The forms a query word may take in the index: the folded word and its stems in the query's
- * language, or in both German and English when it is unknown (PLAN.md "Query pipeline").
+ * language, or in both German and English when it is unknown (ARCHITECTURE.md "Query pipeline").
  */
 export function queryForms(
   word: string,

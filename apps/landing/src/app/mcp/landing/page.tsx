@@ -11,7 +11,7 @@ interface Props {
   readonly searchParams: Promise<SearchParams>;
 }
 
-/** `noindex` with the article's own page as canonical (PLAN.md: no duplicate pages). */
+/** `noindex` with the article's own page as canonical (ARCHITECTURE.md: no duplicate pages). */
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
   const { token, doi } = parseLandingParams(await searchParams);
   const result = await getLandingPage(token, doi);

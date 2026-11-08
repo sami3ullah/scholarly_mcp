@@ -35,7 +35,7 @@ const tracer = trace.getTracer('scholarly-mcp');
 /**
  * Returns the factory the transports call for each HTTP request or stdio connection: a
  * fresh `McpServer` with the six read-only tools. Handlers are stateless; everything they
- * share (index, sessions, caches) lives in the deps (PLAN.md: concurrent requests). Callers
+ * share (index, sessions, caches) lives in the deps (ARCHITECTURE.md edge cases). Callers
  * are anonymous (ADR 0048); the request context only names the client's rate-limit bucket,
  * and stdio has the local one. Each server also offers the MCP Apps card view (ADR 0033);
  * clients without MCP Apps ignore it and show the text with links.
@@ -169,7 +169,7 @@ function countByJournal(cards: readonly { readonly journal: string }[]): Journal
   return [...counts].map(([journal, count]) => ({ journal, cards: count }));
 }
 
-/** Server-level guidance every client receives on connect (PLAN.md security: branding). */
+/** Server-level guidance every client receives on connect (ARCHITECTURE.md security: branding). */
 function instructions({ publisher, notice }: ServerFactoryDeps): string {
   return [
     `Finds ${publisher} journal articles for the reader and links to them; it never returns article content beyond a short teaser.`,

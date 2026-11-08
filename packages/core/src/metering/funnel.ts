@@ -7,7 +7,7 @@ export interface FunnelOptions {
   readonly to?: Date;
 }
 
-/** The four funnel steps (PLAN.md metering dashboard). */
+/** The four funnel steps (ARCHITECTURE.md "Metering"). */
 export interface FunnelSteps {
   /** Successful `search_articles` calls. */
   readonly searches: number;

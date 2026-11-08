@@ -1,7 +1,7 @@
 import type { ServerMetrics } from '../telemetry/create-metrics.js';
 import { metricsResponse, type HttpHandler } from './create-http-handler.js';
 
-/** The internal listener's only route: `GET /metrics` (ADR 0031, SM-14 image). */
+/** The internal listener's only route: `GET /metrics` (ADR 0031, ADR 0037). */
 export function createMetricsHandler(metrics: ServerMetrics): HttpHandler {
   return {
     fetch: async (request) => {

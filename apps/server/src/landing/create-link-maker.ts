@@ -41,7 +41,7 @@ export interface LinkMakerDeps {
 
 /**
  * Stores each response's results under a fresh random token for 24 h and puts the token in
- * every link (PLAN.md query pipeline step 8). If the session store fails, the links go
+ * every link (ARCHITECTURE.md "Query pipeline"). If the session store fails, the links go
  * without a token, so the landing page falls back to the article by its DOI: a side system
  * never fails the request.
  */

@@ -18,7 +18,7 @@ const output = z.object({
   hint: z.string().optional(),
 });
 
-/** `find_related`: nearest neighbours of an article by meaning (PLAN.md tool contracts). */
+/** `find_related`: nearest neighbours of an article by meaning (ARCHITECTURE.md tool contracts). */
 export function createFindRelatedTool(deps: ToolDeps) {
   return defineTool({
     name: 'find_related',

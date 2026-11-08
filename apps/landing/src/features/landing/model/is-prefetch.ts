@@ -1,6 +1,6 @@
 /**
  * Link preview bots and crawlers. Chat apps fetch a shared link to draw its preview, which
- * must not count as a visit (PLAN.md links and landing pages).
+ * must not count as a visit (ARCHITECTURE.md links and landing pages).
  */
 const PREVIEW_AGENTS =
   /bot\b|crawler|spider|preview|slack|discord|telegram|whatsapp|skypeuripreview|facebookexternalhit|embedly|headless|lighthouse|curl|wget|python-requests/i;

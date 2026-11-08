@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The self-hosting bundle end to end (SM-15, ADR 0045): deploy/compose.yaml with the images
+# The self-hosting bundle end to end (ADR 0045): deploy/compose.yaml with the images
 # smoke.sh built (demo index baked in), PUBLIC_HOST=localhost so Caddy uses its local CA, then
 # docker/e2e/smoke.mjs over HTTPS through Caddy, as a reader's client would call it.
 #   docker/e2e/deploy-smoke.sh [sqlite|postgres]

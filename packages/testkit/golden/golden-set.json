@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "rubric": "Graded from title and abstract only, over candidates pooled from the search pipeline, lexical-only (query language and both languages), vector-only, the pre-enrichment index and a search for the English information need; version 2 adds the top ten of multilingual-e5-base and bge-m3 on the eval index (SM-16). 2: mainly about the need. 1: the need is a substantial secondary topic, or the right topic in a narrower or adjacent setting. 0 (not listed): shares words or a broad area only. Language of the article does not matter.",
+  "rubric": "Graded from title and abstract only, over candidates pooled from the search pipeline, lexical-only (query language and both languages), vector-only, the pre-enrichment index and a search for the English information need; version 2 adds the top ten of multilingual-e5-base and bge-m3 on the eval index (ADR 0027). 2: mainly about the need. 1: the need is a substantial secondary topic, or the right topic in a narrower or adjacent setting. 0 (not listed): shares words or a broad area only. Language of the article does not matter.",
   "queries": [
     {
       "id": "de-01",

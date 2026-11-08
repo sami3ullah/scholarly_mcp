@@ -29,7 +29,7 @@ export interface IndexReaderOptions {
 
 /**
  * Opens the index read-only (key design decision 3) and refuses one built with another
- * embedding model, so query and passage vectors are never mixed (PLAN.md edge cases).
+ * embedding model, so query and passage vectors are never mixed (ARCHITECTURE.md edge cases).
  * Throws `INDEX_UNAVAILABLE` with a clear message when the file is missing or not usable,
  * for the server's readiness check to report.
  */

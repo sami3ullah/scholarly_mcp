@@ -4,8 +4,9 @@ import { usageEventSchema, type UsageEvent } from './usage-event.js';
 export type WireEvent = ReturnType<typeof toWireEvent>;
 
 /**
- * The export format (ADR 0033): every line carries `kind`; tool calls keep their SM-10
- * fields. `exportedAt` is outbox bookkeeping and never leaves the server.
+ * The export format (ADR 0033): every line carries `kind`; tool calls keep the fields they had
+ * before referral events (ADR 0031). `exportedAt` is outbox bookkeeping and never leaves the
+ * server.
  */
 export function toWireEvent(event: UsageEvent) {
   const copy = { ...event };

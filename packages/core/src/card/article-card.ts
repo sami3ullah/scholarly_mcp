@@ -10,7 +10,7 @@ export const UNKNOWN_LICENSE = 'unknown';
 /**
  * What every tool returns per article: enough to pick and explain it, never the article
  * itself. The url is the landing link with token and UTM tags. DOI, link and licence are
- * required, so every result carries its attribution (PLAN.md success criteria). It has no
+ * required, so every result carries its attribution (ARCHITECTURE.md "The article card"). It has no
  * transforms, so tools can publish it as JSON Schema.
  */
 export const articleCardSchema = z.object({

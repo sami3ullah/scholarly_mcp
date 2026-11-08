@@ -5,7 +5,7 @@ const quote = (word: string) => `"${word.replaceAll('"', '""')}"`;
 /**
  * Builds the FTS5 `MATCH` expression for the main table from query terms, or undefined when
  * no word is left. Raw input never reaches `MATCH`: every word is reduced to letters and
- * digits and quoted, so `AND`, `NEAR(`, `*` or quotes are plain words (PLAN.md edge cases).
+ * digits and quoted, so `AND`, `NEAR(`, `*` or quotes are plain words (ARCHITECTURE.md edge cases).
  * Any word may match, in its folded or stemmed form; BM25 ranks chunks with more words first.
  * Stems are in `language`, or in German and English when it is undefined.
  */

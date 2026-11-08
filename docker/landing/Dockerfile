@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.10
-# The reference landing app's image (SM-14, ADR 0038): Next.js standalone output on a
+# The reference landing app's image (ADR 0038): Next.js standalone output on a
 # distroless, non-root Node 24 base. Build from the repository root:
 #   docker build -f docker/landing/Dockerfile -t scholarly-mcp-landing .
 # Run it behind a proxy that sets `x-forwarded-for` (compose `landing` profile).

@@ -16,7 +16,7 @@ const HEADING_MAX_WORDS = 4;
 /**
  * Builds a card's teaser from the abstract: the first sentence of its conclusion section, or
  * of a sentence opening a conclusion, else its first sentence; cut at a word boundary to 280
- * characters. Empty when there is no abstract, because nothing is ever invented (PLAN.md
+ * characters. Empty when there is no abstract, because nothing is ever invented (ARCHITECTURE.md
  * "The article card").
  */
 export function buildTeaser(article: Pick<Article, 'abstract' | 'language'>): string {

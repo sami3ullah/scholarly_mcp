@@ -1,4 +1,4 @@
-// Lighthouse CI budgets for the landing page (PLAN.md: LCP under 2.5 s, axe clean). It
+// Lighthouse CI budgets for the landing page (LCP under 2.5 s, axe clean). It
 // audits the built app against the stub API, on mobile settings with simulated throttling.
 const { chromium } = require('@playwright/test');
 

@@ -9,7 +9,7 @@ import { verifyIndex } from './verify-index.js';
 
 /**
  * The index file at `indexPath` and its builds beside it, as the ingest's storage port
- * (ADR 0034). Builds are swapped in by rename (PLAN.md "SQLite store").
+ * (ADR 0034). Builds are swapped in by rename (ARCHITECTURE.md "SQLite store").
  */
 export function createSqliteIndexStorage(indexPath: string): IndexStorage {
   const missing = () =>

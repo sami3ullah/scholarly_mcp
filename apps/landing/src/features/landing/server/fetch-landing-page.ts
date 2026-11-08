@@ -12,7 +12,7 @@ export type LandingResult =
 /**
  * Asks the landing API for a link's page (ADR 0032). When there is no page, or the API is
  * down, a link with a DOI goes to the article through doi.org, so the reader never sees an
- * error page (PLAN.md links and landing pages). Only a link without a DOI can end on the
+ * error page (ARCHITECTURE.md links and landing pages). Only a link without a DOI can end on the
  * not-found page, or on the error page when the API fails. The token and DOI are the only
  * things sent.
  */

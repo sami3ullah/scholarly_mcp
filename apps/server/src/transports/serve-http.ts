@@ -4,7 +4,7 @@ import type { Logger } from '@scholarly-mcp/core';
 import { CLIENT_ADDRESS_HEADER, type ClientAddressResolver } from '../http/client-address.js';
 import { MCP_PATH, type HttpHandler } from '../http/create-http-handler.js';
 
-/** Largest request body accepted; tool arguments are small (PLAN.md security: body limits). */
+/** Largest request body accepted; tool arguments are small (ARCHITECTURE.md security). */
 export const MAX_BODY_BYTES = 64 * 1024;
 
 export interface HttpServerOptions {
@@ -28,7 +28,7 @@ export interface HttpServer {
   inFlight(): number;
   /**
    * Stops accepting connections and waits up to `timeoutMs` for requests in flight to
-   * finish (PLAN.md: SIGTERM drains), then cuts the rest. Resolves with how many were cut.
+   * finish (ARCHITECTURE.md: SIGTERM drains), then cuts the rest. Resolves with how many were cut.
    */
   close(timeoutMs: number): Promise<number>;
 }

@@ -50,11 +50,11 @@ const LOCAL_HOSTS = ['localhost', '127.0.0.1', '[::1]'];
 /** How often idle rate-limit buckets are forgotten (ADR 0036). */
 const BUCKET_SWEEP_MS = 60_000;
 const clock: Clock = { now: () => new Date() };
-/** Settings that may come from a mounted secret file as `<NAME>_FILE` (SM-14). */
+/** Settings that may come from a mounted secret file as `<NAME>_FILE` (ADR 0038). */
 const SECRET_NAMES = ['LANDING_API_SECRET', 'METER_WEBHOOK_SECRET', 'DATABASE_URL'];
 
 /**
- * The composition root (PLAN.md "Backend conventions"): reads config, creates the real
+ * The composition root (ARCHITECTURE.md "Backend conventions"): reads config, creates the real
  * adapters, wires the app and serves it over stdio or Streamable HTTP. `funnel …` writes the funnel
  * report from the metering export or the store, or serves it live (ADR 0035), instead.
  * `STORE` picks SQLite files or Postgres (ADR 0034). The model and the index are opened at
@@ -355,7 +355,7 @@ async function serve(config: ServerConfig, selection: StoreSelection): Promise<v
     'Server started',
   );
 
-  // SIGTERM (PLAN.md failure modes): stop taking work, drain requests in flight, flush the
+  // SIGTERM (ARCHITECTURE.md edge cases): stop taking work, drain requests in flight, flush the
   // metering outbox, then close files. Events the flush cannot export stay in the outbox.
   for (const signal of ['SIGINT', 'SIGTERM'] as const) {
     process.once(signal, () => {

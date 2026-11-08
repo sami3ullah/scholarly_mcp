@@ -1,6 +1,9 @@
 import type { SyncState } from './sync-state.js';
 
-/** How far back an incremental run reaches before the last window's end (PLAN.md edge cases). */
+/**
+ * How far back an incremental run reaches before the last window's end (ARCHITECTURE.md edge
+ * cases).
+ */
 export const INCREMENTAL_OVERLAP_MS = 24 * 60 * 60 * 1000;
 
 /** The time window an ingestion run covers. `updatedSince` absent means a full run. */

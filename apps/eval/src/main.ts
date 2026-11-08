@@ -37,7 +37,7 @@ const USAGE = `Usage:
   eval bench [--rounds N] [--max-p95 MS] [--show]
   eval golden [--golden FILE] [--min-recall R] [--min-cross-recall R] [--show]
               [--baseline FILE] [--write-baseline FILE] [--rankings FILE]`;
-/** The versioned golden set (SM-08), found from this file so any working directory works. */
+/** The versioned golden set (ADR 0026), found from this file so any working directory works. */
 const GOLDEN_SET = fileURLToPath(
   new URL('../../../packages/testkit/golden/golden-set.json', import.meta.url),
 );
@@ -45,16 +45,16 @@ const GOLDEN_SET = fileURLToPath(
 const DOI_CASES = 3;
 
 /**
- * The composition root of the evaluation tools (PLAN.md "Backend conventions"): opens the
+ * The composition root of the evaluation tools (ARCHITECTURE.md "Backend conventions"): opens the
  * live index read-only with the real embedder and search service, as the server will, with
  * the embedding cache off so each search pays for its embedding. `STORE` picks the SQLite
  * file or the live Postgres build (ADR 0034), so both stores are scored the same way.
  * `bench` times every search end to end; exit 1 when p95 is over budget or a search failed.
  * `golden` scores the golden set (recall@10, MRR, nDCG@10). With `--baseline` it exits 1
  * when any score dropped below the committed baseline (run it on the eval index, ADR 0026),
- * otherwise when recall is below the SM-08 targets. Exit 2 is bad usage or a baseline made
+ * otherwise when recall is below the targets of ADR 0026. Exit 2 is bad usage or a baseline made
  * on another index or golden set. `--rankings FILE` writes each query's top ten DOIs, so
- * the results of a new model can be pooled for judging (SM-16).
+ * the results of a new model can be pooled for judging (ADR 0027).
  */
 async function main(argv: readonly string[]): Promise<number> {
   const { positionals, values } = parseArgs({
