@@ -15,5 +15,3 @@ export const ingestConfigSchema = z.object({
   JOURNAL_SUBJECTS_FILE: z.string().min(1).optional(),
   INGEST_DOIS_FILE: z.string().min(1).optional(),
 });
-
-export type IngestConfig = z.output<typeof ingestConfigSchema>;

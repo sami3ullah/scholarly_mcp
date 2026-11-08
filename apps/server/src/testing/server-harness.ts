@@ -32,7 +32,7 @@ import { createRateLimiter } from '../limits/create-rate-limiter.js';
 import { createOutboxMeter } from '../metering/create-outbox-meter.js';
 
 export const LANDING = 'https://landing.example.org';
-export const CC_BY = 'https://creativecommons.org/licenses/by/4.0/';
+const CC_BY = 'https://creativecommons.org/licenses/by/4.0/';
 /** Text that exists only in a full-text chunk: it must never appear in any response. */
 export const FULL_TEXT_MARKER = 'Zebrafinkenprotokoll';
 export const FULL_TEXT_REF = {
@@ -51,7 +51,7 @@ interface Fixture {
 }
 
 /** A small corpus covering the cases the tools treat differently. */
-export function fixtures(): Fixture[] {
+function fixtures(): Fixture[] {
   return [
     {
       article: {

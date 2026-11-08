@@ -8,12 +8,12 @@ import type { EuropepmcConfig } from '../config/europepmc-config.js';
 import { createEuropepmcEnricher } from '../create-europepmc-enricher.js';
 import { NOW, endoscopyXml, searchBody } from './europepmc-fixtures.js';
 
-export const API = 'https://www.ebi.ac.uk/europepmc/webservices/rest';
+const API = 'https://www.ebi.ac.uk/europepmc/webservices/rest';
 export const SEARCH = `${API}/search`;
 export const FULL_TEXT = `${API}/:pmcid/fullTextXML`;
 
 /** Test config: no request gap, a short timeout and few retries. */
-export const testConfig: EuropepmcConfig = {
+const testConfig: EuropepmcConfig = {
   EUROPEPMC_API_URL: API,
   EUROPEPMC_BATCH_SIZE: 100,
   EUROPEPMC_REQUEST_GAP_MS: 0,
@@ -24,7 +24,7 @@ export const testConfig: EuropepmcConfig = {
 const fulltext: FulltextConfig = { FULLTEXT_LICENSE_ALLOWLIST: [...DEFAULT_FULLTEXT_LICENSES] };
 
 /** Answers searches with the recorded hits whose DOI the query names, as Europe PMC would. */
-export const recordedSearch = http.get(SEARCH, ({ request }) => {
+const recordedSearch = http.get(SEARCH, ({ request }) => {
   const query = new URL(request.url).searchParams.get('query') ?? '';
   const result = searchBody.resultList.result.filter((hit) => {
     const doi = hit['doi'];
@@ -35,7 +35,7 @@ export const recordedSearch = http.get(SEARCH, ({ request }) => {
 });
 
 /** Serves the recorded CC BY full text; any other PMCID answers as Europe PMC does, with a 500. */
-export const recordedFullText = http.get(FULL_TEXT, ({ params }) =>
+const recordedFullText = http.get(FULL_TEXT, ({ params }) =>
   params['pmcid'] === 'PMC11288659'
     ? HttpResponse.xml(endoscopyXml)
     : HttpResponse.json({ status: 500, error: 'Internal Server Error' }, { status: 500 }),

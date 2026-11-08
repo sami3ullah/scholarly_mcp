@@ -20,5 +20,3 @@ export const meteringConfigSchema = z.object({
   METER_BACKOFF_MAX_MS: z.coerce.number().int().min(1000).max(3_600_000).default(300_000),
   METER_RETENTION_DAYS: z.coerce.number().int().min(1).max(3650).default(30),
 });
-
-export type MeteringConfig = z.output<typeof meteringConfigSchema>;

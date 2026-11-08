@@ -12,5 +12,3 @@ export const telemetryConfigSchema = z.object({
   OTEL_EXPORTER_OTLP_ENDPOINT: z.url({ protocol: /^https?$/ }).optional(),
   OTEL_SERVICE_NAME: z.string().min(1).max(100).default('scholarly-mcp'),
 });
-
-export type TelemetryConfig = z.output<typeof telemetryConfigSchema>;

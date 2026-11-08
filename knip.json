@@ -1,0 +1,21 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "ignoreExportsUsedInFile": { "interface": true, "type": true },
+  "workspaces": {
+    ".": {
+      "entry": ["docker/e2e/*.mjs", "docker/server/*.mjs"]
+    },
+    "apps/landing": {
+      "entry": ["e2e/*.mjs", "lighthouserc.cjs"]
+    },
+    "packages/card-view": {
+      "entry": ["src/view/main.ts", "scripts/*.mjs"]
+    },
+    "packages/source-crossref": {
+      "entry": ["scripts/*.mjs"]
+    },
+    "packages/source-europepmc": {
+      "entry": ["scripts/*.mjs"]
+    }
+  }
+}

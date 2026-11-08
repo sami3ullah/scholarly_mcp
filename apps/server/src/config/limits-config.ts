@@ -9,5 +9,3 @@ export const limitsConfigSchema = z.object({
   RATE_LIMIT_PER_MINUTE: z.coerce.number().int().min(1).max(1_000_000).default(60),
   RATE_LIMIT_BURST: z.coerce.number().int().min(1).max(100_000).default(20),
 });
-
-export type LimitsConfig = z.output<typeof limitsConfigSchema>;

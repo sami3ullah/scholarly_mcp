@@ -11,7 +11,7 @@ import { retracted, walk, type RecordedPage } from './crossref-fixtures.js';
 export const WORKS = 'https://api.crossref.org/prefixes/10.1055/works';
 
 /** Test config: three rows per page as recorded, a short timeout and few retries. */
-export const testConfig: CrossrefConfig = {
+const testConfig: CrossrefConfig = {
   CROSSREF_PREFIX: '10.1055',
   CROSSREF_FROM_PUB_DATE: '2024-01-01',
   CROSSREF_API_URL: 'https://api.crossref.org',

@@ -22,10 +22,10 @@ import { planRun, type IngestCommand, type RunPlan } from './plan-run.js';
 import { runIngest, type IngestReport } from './run-ingest.js';
 
 /**
- * A new index may hold at most this share fewer articles than the live one. More means a
- * source or filter broke, and the live index is kept (PLAN.md "Crash halfway through a run").
+ * A new index may hold at most this share fewer articles than the live one. More means a source or
+ * filter broke, and the live index is kept (ARCHITECTURE.md "Crash halfway through a run").
  */
-export const MAX_SHRINK = 0.1;
+const MAX_SHRINK = 0.1;
 
 export interface IngestIndexDeps {
   /** Where the live index is and the build goes: a SQLite file or Postgres (ADR 0034). */
@@ -52,7 +52,7 @@ export interface IngestOutcome {
 }
 
 /**
- * Builds an index next to the live one, verifies it and swaps it in (PLAN.md "SQLite
+ * Builds an index next to the live one, verifies it and swaps it in (ARCHITECTURE.md "SQLite
  * store", ADR 0034). A full run reuses the live index's embeddings for unchanged articles.
  * When the run fails, the build is kept so the next run of the same kind resumes it.
  */
@@ -250,7 +250,7 @@ const COPY_BATCH = 100;
 
 /**
  * `ingest subset`: builds a small index from chosen articles of a bigger one, such as the
- * committed eval index (SM-08). Articles keep their chunks and embeddings, so nothing is
+ * eval index (ADR 0026). Articles keep their chunks and embeddings, so nothing is
  * fetched or embedded, and the subset is verified like any other build.
  */
 export async function extractSubset(
@@ -401,7 +401,7 @@ export interface ReembedOutcome {
 
 /**
  * `ingest reembed`: builds a copy of an index whose chunks are embedded again by another
- * model, chunking unchanged, to compare models on the same text (SM-16, ADR 0028). Each
+ * model, chunking unchanged, to compare models on the same text (ADR 0028). Each
  * chunk is embedded from its stored text with the article title in front, as at ingestion,
  * so full text is never fetched again. An interrupted run resumes: articles already in the
  * build are kept.

@@ -30,25 +30,25 @@ import { withBudget } from './with-budget.js';
 
 /**
  * Just above 1, so at the same rank an exact word match beats a neighbour by meaning, such
- * as a rare word found only in one article's full text (SM-08). Larger weights lowered
+ * as a rare word found only in one article's full text. Larger weights lowered
  * recall on the golden set (ADR 0026).
  */
-export const LEXICAL_WEIGHT = 1.01;
+const LEXICAL_WEIGHT = 1.01;
 
 /**
  * How much less similar to the query than the best vector hit a vector hit may be and still
  * count. Each language lane brings its own nearest neighbours, related or not; this keeps the
  * ones that are. Best on the golden set at 0.05 to 0.055, worse from 0.06 (ADR 0044).
  */
-export const VECTOR_MARGIN = 0.055;
+const VECTOR_MARGIN = 0.055;
 
 /**
  * The first results that hold both language lanes when both have related passages: the
  * tool's default page (ADR 0044).
  */
-export const MIXED_WITHIN = 5;
+const MIXED_WITHIN = 5;
 
-/** The most results one page may hold (PLAN.md tool contracts). */
+/** The most results one page may hold (ARCHITECTURE.md tool contracts). */
 export const MAX_SEARCH_LIMIT = 10;
 
 export const DEFAULT_SEARCH_OPTIONS: SearchOptions = {
@@ -60,7 +60,7 @@ export const DEFAULT_SEARCH_OPTIONS: SearchOptions = {
   vectorMargin: VECTOR_MARGIN,
 };
 
-/** Facts about one search for its log line. Never the query text (PLAN.md hard rules). */
+/** Facts about one search for its log line. Never the query text (ARCHITECTURE.md security). */
 interface SearchStats {
   mode: QueryPlan['kind'];
   lexicalHits: number;

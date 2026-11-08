@@ -34,6 +34,7 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm depcruise
+      - run: pnpm knip
       - run: pnpm test:coverage
 
   # The landing page end to end (ADR 0032): Playwright with axe and Lighthouse CI, against a
@@ -62,7 +63,7 @@ jobs:
             apps/landing/test-results
             apps/landing/.lighthouseci
 
-  # End to end (SM-14): both images with the demo index (ADR 0039) baked in, the compose stack
+  # End to end: both images with the demo index (ADR 0039) baked in, the compose stack
   # on SQLite and then on Postgres, each with the landing app, and every tool over HTTP.
   e2e:
     runs-on: ubuntu-latest

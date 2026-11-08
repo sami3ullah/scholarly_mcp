@@ -17,8 +17,8 @@ import { CLIENT_ADDRESS_HEADER } from './client-address.js';
 /** The MCP endpoint's path. */
 export const MCP_PATH = '/mcp';
 
-/** Longest request URL accepted; MCP puts nothing in the query string (PLAN.md limits). */
-export const MAX_URL_LENGTH = 2048;
+/** Longest request URL accepted; MCP puts nothing in a query string (ARCHITECTURE.md security). */
+const MAX_URL_LENGTH = 2048;
 
 /** What `/readyz` reports; ready only when every check is true. */
 export type Readiness = () => Readonly<Record<string, boolean>>;

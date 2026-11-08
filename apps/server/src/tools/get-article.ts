@@ -16,7 +16,7 @@ const RETRACTED_WARNING =
 
 const input = z.strictObject({ doi: doiInput });
 
-export const journalRefOutput = z.object({
+const journalRefOutput = z.object({
   name: z.string(),
   issnPrint: issnSchema.optional(),
   issnElectronic: issnSchema.optional(),
@@ -34,7 +34,7 @@ const output = z.object({
     .describe('Whether open access full text was used for matching; it is never shown'),
 });
 
-/** `get_article`: one card by DOI, with subjects and the journal (PLAN.md tool contracts). */
+/** `get_article`: one card by DOI, with subjects and journal (ARCHITECTURE.md tool contracts). */
 export function createGetArticleTool(deps: ToolDeps) {
   return defineTool({
     name: 'get_article',
@@ -92,7 +92,7 @@ export function subjectLabels(article: Article): string[] {
 }
 
 /** The article's journal with its page link when a template is configured. */
-export function journalRef(deps: Pick<ToolDeps, 'journalUrl'>, article: Article) {
+function journalRef(deps: Pick<ToolDeps, 'journalUrl'>, article: Article) {
   const { name, issnPrint, issnElectronic } = article.journal;
   const issn = issnElectronic ?? issnPrint;
   return {

@@ -10,7 +10,7 @@ afterAll(async () => {
 });
 
 /** The connection string of a new, empty database on the test container. */
-export async function freshDatabaseUrl(): Promise<string> {
+async function freshDatabaseUrl(): Promise<string> {
   const admin = inject('postgresAdminUrl');
   const name = `t_${randomBytes(6).toString('hex')}`;
   const client = new pg.Client({ connectionString: admin });

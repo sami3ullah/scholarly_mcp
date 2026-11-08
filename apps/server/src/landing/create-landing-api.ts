@@ -16,7 +16,7 @@ import type { Referrals } from './create-referrals.js';
 /** Paths of the landing API (ADR 0032). */
 export const LANDING_PAGE_PATH = '/landing/v1/page';
 export const LANDING_VISITS_PATH = '/landing/v1/visits';
-export const LANDING_ACTIONS_PATH = '/landing/v1/actions';
+const LANDING_ACTIONS_PATH = '/landing/v1/actions';
 
 /** The header the landing app names its visitor in, for the per-visitor rate limit. */
 export const VISITOR_HEADER = 'x-landing-visitor';

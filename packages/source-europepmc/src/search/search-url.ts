@@ -2,7 +2,7 @@ import type { Doi } from '@scholarly-mcp/core';
 import type { EuropepmcConfig } from '../config/europepmc-config.js';
 
 /** Europe PMC returns at most this many hits per page. */
-export const SEARCH_PAGE_SIZE = 1000;
+const SEARCH_PAGE_SIZE = 1000;
 
 /** DOIs that can be quoted in a Europe PMC query; one with a quote or backslash cannot. */
 export function isQueryableDoi(doi: Doi): boolean {

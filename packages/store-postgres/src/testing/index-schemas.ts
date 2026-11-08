@@ -13,7 +13,7 @@ const signal = new AbortController().signal;
 let shared: Promise<Pool> | undefined;
 
 /** One migrated database per test file, shared by its tests. */
-export function migratedPool(): Promise<Pool> {
+function migratedPool(): Promise<Pool> {
   shared ??= freshPool().then(async (pool) => {
     await migrateDatabase(pool, signal);
     return pool;

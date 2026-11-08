@@ -2,7 +2,7 @@ import { appError } from '@scholarly-mcp/core';
 import { identifier, inTransaction, query, type Pool, type Queryable } from './pool.js';
 
 /** The schema holding everything except the index builds themselves. */
-export const CONTROL_SCHEMA = 'scholarly';
+const CONTROL_SCHEMA = 'scholarly';
 
 /*
  * Runtime tables and the index pointers (ADR 0034). Migrations only ever append: entry n
