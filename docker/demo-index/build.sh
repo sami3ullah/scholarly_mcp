@@ -17,9 +17,12 @@ out=$(cd "$out" && pwd)
 mailto=()
 if [ -n "${CROSSREF_MAILTO:-}" ]; then mailto=(-e "CROSSREF_MAILTO=$CROSSREF_MAILTO"); fi
 
+# Europe PMC answers many full-text requests with a passing HTTP 500 (ADR 0049); more retries,
+# with backoff up to a minute, ride those out instead of stopping after 5 articles in a row.
 docker run --rm --read-only --tmpfs /tmp \
   --env-file presets/thieme.env \
   -e INGEST_DOIS_FILE=/app/presets/thieme.demo-dois.txt \
+  -e "EUROPEPMC_MAX_RETRIES=${EUROPEPMC_MAX_RETRIES:-8}" \
   -e "FULLTEXT_LICENSE_ALLOWLIST=$cc_by" \
   ${mailto[@]+"${mailto[@]}"} \
   -v "$out:/data" \
