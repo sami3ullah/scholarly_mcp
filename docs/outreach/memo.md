@@ -15,7 +15,7 @@ _Draft memo, one page. Independent prototype, not affiliated with Thieme. Links 
 
 **What it takes to run.** A self-hosting guide brings a fresh Linux VM, AWS or Cloudflare to a working HTTPS deployment with Docker Compose: one hostname, automatic certificates, and a public endpoint that Claude, ChatGPT and claude.ai connect to with the URL alone, rate limited per client. One 2-vCPU server handles 20 tool calls a second (p95 about 0.4 s); Postgres scales to several replicas. Index refresh is one scheduled command.
 
-**Where it stands.** Production-grade engineering (strict TypeScript, about 1,600 tests, security scans, signed multi-arch images, SBOMs), released as v0.2.0. Known gap: recall@10 on a 60-question golden set is 0.71 against a 0.8 target, weakest on cross-language questions; query translation and a reranker are the next levers. Click-through from assistants is not yet measured on real users.
+**Where it stands.** Production-grade engineering (strict TypeScript, about 1,600 tests, security scans, signed multi-arch images, SBOMs), released as v0.2.1. Known gap: recall@10 on a 60-question golden set is 0.71 against a 0.8 target, weakest on cross-language questions; query translation and a reranker are the next levers. Click-through from assistants is not yet measured on real users.
 
 **The ask.** 15 minutes of feedback from whoever owns digital products or AI at Thieme, and, if it is useful, a 30-day pilot with one hospital or department to measure reach and click-through with Thieme's own numbers.
 
