@@ -1,6 +1,6 @@
 # @scholarly-mcp/search
 
-The search service (PLAN.md "Query pipeline"): validates the query, looks a DOI up directly, otherwise runs lexical and vector retrieval in parallel with the same filters, fuses them with Reciprocal Rank Fusion (k = 60), collapses chunks to one result per article and returns a page with teasers, match labels and a cursor, all within a 2 s budget. It depends only on core and zod; adapters are passed in. Design rules: [ADR 0023](../../docs/adr/0023-search-service-rules.md).
+The search service (ARCHITECTURE.md "Query pipeline"): validates the query, looks a DOI up directly, otherwise runs lexical and vector retrieval in parallel with the same filters, fuses them with Reciprocal Rank Fusion (k = 60), collapses chunks to one result per article and returns a page with teasers, match labels and a cursor, all within a 2 s budget. It depends only on core and zod; adapters are passed in. Design rules: [ADR 0023](../../docs/adr/0023-search-service-rules.md).
 
 ## Configuration
 

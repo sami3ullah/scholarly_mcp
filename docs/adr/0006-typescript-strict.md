@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-11-02
-- Records: PLAN.md key design decision #1 (runtime version amended by ADR 0001)
+- Records: ARCHITECTURE.md key design decision 1 (runtime version amended by ADR 0001)
 
 ## Context
 

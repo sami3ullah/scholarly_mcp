@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-11-08
-- Records: SM-15 (owner decision); supersedes ADR 0047 and the auth parts of ADR 0031 (decision 1, auth modes; API keys); amends ADR 0025 (the local caller), ADR 0033 and ADR 0035 (per-key funnel rows and filters), ADR 0045 (keys in the bundle)
+- Records: owner decision; supersedes ADR 0047 and the auth parts of ADR 0031 (decision 1, auth modes; API keys); amends ADR 0025 (the local caller), ADR 0033 and ADR 0035 (per-key funnel rows and filters), ADR 0045 (keys in the bundle)
 
 ## Context
 

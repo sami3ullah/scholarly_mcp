@@ -1,7 +1,7 @@
 # 0005 Use the Crossref public pool (no mailto) for now
 
 - Status: accepted (owner decision, 2026-11-02)
-- Affects: PLAN.md edge case "Crossref 429, 5xx or timeouts" (polite pool with a `mailto`)
+- Affects: ARCHITECTURE.md edge case "Crossref 429, 5xx or timeouts" (polite pool with a `mailto`)
 
 ## Context
 

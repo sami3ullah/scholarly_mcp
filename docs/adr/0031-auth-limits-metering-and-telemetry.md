@@ -3,7 +3,7 @@
 - Status: accepted; auth (decision 1, API keys, OAuth) superseded by [0048](0048-public-server-without-auth.md)
 - Date: 2026-11-03
 - Amends: ADR 0025 (decision 1, loopback-only HTTP; decision 5, the local caller)
-- For: ticket SM-10, PLAN.md "Security and privacy", "Edge cases and failure handling"
+- For: ARCHITECTURE.md "Security, compliance and guardrails", "Edge cases and failure handling"
 
 ## Context
 
@@ -30,9 +30,9 @@ The plan asks for API keys stored hashed and identified by prefix, OAuth 2.1 res
 
 ## Consequences
 
-- The loopback-only rule of ADR 0025 is replaced by the allowlists plus an auth mode. A public deployment needs TLS at the load balancer (PLAN.md) and should keep `/metrics` internal there.
+- The loopback-only rule of ADR 0025 is replaced by the allowlists plus an auth mode. A public deployment needs TLS at the load balancer (ARCHITECTURE.md) and should keep `/metrics` internal there.
 - `LOCAL_CALLER` lives in `auth/auth-info.ts` and is now only the caller of stdio and of `AUTH_MODE=none`.
 - `UsageEvent.status` gains `INTERNAL`; the runtime database gains migration 2 (`api_keys`, an index on exported events). Core gains the `ApiKeyStore` and `UsageOutbox` ports, with testkit fakes and contracts that the SQLite adapters pass.
 - Billing receives each event at least once and must dedupe on `id`; the JSON-lines file can repeat a batch when the webhook failed after it.
-- The rate limit is per process. Moving to several replicas needs a shared bucket store (a new port), noted for SM-13/SM-14. Done in ADR 0036: with `STORE=postgres` the buckets are shared.
-- Exit check: every server and metering edge case named in the ticket has a test. A live smoke test on the real index served `401` without a key, searched with a key (5 cards, 349 ms), exported both events to JSON lines within a second and stopped cleanly on SIGTERM, with no query text in logs or events.
+- The rate limit is per process. Moving to several replicas needs a shared bucket store (a new port), noted as a follow-up. Done in ADR 0036: with `STORE=postgres` the buckets are shared.
+- Verification: every server and metering edge case named in ARCHITECTURE.md has a test. A live smoke test on the real index served `401` without a key, searched with a key (5 cards, 349 ms), exported both events to JSON lines within a second and stopped cleanly on SIGTERM, with no query text in logs or events.

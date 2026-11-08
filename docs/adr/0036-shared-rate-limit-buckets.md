@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-11-03
-- Records: SM-14; follows up ADR 0031 (per-key limit) and ADR 0032 (per-visitor landing limit); builds on ADR 0034 (Postgres store)
+- Follows up ADR 0031 (per-key limit) and ADR 0032 (per-visitor landing limit); builds on ADR 0034 (Postgres store)
 
 ## Context
 

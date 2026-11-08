@@ -1,8 +1,8 @@
 # 0010 multilingual-e5-small embeddings, in-process via ONNX
 
-- Status: accepted
+- Status: accepted, amended by [ADR 0028](0028-selectable-embedding-model.md) (the model and vector size became settings)
 - Date: 2026-11-02
-- Records: PLAN.md key design decision #5 (confirmed by the spike, ADR 0002)
+- Records: ARCHITECTURE.md key design decision 5 (confirmed by the spike, ADR 0002)
 
 ## Context
 

@@ -89,7 +89,7 @@ curl -fsS https://mcp.example.org/readyz                                 # 200: 
 
 `--wait` returns when the server is ready, Caddy has its certificate in a few seconds after that. `init` runs `ingest migrate` on every `up` and exits; that is expected.
 
-The MCP endpoint is public: anyone who knows the URL can connect, with no key ([ADR 0048](adr/0048-public-server-without-auth.md)). Each client address may make `RATE_LIMIT_PER_MINUTE` tool calls a minute (default 60, bursts of `RATE_LIMIT_BURST`, default 20); raise both in `.env` when many readers share one address, such as a hospital network. The bundle sets `HTTP_TRUSTED_PROXIES` to the private ranges, as only Caddy reaches the server, so the limit applies to the reader's address that Caddy passes on. Addresses are never stored or logged.
+The MCP endpoint is public: anyone who knows the URL can connect, with no key ([ADR 0048](adr/0048-public-server-without-auth.md)). Each client address may make `RATE_LIMIT_PER_MINUTE` tool calls a minute (default 60, in bursts of up to 20); raise it in `.env` when many readers share one address, such as a hospital network. The bundle sets `HTTP_TRUSTED_PROXIES` to the private ranges, as only Caddy reaches the server, so the limit applies to the reader's address that Caddy passes on. Addresses are never stored or logged.
 
 Usage (searches, cards shown, landing visits, click-through) as JSON; add `--since 2026-11-01` for a period:
 
@@ -101,7 +101,7 @@ The [funnel guide](guides/funnel-and-card-view.md) explains the numbers and the 
 
 ## 4. The full index
 
-The image carries about 200 open access articles so a new install answers at once. Build the whole corpus of your preset (the Thieme preset: DOI prefix 10.1055 from 2024, about 71,000 articles):
+The image carries 214 open access articles so a new install answers at once. Build the whole corpus of your preset (the Thieme preset: DOI prefix 10.1055 from 2024, about 71,000 articles):
 
 ```bash
 docker compose run -d --name scholarly-full-build admin ingest full

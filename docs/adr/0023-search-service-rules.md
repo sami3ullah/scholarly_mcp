@@ -1,8 +1,8 @@
 # 0023 Search service rules
 
-- Status: accepted
+- Status: accepted, amended by [ADR 0044](0044-language-lanes-for-any-language-search.md) (language lanes for "any language" search)
 - Date: 2026-11-02
-- Fills gaps in: PLAN.md "Query pipeline", "Search and queries" edge cases, "The article card", key design decisions #6 and #7, ticket SM-07
+- Fills gaps in: ARCHITECTURE.md "Query pipeline", "Search and queries" edge cases, "The article card", key design decisions 6 and 7
 
 ## Context
 
@@ -17,7 +17,7 @@ The plan lists the query pipeline's steps but leaves open where the service live
 1. **Own package.** The service lives in `packages/search`, not `packages/core`. It is still "core, not swapped": dependency-cruiser allows it only core and zod, and no Node I/O built-ins, the same purity as core, while its tests use testkit's in-memory store, fake embedder and builders. It defines its own config section (`SEARCH_BUDGET_MS`, `SEARCH_CANDIDATES`, `SEARCH_CACHE_SIZE`, ADR 0014); the RRF constant stays fixed at 60.
 2. **Query validation.** `normalizeText` (NFC, soft hyphens, zero-width and control characters), whitespace collapsed, cut to 500 code points. A query without any letter or digit is `INVALID_INPUT` on `query`, like an empty one; a one-letter query is searched. Limits outside 1 to 10 and `yearFrom` after `yearTo` are `INVALID_INPUT` naming the field, because the service may be called without the tool schema.
 3. **Lexical terms.** Words are letter-and-digit runs. Stopwords (German and English function and question words, including those both languages share, such as `die`, `in`, `and`) and one-character words are left out. When nothing is left the search is vector only, as the plan asks for stopword-only queries. Query syntax (`AND`, `NEAR(`, quotes, `*`, `-`) is just words; the store quotes every term (ADR 0022). A contract property test checks that no random string fails a store.
-4. **Query language.** `LexicalQuery` gains an optional `language`, set only when `detectLanguage` is sure; the store then stems in that language alone, and in both otherwise. This is what the plan says; SM-08 checks against the golden set whether always stemming both is better for cross-language recall.
+4. **Query language.** `LexicalQuery` gains an optional `language`, set only when `detectLanguage` is sure; the store then stems in that language alone, and in both otherwise. This is what the plan says; the golden-set evaluation checks whether always stemming both is better for cross-language recall.
 5. **Abbreviations.** A small, test-covered map of about 30 clinical abbreviation groups (`VHF` and `AF`, `KHK` and `CAD`, ...) adds each found abbreviation's German and English meanings and other-language abbreviations to the lexical terms and appends them in brackets to the embedded text. Two-letter abbreviations count only in capitals ("ms", "pe" are ordinary words); longer ones in any case unless they are stopwords ("its").
 6. **DOI shortcut.** A DOI anywhere in the query, also as a doi.org link, is looked up directly; trailing punctuation is dropped, and a closing bracket only when unbalanced, because DOIs such as `10.1016/s0140-6736(20)30183-5` contain brackets. The article is returned with "Matched by DOI" and no matched chunk; an unknown DOI gives an empty page. Of the filters, only the retraction rule applies: the reader named the paper, so language, year, journal or open access filters do not hide it, but a retracted article stays hidden unless `includeRetracted` is set.
 7. **Fusion and collapse.** Lexical and vector top 50 run in parallel with the same filters. RRF scores chunks (sum of 1 / (60 + rank)), then each article keeps its best chunk, whose score becomes the article's. Order: an article whose title, or title and subtitle, equals the query (compared by folded words) goes first; then score; then newer publication date (a missing month or day sorts before a given one); then DOI. All candidates (at most 100) are loaded so dates and titles can order them before the page is cut.
@@ -27,13 +27,13 @@ The plan lists the query pipeline's steps but leaves open where the service live
 11. **Budget.** Each search runs under `AbortSignal.any([caller, timeout(2 s)])` and races that signal, so it settles on time even when a port ignores the signal (SQLite queries run synchronously). Running out is `TIMEOUT`; a caller's own abort passes through unchanged.
 12. **Embedding cache.** An LRU of 1,000 query embeddings, keyed by the SHA-256 of the embedded text, so the cache holds no query text. Only finished embeddings are stored.
 13. **Logs.** One line per search with mode, query length, hit counts per side, candidates, results, offset, cache hit and duration; failures log their code, at `info` for `INVALID_INPUT` and `CURSOR_STALE` and at `warn` otherwise. Never the query.
-14. **What the tool layer does.** The service returns `SearchHit`s (article, matched chunk id, teaser, `whyMatched`), the index version and a cursor. Cards, landing tokens and links (SM-11), access status (SM-10), journal names resolved to an ISSN with `INVALID_INPUT` for an unknown journal, and the "loosen your filters" hint on empty results are the tool layer's job (SM-09), so the service needs no journal directory or session store.
+14. **What the tool layer does.** The service returns `SearchHit`s (article, matched chunk id, teaser, `whyMatched`), the index version and a cursor. Cards, landing tokens and links, access status, journal names resolved to an ISSN with `INVALID_INPUT` for an unknown journal, and the "loosen your filters" hint on empty results are the tool layer's job (ADR 0025), so the service needs no journal directory or session store.
 
 ## Consequences
 
 - The search package's tests run the whole pipeline against the in-memory store and fake embedder, including a property test that any string gives results or `INVALID_INPUT`. The pure steps (RRF, collapse, ordering, teaser, `whyMatched`, cursor) have unit tests of their own.
-- `apps/eval` is the composition root for measuring search; SM-08 adds the golden-set evaluation to it.
-- The latency target holds with a wide margin, so SM-08 can raise the candidate counts if recall needs it.
+- `apps/eval` is the composition root for measuring search; the golden-set evaluation is added to it (ADR 0026).
+- The latency target holds with a wide margin, so tuning can raise the candidate counts if recall needs it.
 - The abbreviation map and the stopword list are data; adding an entry needs only a test.
 - `whyMatched` can name a query term for a chunk that only shares its stem prefix; it is a label, not evidence, and never quotes the article.
 - Amended by ADR 0044: without a language filter the vector side runs in a German and a non-German lane, vector hits more than 0.055 below the best are dropped, and the other language's best related result is moved into the first five.

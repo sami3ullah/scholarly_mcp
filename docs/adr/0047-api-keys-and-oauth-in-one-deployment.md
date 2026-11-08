@@ -2,11 +2,11 @@
 
 - Status: superseded by [0048](0048-public-server-without-auth.md) the same day: the server became public and the key and OAuth code was removed
 - Date: 2026-11-08
-- Records: SM-15; extends ADR 0031 (auth modes) and ADR 0045 (self-hosting bundle)
+- Extends ADR 0031 (auth modes) and ADR 0045 (self-hosting bundle)
 
 ## Context
 
-ADR 0031 gave a deployment one `AUTH_MODE`: `none`, `api-key` or `oauth`. Clients differ: ChatGPT and most claude.ai organisations reach a connector only through OAuth, while Claude Code, Claude Desktop through `mcp-remote`, MCP Inspector and scripts work best with a fixed key. With one mode, a publisher that wants ChatGPT and claude.ai has to move every key holder (pilot clinics, internal tools, monitoring) to its identity provider, or run two deployments with two hostnames, two runtime databases and two meters. The owner asked the agent to choose.
+ADR 0031 gave a deployment one `AUTH_MODE`: `none`, `api-key` or `oauth`. Clients differ: ChatGPT and most claude.ai organisations reach a connector only through OAuth, while Claude Code, Claude Desktop through `mcp-remote`, MCP Inspector and scripts work best with a fixed key. With one mode, a publisher that wants ChatGPT and claude.ai has to move every key holder (pilot clinics, internal tools, monitoring) to its identity provider, or run two deployments with two hostnames, two runtime databases and two meters.
 
 ## Decision
 

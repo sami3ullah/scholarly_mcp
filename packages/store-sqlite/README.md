@@ -1,20 +1,21 @@
 # @scholarly-mcp/store-sqlite
 
-The default store (key design decision 4): one SQLite file per index with FTS5, a trigram FTS table and sqlite-vec, plus a separate runtime file for landing sessions and the metering outbox. Implements `ArticleReader`, `ArticleWriter`, `ArticleSearch`, `SyncStateStore` and `SessionStore`, and passes their shared contracts. Design rules: [ADR 0022](../../docs/adr/0022-sqlite-index-files-and-builds.md).
+The default store (key design decision 4): one SQLite file per index with FTS5, a trigram FTS table and sqlite-vec, plus a separate runtime file for landing sessions and the metering outbox. Implements `ArticleReader`, `ArticleWriter`, `ArticleSearch`, `SyncStateStore`, `IndexStorage`, `SessionStore` and `UsageOutbox`, and passes their shared contracts. Design rules: [ADR 0022](../../docs/adr/0022-sqlite-index-files-and-builds.md).
 
 ## Configuration
 
-| Variable          | Default               | Meaning                                                                      |
-| ----------------- | --------------------- | ---------------------------------------------------------------------------- |
-| `INDEX_PATH`      | `data/index.sqlite`   | The live index; builds go to `<INDEX_PATH>.building` and are renamed over it |
-| `RUNTIME_DB_PATH` | `data/runtime.sqlite` | Landing sessions and usage events; the server writes it                      |
+| Variable                | Default               | Meaning                                                                                                                                                                                            |
+| ----------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `INDEX_PATH`            | `data/index.sqlite`   | The live index; builds go to `<INDEX_PATH>.building` and are renamed over it                                                                                                                       |
+| `RUNTIME_DB_PATH`       | `data/runtime.sqlite` | Landing sessions and usage events; the server writes it                                                                                                                                            |
+| `SQLITE_SEARCH_WORKERS` | `2`                   | Worker threads that run the server's searches, each on its own connection; about one per CPU, `0` runs them on the event loop ([ADR 0041](../../docs/adr/0041-sqlite-search-on-worker-threads.md)) |
 
 ## Files
 
-| File    | Tables                                                                                         | Written by                             |
-| ------- | ---------------------------------------------------------------------------------------------- | -------------------------------------- |
-| Index   | `articles`, `chunks`, `chunks_fts`, `chunks_trigram`, `vec_chunks`, `index_meta`, `sync_state` | ingest only (read-only for the server) |
-| Runtime | `landing_sessions`, `usage_events`                                                             | server                                 |
+| File    | Tables                                                                                                        | Written by                             |
+| ------- | ------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| Index   | `articles`, `chunks`, `chunks_fts`, `chunks_trigram`, `vec_chunks`, `index_meta`, `sync_state`, `index_build` | ingest only (read-only for the server) |
+| Runtime | `landing_sessions`, `usage_events`                                                                            | server                                 |
 
 ## Usage
 

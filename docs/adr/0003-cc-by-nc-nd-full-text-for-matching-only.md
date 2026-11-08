@@ -1,11 +1,11 @@
 # 0003 Allow CC BY-NC-ND open access full text for matching only
 
 - Status: accepted (owner decision, 2026-11-02)
-- Deviates from: PLAN.md key design decision #11 ("full text used only for matching, under a CC BY allowlist")
+- Deviates from: ARCHITECTURE.md key design decision 11 ("full text used only for matching, under a CC BY allowlist")
 
 ## Context
 
-In the Phase 0 sample, half of the openly licensed records (39 of 79) are CC BY-NC-ND 4.0; the rest are CC BY 4.0. A CC BY-only allowlist would drop half of the full text that can improve matching for the ~53% of articles with no abstract. The owner approved using them, on condition that no data or compliance rule is broken.
+In the feasibility spike sample, half of the openly licensed records (39 of 79) are CC BY-NC-ND 4.0; the rest are CC BY 4.0. A CC BY-only allowlist would drop half of the full text that can improve matching for the ~53% of articles with no abstract. The owner approved using them, on condition that no data or compliance rule is broken.
 
 ## Decision
 

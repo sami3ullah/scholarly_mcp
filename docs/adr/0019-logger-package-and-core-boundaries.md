@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-11-02
-- Fills a gap in: PLAN.md "Repository and layering" (no home for the pino logger)
+- Fills a gap in: ARCHITECTURE.md "Repository and layering" (no home for the pino logger)
 
 ## Context
 

@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-11-02
-- Fills gaps in: PLAN.md "Europe PMC has no match or a different version", key design decision #11, ADR 0003 and ADR 0004, ticket SM-06
+- Fills gaps in: ARCHITECTURE.md "Europe PMC has no match or a different version", key design decision 11, ADR 0003 and ADR 0004
 
 ## Context
 
@@ -36,7 +36,7 @@ ADR 0003 allows open access full text under CC BY 4.0 and CC BY-NC-ND 4.0 for ma
 
 5. **What is read.** Only `<body>`; never `<front>` (the abstract comes from Crossref) or `<back>`. Top-level sections become sections, nested ones fold into their parent, prose before the first section forms an unlabelled section. Figures, tables, formulas, captions, labels and citation markers are dropped, and the empty brackets they leave are removed. Back matter is skipped by `sec-type` or by an English or German heading pattern.
 6. **Generic labels only.** A heading is article content, and `whyMatched` names the matched section, so headings are mapped to `Introduction`, `Methods`, `Results`, `Discussion`, `Conclusion` or `Case report` (EN and DE patterns) and otherwise dropped. Core's `fullTextSectionSchema` allows nothing else, and ingestion, not the adapter, stamps origin `fulltext`, source and licence on each section, so an adapter cannot produce a displayable or unlicensed full-text chunk.
-7. **Subjects.** MeSH descriptor names without qualifiers or check tags (origin `mesh`), and up to 20 author keywords as plain text (origin `keyword`), deduplicated per origin, at most 120 characters each. Subjects come from every match, open access or not. The journal-level fallback of ADR 0004 is the preset's job (SM-14).
+7. **Subjects.** MeSH descriptor names without qualifiers or check tags (origin `mesh`), and up to 20 author keywords as plain text (origin `keyword`), deduplicated per origin, at most 120 characters each. Subjects come from every match, open access or not. The journal-level fallback of ADR 0004 is the preset's job.
 8. **Ingest order.** Each page is looked up in one batched call per 100 DOIs. For each article:
    1. Enrich it.
    2. Skip it if the index holds the same hash.
@@ -53,7 +53,7 @@ ADR 0003 allows open access full text under CC BY 4.0 and CC BY-NC-ND 4.0 for ma
 ## Consequences
 
 - Open access articles without an abstract become findable by their full text; the reader still sees only the abstract teaser and a link (ADR 0016). `whyMatched` says "Matched in Methods (full text): <query terms>".
-- The index grows. On the Thieme corpus (SM-06 exit check), 6,861 of 70,911 articles have full text, adding 87,045 chunks (about 13 per article). The chunk count goes from 89,388 to 176,433 and the file from 551 MB to 1,322 MB. The vector scan (ADR 0022) grows with it: bench p95 goes from 132 ms to 287 ms.
+- The index grows. On the Thieme corpus, 6,861 of 70,911 articles have full text, adding 87,045 chunks (about 13 per article). The chunk count goes from 89,388 to 176,433 and the file from 551 MB to 1,322 MB. The vector scan (ADR 0022) grows with it: bench p95 goes from 132 ms to 287 ms.
 - The first build with enrichment fetches every eligible text one at a time: 2 h 50 min on the Thieme corpus. Later full runs fetch only new or revised texts. If that ever matters, a small fixed concurrency for full-text fetches is the next step.
 - Heading patterns are English and German; other languages' sections are indexed unlabelled.
 - A text whose licence Europe PMC states differently from Crossref is not used, even if one of them is wrong; this errs on the side of not using text.

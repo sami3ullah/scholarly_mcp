@@ -21,8 +21,10 @@ Exit codes: `0` done, `1` failed or not verified (the live index is unchanged), 
 
 Everything from the [Crossref source](../../packages/source-crossref/README.md), the [Europe PMC enricher](../../packages/source-europepmc/README.md), the [embedder](../../packages/embedder-onnx/README.md), the [SQLite store](../../packages/store-sqlite/README.md) and the [Postgres store](../../packages/store-postgres/README.md), plus:
 
-| Variable               | Default | Meaning                                                                                                                                 |
-| ---------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `INGEST_FULL_RUN_DAYS` | `7`     | An incremental run turns full when the last full run is this many days old                                                              |
-| `EUROPEPMC_ENABLED`    | `false` | Add Europe PMC subjects and matching-only full text ([ADR 0024](../../docs/adr/0024-europe-pmc-enrichment.md)); on in the Thieme preset |
-| `LOG_LEVEL`            | `info`  | Pino log level                                                                                                                          |
+| Variable                | Default | Meaning                                                                                                                                        |
+| ----------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `INGEST_FULL_RUN_DAYS`  | `7`     | An incremental run turns full when the last full run is this many days old                                                                     |
+| `EUROPEPMC_ENABLED`     | `false` | Add Europe PMC subjects and matching-only full text ([ADR 0024](../../docs/adr/0024-europe-pmc-enrichment.md)); on in the Thieme preset        |
+| `JOURNAL_SUBJECTS_FILE` | unset   | Journal-level subjects for articles without article-level ones ([ADR 0004](../../docs/adr/0004-subjects-from-europe-pmc.md))                   |
+| `INGEST_DOIS_FILE`      | unset   | Limits the index to the DOIs listed in this file, such as the demo index ([ADR 0039](../../docs/adr/0039-demo-index-from-a-cc-by-doi-list.md)) |
+| `LOG_LEVEL`             | `info`  | Pino log level                                                                                                                                 |

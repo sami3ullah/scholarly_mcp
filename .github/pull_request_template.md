@@ -6,7 +6,7 @@
 
 ## Edge cases covered
 
-<!-- List the PLAN.md edge cases this PR handles, each with its test. -->
+<!-- List the edge cases from docs/ARCHITECTURE.md (Edge cases and failure handling) this PR handles, each with its test. -->
 
 ## Design changes
 

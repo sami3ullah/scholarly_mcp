@@ -3,16 +3,16 @@
 - Status: accepted
 - Date: 2026-11-03
 - Supersedes: ADR 0002 (keep e5-small after the spike), ADR 0027 (measure a larger model first)
-- For: ticket SM-16, PLAN.md key design decision #5
+- For: ARCHITECTURE.md key design decision 5
 
 ## Context
 
-The golden set misses the SM-08 targets (recall@10 0.8 overall, 0.7 cross-language; ADR 0026), and ADR 0027 asked to measure bge-m3, with multilingual-e5-base as a middle step, before deciding on a switch. ADR 0028 made the model a setting and added `ingest reembed`, which embeds the eval index's 15,946 chunks again with another model, chunking unchanged.
+The golden set misses its targets (recall@10 0.8 overall, 0.7 cross-language; ADR 0026), and ADR 0027 asked to measure bge-m3, with multilingual-e5-base as a middle step, before deciding on a switch. ADR 0028 made the model a setting and added `ingest reembed`, which embeds the eval index's 15,946 chunks again with another model, chunking unchanged.
 
 ## Method
 
 1. The eval index (2,959 articles) was re-embedded with each candidate, q8 weights, pinned commits (`EMBEDDER_MODEL`, ADR 0028): e5-base in 13 min, bge-m3 in 33 min, on an Apple M-series CPU.
-2. **Pooling bias was removed before comparing.** Golden set v1 was pooled from e5-small runs, and results nobody judged count as not relevant, so a different model is penalised for finding unjudged articles. Each candidate's top ten (`eval golden --rankings`) that was neither graded relevant nor in e5-small's top ten, 172 query-article pairs, was judged blind from title and abstract with the v1 rubric by three Claude agents, one per query group, in shuffled order. Mixed in were 15 already-graded pairs as a check: all 15 were judged relevant again, 11 with the same grade. The pairs yielded 18 new relevant judgments (17 grade 1, 1 grade 2), which make golden set **version 2** (1,276 judgments). Every model below is scored on v2.
+2. **Pooling bias was removed before comparing.** Golden set v1 was pooled from e5-small runs, and results nobody judged count as not relevant, so a different model is penalised for finding unjudged articles. Each candidate's top ten (`eval golden --rankings`) that was neither graded relevant nor in e5-small's top ten, 172 query-article pairs, was judged blind from title and abstract with the v1 rubric, one query group at a time, in shuffled order. Mixed in were 15 already-graded pairs as a check: all 15 were judged relevant again, 11 with the same grade. The pairs yielded 18 new relevant judgments (17 grade 1, 1 grade 2), which make golden set **version 2** (1,276 judgments). Every model below is scored on v2.
 3. `eval bench --rounds 5` on each eval index, and a synthetic vector scan of 176,433 chunks (the live index's count) at 384 and 1024 dimensions.
 
 ## Results
@@ -46,13 +46,13 @@ On the live index (bench p95 288 ms with e5-small, ADR 0026) bge-m3 would add ab
 
 ## Decision
 
-**Keep multilingual-e5-small.** Neither candidate reaches the SM-08 targets (bge-m3: 0.697 overall, 0.665 cross-language), and neither clearly beats e5-small: every interval includes zero. bge-m3's one promising difference, cross-language recall, is uncertain (+0.065, interval −0.033 to +0.163) and comes with a German loss (8 queries worse, 5 better). e5-base is no better on any group. A switch would cost about 2.7 times the vector scan and storage, four times the model size and a much longer rebuild for no measured gain.
+**Keep multilingual-e5-small.** Neither candidate reaches the targets (bge-m3: 0.697 overall, 0.665 cross-language), and neither clearly beats e5-small: every interval includes zero. bge-m3's one promising difference, cross-language recall, is uncertain (+0.065, interval −0.033 to +0.163) and comes with a German loss (8 queries worse, 5 better). e5-base is no better on any group. A switch would cost about 2.7 times the vector scan and storage, four times the model size and a much longer rebuild for no measured gain.
 
-The ticket's second re-embedding, with chunk sizes bge-m3 allows (up to 8192 tokens), was not run. It needs the source text, so it is a full ingest (Europe PMC full text included, hours), and with chunks unchanged bge-m3 already showed no significant gain; most articles are one abstract chunk under 400 tokens, so larger chunks would change only the full-text half of the index, which feeds matching, not cards.
+The planned second re-embedding, with chunk sizes bge-m3 allows (up to 8192 tokens), was not run. It needs the source text, so it is a full ingest (Europe PMC full text included, hours), and with chunks unchanged bge-m3 already showed no significant gain; most articles are one abstract chunk under 400 tokens, so larger chunks would change only the full-text half of the index, which feeds matching, not cards.
 
 ## Consequences
 
-- The recall gap is not the embedding model's alone. The next levers are query-side, where German and cross-language queries lose: query translation or expansion of the German need into English, and a reranker over the fused top 50 (SM-08 left both open). They need their own ADR and measurement on golden set v2.
+- The recall gap is not the embedding model's alone. The next levers are query-side, where German and cross-language queries lose: query translation or expansion of the German need into English, and a reranker over the fused top 50 (the tuning work left both open). They need their own ADR and measurement on golden set v2.
 - `EMBEDDER_MODEL` stays (ADR 0028), so a future candidate is one table entry, `ingest reembed` and `eval golden` on the eval index. A new candidate's top ten must be pooled and judged first, as in step 2, or the comparison favours e5-small.
 - Golden set v2 and its baseline replace v1; v1 scores no longer compare.
 - The live index and image stay as they are: no rebuild, no new baseline beyond v2, no image or cold-start change.

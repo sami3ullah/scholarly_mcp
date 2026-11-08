@@ -67,7 +67,16 @@ export SCHOLARLY_IMAGE=ghcr.io/sami3ullah/scholarly-mcp:latest LANDING_IMAGE=ghc
 docker compose --profile sqlite --profile landing up -d --wait     # MCP on :8080, landing page on :3000
 ```
 
-Swap `sqlite` for `postgres` to run on Postgres. The demo index has about 200 articles; for the whole Thieme corpus build the full index with `ingest full` ([ingestion guide](docs/guides/ingestion.md), a few hours). Deploying for others, with TLS on your own hostname: [self-hosting guide](docs/SELF-HOSTING.md); connecting Claude and ChatGPT to it: [connectors](docs/CONNECTORS.md).
+To run on Postgres instead, load the image's demo index into it, then start the stack with `postgres` in place of `sqlite`:
+
+```bash
+docker compose --profile postgres up -d --wait postgres
+docker compose --profile postgres run --rm migrate
+docker compose --profile postgres run --rm migrate ingest copy --from /data/index.sqlite
+docker compose --profile postgres --profile landing up -d --wait
+```
+
+The demo index has 214 articles; for the whole Thieme corpus build the full index with `ingest full` ([ingestion guide](docs/guides/ingestion.md), a few hours). Deploying for others, with TLS on your own hostname: [self-hosting guide](docs/SELF-HOSTING.md); connecting Claude and ChatGPT to it: [connectors](docs/CONNECTORS.md).
 
 </details>
 
@@ -145,7 +154,10 @@ scholarly-mcp/
 ├── packages/
 │   ├── core/              domain types, zod schemas, ports, article cards
 │   ├── search/            search service: query pipeline, RRF fusion, teasers, cursors
+│   ├── lexical/           word folding, stemming and compound matching for lexical search
 │   ├── cite/              citations: Vancouver, APA, AMA, BibTeX, RIS
+│   ├── card-view/         MCP Apps card list for search_articles
+│   ├── http/              retrying HTTP client for the Crossref and Europe PMC APIs
 │   ├── source-crossref/   Crossref adapter (metadata, abstracts, licenses)
 │   ├── source-europepmc/  open access full text, used for matching only
 │   ├── store-sqlite/      FTS5 + trigram + sqlite-vec, landing sessions
@@ -154,24 +166,26 @@ scholarly-mcp/
 │   ├── logger/            pino logger with query and secret redaction
 │   └── testkit/           contract suites, fixtures, golden set
 ├── apps/
-│   ├── ingest/            CLI: full, incremental, verify, subset
+│   ├── ingest/            CLI: full, incremental, verify, migrate, copy, subset, purge-license, reembed
 │   ├── eval/              CLI: search latency bench and golden-set eval
 │   ├── server/            MCP server: six tools, stdio and Streamable HTTP
 │   └── landing/           Next.js reference landing page
+├── presets/               publisher presets (Thieme), demo DOI list
+├── deploy/                self-hosting bundle: compose, Caddy, .env.example
 ├── docker/                images, compose services, demo index, smoke and load tests
-└── docs/                  operations, adapters, landing, security, plan, ADRs, guides
+└── docs/                  architecture, operations, adapters, landing, security, ADRs, guides
 ```
 
-| Layer            | Swappable via  | Default                           | Production                                                                          |
-| ---------------- | -------------- | --------------------------------- | ----------------------------------------------------------------------------------- |
-| Content source   | `Source`       | Crossref + Europe PMC             | Your content API ([adapters](docs/ADAPTERS.md#your-own-content-api))                |
-| Search index     | `Store`        | SQLite (FTS5 + sqlite-vec)        | Postgres (tsvector + pgvector), `STORE=postgres` ([guide](docs/guides/postgres.md)) |
-| Embeddings       | `Embedder`     | multilingual-e5-small, in-process | Any ONNX model ([ADR 0028](docs/adr/0028-selectable-embedding-model.md))            |
-| Landing sessions | `SessionStore` | SQLite                            | Postgres                                                                            |
-| Access status    | `Entitlements` | Mock                              | Your entitlement service                                                            |
-| Usage events     | `Meter`        | Outbox + signed webhook           | Your billing pipeline                                                               |
+| Layer            | Swappable via  | Default                            | Production                                                                          |
+| ---------------- | -------------- | ---------------------------------- | ----------------------------------------------------------------------------------- |
+| Content source   | `Source`       | Crossref + Europe PMC              | Your content API ([adapters](docs/ADAPTERS.md#your-own-content-api))                |
+| Search index     | `Store`        | SQLite (FTS5 + sqlite-vec)         | Postgres (tsvector + pgvector), `STORE=postgres` ([guide](docs/guides/postgres.md)) |
+| Embeddings       | `Embedder`     | multilingual-e5-small, in-process  | Any ONNX model ([ADR 0028](docs/adr/0028-selectable-embedding-model.md))            |
+| Landing sessions | `SessionStore` | SQLite                             | Postgres                                                                            |
+| Access status    | `Entitlements` | Mock                               | Your entitlement service                                                            |
+| Usage events     | `Meter`        | Outbox, JSON lines, signed webhook | Your billing pipeline                                                               |
 
-Read more in the [engineering plan](docs/PLAN.md#high-level-architecture) and the [ADRs](docs/adr/README.md).
+Read more in the [architecture doc](docs/ARCHITECTURE.md#high-level-architecture) and the [ADRs](docs/adr/README.md).
 
 <details>
 <summary><b>Develop</b></summary>
@@ -197,6 +211,8 @@ pnpm check        # format, lint, typecheck, layering rules, tests with coverage
 | `pnpm ingest <full\|incremental\|verify>`   | Build, refresh or check the index ([guide](docs/guides/ingestion.md))               |
 | `pnpm ingest <migrate\|copy --from <file>>` | Prepare Postgres, load an existing index into it ([guide](docs/guides/postgres.md)) |
 | `pnpm eval bench`                           | Times every search end to end on the live index                                     |
+| `pnpm eval golden`                          | Golden-set relevance eval ([guide](docs/guides/evaluating-search.md))               |
+| `pnpm landing dev`                          | The reference landing app on :3000 ([guide](docs/LANDING.md))                       |
 | `docker/e2e/smoke.sh [sqlite\|postgres]`    | The compose stack on the demo index, every tool over HTTP                           |
 | `docker/e2e/load.sh <index dir>`            | Load test: cold start, latency at 20 calls a second, memory                         |
 
@@ -215,55 +231,48 @@ pnpm check        # format, lint, typecheck, layering rules, tests with coverage
 
 | Limitation                                                                                                                                                                                                                                                                                                                                                                                       | Impact                                                                                                                                                                                          | Fix                                                                                                                   |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| **The public image has a demo index.** It carries about 200 CC BY 4.0 articles, two per journal, because the full index holds content that may not be redistributed ([ADR 0039](docs/adr/0039-demo-index-from-a-cc-by-doi-list.md)).                                                                                                                                                             | Many questions find little or nothing.                                                                                                                                                          | Build the full index with `ingest full` and mount or bake it in ([operations](docs/OPERATIONS.md#deploy)).            |
+| **The public image has a demo index.** It carries 214 CC BY 4.0 articles, two per journal, because the full index holds content that may not be redistributed ([ADR 0039](docs/adr/0039-demo-index-from-a-cc-by-doi-list.md)).                                                                                                                                                                   | Many questions find little or nothing.                                                                                                                                                          | Build the full index with `ingest full` and mount or bake it in ([operations](docs/OPERATIONS.md#deploy)).            |
 | **Crossref public pool.** No contact email is configured, so ingestion uses Crossref's slower public pool instead of the polite pool ([ADR 0005](docs/adr/0005-crossref-public-pool.md)).                                                                                                                                                                                                        | The first full ingestion is slower and sees more rate limiting. Incremental syncs are barely affected.                                                                                          | Set `CROSSREF_MAILTO`.                                                                                                |
 | **Thin abstracts.** About half of recent Thieme articles have no abstract in Crossref.                                                                                                                                                                                                                                                                                                           | Those articles match on title, journal and subjects, plus their full text when they are open access in Europe PMC (used for matching only, [ADR 0024](docs/adr/0024-europe-pmc-enrichment.md)). | A publisher's own content API removes it.                                                                             |
 | **Coarse subjects for some articles.** Crossref has no subjects; Europe PMC covers only part of the corpus ([ADR 0004](docs/adr/0004-subjects-from-europe-pmc.md)).                                                                                                                                                                                                                              | Articles outside Europe PMC get journal-level subjects.                                                                                                                                         | A publisher's own taxonomy via a source adapter.                                                                      |
-| **Embargoes open on a full run.** An article whose open licence starts in the future is indexed as closed; incremental runs skip unchanged records, so it opens at the next full run, which `ingest incremental` triggers every 7 days by default ([ADR 0020](docs/adr/0020-crossref-source-ingestion-rules.md), [ADR 0022](docs/adr/0022-sqlite-index-files-and-builds.md)).                    | Until then it shows as paywalled, with the abstract and a subscribe link.                                                                                                                       |
+| **Embargoes open on a full run.** An article whose open licence starts in the future is indexed as closed; incremental runs skip unchanged records, so it opens at the next full run, which `ingest incremental` triggers every 7 days by default ([ADR 0020](docs/adr/0020-crossref-source-ingestion-rules.md), [ADR 0022](docs/adr/0022-sqlite-index-files-and-builds.md)).                    | Until then it shows as paywalled, with the abstract and a subscribe link.                                                                                                                       | Lower `INGEST_FULL_RUN_DAYS`.                                                                                         |
 | **No journal page links by default.** No verified ISSN-based journal URL is known for the publisher's site.                                                                                                                                                                                                                                                                                      | `get_journal` and `get_article` omit the journal link.                                                                                                                                          | Set `JOURNAL_URL_TEMPLATE`.                                                                                           |
 | **Search recall below target.** On the 60-query golden set, recall@10 is 0.71 overall and 0.66 cross-language, against targets of 0.8 and 0.7 ([ADR 0026](docs/adr/0026-golden-set-eval-and-tuning.md), [ADR 0044](docs/adr/0044-language-lanes-for-any-language-search.md)). Larger embedding models did not close the gap ([ADR 0029](docs/adr/0029-keep-e5-small-after-model-comparison.md)). | Some relevant articles, most often for German and cross-language queries, are not on the first page.                                                                                            | Next levers are query translation and a reranker ([ADR 0029](docs/adr/0029-keep-e5-small-after-model-comparison.md)). |
 
-## Roadmap
+## What's built
 
-| Ticket                                             | Scope                                                | Status |
-| -------------------------------------------------- | ---------------------------------------------------- | :----: |
-| [SM-00](tickets/SM-00-feasibility-spike.md)        | Feasibility spike ([results](docs/spike-results.md)) |   ✅   |
-| [SM-01](tickets/SM-01-foundations.md)              | Monorepo foundations and CI                          |   ✅   |
-| [SM-02](tickets/SM-02-core-domain.md)              | Core domain, ports, config, errors, testkit          |   ✅   |
-| [SM-03](tickets/SM-03-crossref-source.md)          | Crossref source and normalisation                    |   ✅   |
-| [SM-04](tickets/SM-04-chunker-embedder.md)         | Chunker and ONNX embedder                            |   ✅   |
-| [SM-05](tickets/SM-05-sqlite-store-ingest.md)      | SQLite store and ingest CLI                          |   ✅   |
-| [SM-06](tickets/SM-06-europepmc-source.md)         | Europe PMC full-text source                          |   ✅   |
-| [SM-07](tickets/SM-07-search-service.md)           | Search service                                       |   ✅   |
-| [SM-08](tickets/SM-08-golden-set-eval.md)          | Golden set, eval and tuning                          |   ✅   |
-| [SM-09](tickets/SM-09-mcp-server.md)               | MCP server: six tools and transports                 |   ✅   |
-| [SM-10](tickets/SM-10-auth-telemetry-metering.md)  | Auth, rate limits, telemetry, metering               |   ✅   |
-| [SM-11](tickets/SM-11-landing.md)                  | Landing sessions and Next.js landing page            |   ✅   |
-| [SM-12](tickets/SM-12-mcp-apps-funnel.md)          | MCP Apps cards and funnel dashboard                  |   ✅   |
-| [SM-13](tickets/SM-13-postgres-adapter.md)         | Postgres adapter                                     |   ✅   |
-| [SM-14](tickets/SM-14-hardening-docs.md)           | Hardening, image and docs                            |   ✅   |
-| [SM-15](tickets/SM-15-demo-outreach.md)            | Demo and self-hosting guide                          |   ⬜   |
-| [SM-16](tickets/SM-16-embedding-model-eval.md)     | Embedding model evaluation (bge-m3)                  |   ✅   |
-| [SM-17](tickets/SM-17-sqlite-search-throughput.md) | SQLite search throughput                             |   ✅   |
+- Six read-only MCP tools over stdio and Streamable HTTP, with plain-text answers and MCP Apps article cards.
+- Hybrid search: lexical (FTS5 or tsvector, with German compound matching) and multilingual-e5-small vectors, fused with Reciprocal Rank Fusion, across German and English.
+- Ingestion from Crossref with Europe PMC subjects and open access full text for matching only: full and incremental runs, verify before swap, copy into Postgres.
+- SQLite by default, Postgres with pgvector for several replicas.
+- Short-lived landing tokens, the landing API and a Next.js reference landing page.
+- Per-client rate limits, usage metering with a signed webhook, a funnel report and live view, health checks, Prometheus metrics and OpenTelemetry traces.
+- A 60-query golden set, a latency bench and a local regression gate for ranking changes.
+- Multi-arch images with a demo index, SBOMs and build provenance; a self-hosting bundle with TLS by Caddy and an optional Cloudflare Tunnel.
 
-Full board: [tickets/README.md](tickets/README.md).
+## Not yet
+
+- No hosted public demo: run the image locally or self-host it.
+- The self-hosting bundle is tested in Docker and CI with a local certificate authority, not yet with Let's Encrypt on a public hostname or through a real Cloudflare Tunnel.
+- Search recall is below its targets; query translation and a reranker are not built ([limitations](#limitations)).
+- Access status comes from a mock entitlement adapter; a real entitlement service is not wired in.
 
 ## Documentation
 
 Everything lives in [`docs/`](docs/README.md):
 
-| Document                                     | For                                                         |
-| -------------------------------------------- | ----------------------------------------------------------- |
-| [Docs index](docs/README.md)                 | Start here: every guide in one place                        |
-| [Engineering plan](docs/PLAN.md)             | The full design: goals, architecture, edge cases, standards |
-| [Architecture decisions](docs/adr/README.md) | Why things are the way they are                             |
-| [Phase 0 results](docs/spike-results.md)     | Data coverage and model checks                              |
-| [Self-hosting](docs/SELF-HOSTING.md)         | Your own HTTPS deployment: VM, AWS, Cloudflare, Postgres    |
-| [Connectors](docs/CONNECTORS.md)             | Adding the server to Claude and ChatGPT, URL only, no auth  |
-| [Operations](docs/OPERATIONS.md)             | Deploying, refreshing, scaling, capacity, monitoring        |
-| [Adapters](docs/ADAPTERS.md)                 | Plugging in your own content API, access rules or store     |
-| [The landing page](docs/LANDING.md)          | The landing API and building the page in your own stack     |
-| [Security](docs/SECURITY.md)                 | Reporting issues, threat model, controls, supply chain      |
+| Document                                     | For                                                                   |
+| -------------------------------------------- | --------------------------------------------------------------------- |
+| [Docs index](docs/README.md)                 | Start here: every guide in one place                                  |
+| [Architecture](docs/ARCHITECTURE.md)         | The design: components, search, tool contracts, edge cases, standards |
+| [Architecture decisions](docs/adr/README.md) | Why things are the way they are                                       |
+| [Feasibility results](docs/spike-results.md) | Data coverage and model checks                                        |
+| [Self-hosting](docs/SELF-HOSTING.md)         | Your own HTTPS deployment: VM, AWS, Cloudflare, Postgres              |
+| [Connectors](docs/CONNECTORS.md)             | Adding the server to Claude and ChatGPT, URL only, no auth            |
+| [Operations](docs/OPERATIONS.md)             | Deploying, refreshing, scaling, capacity, monitoring                  |
+| [Adapters](docs/ADAPTERS.md)                 | Plugging in your own content API, access rules or store               |
+| [The landing page](docs/LANDING.md)          | The landing API and building the page in your own stack               |
+| [Security](docs/SECURITY.md)                 | Reporting issues, threat model, controls, supply chain                |
 
 ## Contributing
 

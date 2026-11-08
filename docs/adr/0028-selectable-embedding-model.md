@@ -2,12 +2,12 @@
 
 - Status: accepted
 - Date: 2026-11-03
-- Changes: ADR 0010 and ADR 0021 (one fixed model and vector size), PLAN.md key design decision #5
-- For: ADR 0027, ticket SM-16
+- Changes: ADR 0010 and ADR 0021 (one fixed model and vector size), ARCHITECTURE.md key design decision 5
+- For: ADR 0027
 
 ## Context
 
-SM-16 compares embedding models on the eval index (ADR 0027). The code had one model and one vector size built in: `EMBEDDING_DIMENSIONS = 384` in core, checked by the chunk schema, the embedder, the testkit contract and the `vec_chunks` column check; the model id, revision and `passage: `/`query: ` prefixes fixed in `embedder-onnx`. bge-m3 has 1024 dimensions, CLS pooling and no prefixes; multilingual-e5-base has 768. Measuring them, and switching later if the numbers say so, needs the model to be a setting, not a code change, and an index must still never mix models.
+The model comparison measures embedding models on the eval index (ADR 0027). The code had one model and one vector size built in: `EMBEDDING_DIMENSIONS = 384` in core, checked by the chunk schema, the embedder, the testkit contract and the `vec_chunks` column check; the model id, revision and `passage: `/`query: ` prefixes fixed in `embedder-onnx`. bge-m3 has 1024 dimensions, CLS pooling and no prefixes; multilingual-e5-base has 768. Measuring them, and switching later if the numbers say so, needs the model to be a setting, not a code change, and an index must still never mix models.
 
 ## Decision
 

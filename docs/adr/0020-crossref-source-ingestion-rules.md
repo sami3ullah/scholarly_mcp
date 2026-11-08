@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-11-02
-- Fills gaps in: PLAN.md "Edge cases and failure handling" (ingestion rows) and ticket SM-03
+- Fills gaps in: ARCHITECTURE.md "Edge cases and failure handling" (ingestion rows)
 
 ## Context
 
@@ -19,7 +19,7 @@ The plan names the Crossref edge cases but not how to handle several facts found
 ## Decision
 
 1. **Walk** `/prefixes/{prefix}/works` filtered to `type:journal-article` (and `from-pub-date` when `CROSSREF_FROM_PUB_DATE` is set), sorted by deposit date ascending, full records. The source's opaque cursor encodes Crossref's cursor, the walk's lower bound and the latest deposit seen (the watermark).
-2. **Incremental windows**: the source honours `updatedSince` exactly, filtering the day-granular Crossref result by the instant itself, so the source contract holds. The one-day overlap lives in core's `incrementalWindow`, which ingestion (SM-05) uses to choose `updatedSince`; a failed run retries from its own window start.
+2. **Incremental windows**: the source honours `updatedSince` exactly, filtering the day-granular Crossref result by the instant itself, so the source contract holds. The one-day overlap lives in core's `incrementalWindow`, which ingestion (ADR 0022) uses to choose `updatedSince`; a failed run retries from its own window start.
 3. **Expired cursor**: restart once with a fresh cursor from the watermark day and drop records deposited before the watermark. Records at the watermark itself may be emitted twice; upserts are idempotent. A fresh cursor that is also rejected fails the page.
 4. **Notices are skipped**, not flagged: errata, corrections, retraction notices and expressions of concern are identified by update relation (`update-to` pointing at another DOI) or, failing that, by title. The canonical `Article` has no erratum flag, and a notice is not something a reader should discover. Counts of skipped records are logged per page.
 5. **Retractions**: an article is retracted when `updated-by` or a self-pointing `update-to` has type `retraction`, `withdrawal` or `removal`, or its title starts "Retracted …". When a page holds a retraction notice, the retracted article is marked on the same page or looked up by DOI (within the same scope) and emitted as retracted, with `sourceUpdatedAt` no earlier than the notice. This catches retractions even when the original was not re-deposited. A partial retraction or expression of concern does not retract.
@@ -30,5 +30,5 @@ The plan names the Crossref edge cases but not how to handle several facts found
 ## Consequences
 
 - Full records cost more bandwidth (~10 kB per article), acceptable for ~71k articles.
-- An embargoed article opens in the index only when its record is ingested again after the start date. Incremental runs do not re-fetch unchanged records, so a periodic full run (SM-05) is what opens embargoes. Revisit if embargoed CC articles become common.
+- An embargoed article opens in the index only when its record is ingested again after the start date. Incremental runs do not re-fetch unchanged records, so a periodic full run (ADR 0022) is what opens embargoes. Revisit if embargoed CC articles become common.
 - Title-based notice detection can miss notices with unusual titles; those stay indexed as ordinary articles. The patterns are tested against real titles and against article titles that only start like notices ("Correction of hallux valgus").

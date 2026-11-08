@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-11-03
-- Records: SM-17; builds on ADR 0037 (container image), ADR 0040 (vector scan by Euclidean distance), ADR 0041 (search on worker threads)
+- Builds on ADR 0037 (container image), ADR 0040 (vector scan by Euclidean distance), ADR 0041 (search on worker threads)
 
 ## Context
 
@@ -20,7 +20,7 @@ Measured in the arm64 image on the full index (176,536 chunks, 384 dimensions), 
 
 ## Consequences
 
-- At 20 tool calls a second offered on 2 vCPUs, the full index serves 19.6 to 19.9 a second at p50 217 to 222 ms, p95 346 to 361 ms, p99 618 to 1,122 ms, with no `TIMEOUT` in three runs (before: 19.4 a second, p95 517 ms, 1 `TIMEOUT`). SM-17's exit is met on SQLite.
+- At 20 tool calls a second offered on 2 vCPUs, the full index serves 19.6 to 19.9 a second at p50 217 to 222 ms, p95 346 to 361 ms, p99 618 to 1,122 ms, with no `TIMEOUT` in three runs (before: 19.4 a second, p95 517 ms, 1 `TIMEOUT`). The 20-a-second target is met on SQLite.
 - Results are unchanged: for 100 chunk vectors as queries, the top 50 from the scalar and the NEON build held the same chunks in the same order.
 - The amd64 image needs a CPU with AVX, which every x86-64 server CPU since 2011 and every common cloud instance has; on one without it the extension fails to load (`SIGILL`). arm64 needs nothing beyond the base ISA.
 - Bumping sqlite-vec means changing `SQLITE_VEC_VERSION` and the amalgamation checksum in the Dockerfile with the lockfile. A Dependabot bump alone fails the image build on the version check, so the image never runs a binary from a different release than the lockfile names.

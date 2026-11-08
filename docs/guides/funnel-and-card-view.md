@@ -2,7 +2,7 @@
 
 [← Back to the docs index](../README.md)
 
-This guide covers two things from SM-12 ([ADR 0033](../adr/0033-referral-events-funnel-and-card-view.md)), and the live funnel from SM-13 ([ADR 0035](../adr/0035-live-funnel-over-stored-events.md)):
+This guide covers two things ([ADR 0033](../adr/0033-referral-events-funnel-and-card-view.md); the live funnel is [ADR 0035](../adr/0035-live-funnel-over-stored-events.md)):
 
 - **The funnel.** How the server measures what happens after a search, from cards shown to landing visits to what readers do next, and how to read the report.
 - **The card view.** How `search_articles` shows its results as cards in clients that support MCP Apps.
@@ -23,7 +23,7 @@ flowchart LR
 | **Landing visits** | A reader's browser opens one result of a live search on the landing page                        | `landing_visit`  |
 | **Next actions**   | A reader clicks an access button on that page                                                   | `landing_action` |
 
-Click-through is visits per card shown. A client whose cards are shown but almost never opened probably hides or rewrites the links (PLAN.md risks). Callers are anonymous ([ADR 0048](../adr/0048-public-server-without-auth.md)), so the report counts all clients together; a click-through well below the usual rate across all traffic is the sign to look for.
+Click-through is visits per card shown. A client whose cards are shown but almost never opened probably hides or rewrites the links. Callers are anonymous ([ADR 0048](../adr/0048-public-server-without-auth.md)), so the report counts all clients together; a click-through well below the usual rate across all traffic is the sign to look for.
 
 ### What is in an event
 
@@ -38,7 +38,7 @@ Every event goes through the metering outbox and its exporters ([Operating the s
 - **No query text, no token.** A visit or action id is a SHA-256 of kind, token, DOI and action. The same visit from a second tab or a retried beacon gets the same id, so it is stored and counted once.
 - **Checked against the session.** The server records a referral only when the token is live (24 h) and the DOI is one of that search's results. The journal comes from the index, not from the browser.
 - **Never billable.** Visits and actions have `billable: false`.
-- **Lines from before SM-12.** The funnel still reads lines without `kind`: they are tool calls with no card counts.
+- **Older lines.** The funnel still reads lines without `kind`, written before referral events existed: they are tool calls with no card counts.
 
 ### Which visits count
 

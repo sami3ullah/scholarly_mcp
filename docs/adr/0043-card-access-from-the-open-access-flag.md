@@ -2,13 +2,13 @@
 
 - Status: accepted
 - Date: 2026-11-03
-- Records: SM-15; amends ADR 0025 decision 4
+- Amends ADR 0025 decision 4
 
 ## Context
 
 ADR 0025 gave a card's `access` badge three values from the record alone: `open` for open access, `subscription` when a closed version-of-record licence is in force, and `unknown` otherwise. It expected most subscription cards to show `unknown`, because Thieme deposits no licence for most closed articles.
 
-On the full Thieme index that is what happens, and it is wrong for the reader: 57,844 of 70,989 articles carry no licence, and every one of them is a closed article. A paywalled Endoscopy trial shows `access unknown` on its card while `check_access` answers `subscription` with login and purchase links. The demo's paywall question (SM-15) shows both answers side by side.
+On the full Thieme index that is what happens, and it is wrong for the reader: 57,844 of 70,989 articles carry no licence, and every one of them is a closed article. A paywalled Endoscopy trial shows `access unknown` on its card while `check_access` answers `subscription` with login and purchase links. The demo's paywall question shows both answers side by side.
 
 Facts from the full index (2026-11-03):
 

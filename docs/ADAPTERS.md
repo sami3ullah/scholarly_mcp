@@ -6,14 +6,14 @@ scholarly-mcp is built as ports and adapters. `packages/core` defines the ports 
 
 ## Where adapters are wired
 
-Only the composition roots create concrete adapters ([PLAN.md](PLAN.md#engineering-standards)):
+Only the composition roots create concrete adapters ([architecture](ARCHITECTURE.md#engineering-standards)):
 
 | App    | Composition root                                                           | Wires                                                                                       |
 | ------ | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
 | Ingest | `apps/ingest/src/main.ts`                                                  | `Source`, `ArticleEnricher`, `IndexStorage`, `Embedder`                                     |
 | Server | `apps/server/src/main.ts`, `apps/server/src/runtime/open-server-stores.ts` | `IndexReader`, `Embedder`, `SessionStore`, `RateBucketStore`, `UsageOutbox`, `Entitlements` |
 
-The layering rules (`pnpm depcruise`) keep it that way: an adapter package depends on `core` only, never on another adapter or an app.
+The layering rules (`pnpm depcruise`) keep it that way: an adapter package depends on `core` and the shared helpers (`http` for the sources, `lexical` for the stores), never on another adapter or an app.
 
 ## The ports
 
@@ -99,7 +99,7 @@ The server and ingest choose SQLite or Postgres with `STORE` ([ADR 0034](adr/003
 
 ## Your own embedding model
 
-`EMBEDDER_MODEL` picks another ONNX model from the Hugging Face hub; vectors are sized by the model ([ADR 0028](adr/0028-selectable-embedding-model.md)). A different runtime (a hosted embedding API, for example) is a new `Embedder` adapter passing `runEmbedderContract`. A model change needs a re-embedded index (`ingest reembed`), and the golden-set eval shows whether it helps ([evaluating search](guides/evaluating-search.md)).
+`EMBEDDER_MODEL` picks one of the pinned ONNX models in `packages/embedder-onnx/src/model.ts` (`multilingual-e5-small`, the default, `multilingual-e5-base` or `bge-m3`); another Hugging Face model is one more entry there, and vectors are sized by the model ([ADR 0028](adr/0028-selectable-embedding-model.md)). A different runtime (a hosted embedding API, for example) is a new `Embedder` adapter passing `runEmbedderContract`. A model change needs a re-embedded index (`ingest full`, or `ingest reembed` into a new file that `ingest copy` then loads), and the golden-set eval shows whether it helps ([evaluating search](guides/evaluating-search.md)).
 
 ## Usage and billing
 

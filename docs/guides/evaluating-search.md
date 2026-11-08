@@ -23,7 +23,7 @@ source ~/.nvm/nvm.sh && nvm use
 LOG_LEVEL=warn EMBEDDER_CACHE_DIR=.cache/models pnpm eval golden --show
 ```
 
-`--show` lists each query worst first, with its recall, reciprocal rank and nDCG, and the grade of each of its top ten results (`2`, `1`, or `.` for not relevant). The exit code is `1` while recall is below the SM-08 targets (0.8 overall, 0.7 cross-language). The live index changes with every ingest run, so its scores move a little over time.
+`--show` lists each query worst first, with its recall, reciprocal rank and nDCG, and the grade of each of its top ten results (`2`, `1`, or `.` for not relevant). The exit code is `1` while recall is below the targets (`--min-recall`, default 0.8 overall, and `--min-cross-recall`, default 0.7 cross-language). The live index changes with every ingest run, so its scores move a little over time.
 
 ## The regression gate
 

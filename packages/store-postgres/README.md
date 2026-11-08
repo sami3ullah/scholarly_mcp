@@ -16,7 +16,7 @@ The production store (key design decision 4, ADR 0034): the same ports as `store
 | Schema             | Tables                                                                                        | Written by                                              |
 | ------------------ | --------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
 | `scholarly`        | `migrations`, `landing_sessions`, `usage_events`, `rate_buckets`, `live_index`, `index_build` | migrations; server for sessions, events and rate limits |
-| `index_<build id>` | `layout`, `articles`, `chunks`, `index_meta`, `sync_state`                                    | the ingest, while the build is in progress              |
+| `index_<build id>` | `layout`, `articles`, `chunks`, `index_meta`, `sync_state`, `term_stats`                      | the ingest, while the build is in progress              |
 
 Runtime migrations are versioned and append-only, and run under an advisory lock (`migrateDatabase`). Migration 2 creates the `vector` and `pg_trgm` extensions, which may need a superuser; the `postgres` compose profile creates them up front ([Postgres guide](../../docs/guides/postgres.md)). Migration 3 indexes `usage_events` by `(occurred_at, id)` for the outbox's `list`, which the live funnel pages through (ADR 0035). The server does not migrate: it checks the version with `assertMigrated`.
 

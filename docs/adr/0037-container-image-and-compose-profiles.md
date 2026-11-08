@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-11-03
-- Records: SM-14; builds on ADR 0031 (shutdown, metrics), ADR 0034 (Postgres roles), ADR 0036 (shared buckets)
+- Builds on ADR 0031 (shutdown, metrics), ADR 0034 (Postgres roles), ADR 0036 (shared buckets)
 
 ## Context
 
@@ -24,6 +24,6 @@ The plan asks for a non-root distroless image with a read-only filesystem, its s
 - **Rebuilds.** Code changes rebuild the app layer; the model layer is cached. pnpm's store is a BuildKit cache mount, so dependency downloads are shared between builds.
 - **No shell.** Debugging needs `docker run --entrypoint /nodejs/bin/node …` or a debug variant of the base image.
 
-## Implementation note (2026-11-03, SM-14)
+## Implementation note (2026-11-03)
 
 So that `docker run ghcr.io/…/scholarly-mcp` works with no settings, the image now defaults to `AUTH_MODE=api-key`, `HTTP_ALLOWED_HOSTS=localhost,127.0.0.1` and `LANDING_API_PORT=8081` (on loopback until `LANDING_API_HOST` and the secret open it), and the entrypoint applies `presets/$SCHOLARLY_PRESET.env` (default `thieme`, the preset of the demo index the release image carries, [ADR 0039](0039-demo-index-from-a-cc-by-doi-list.md)) under any setting already made. Set `SCHOLARLY_PRESET=` to turn it off.

@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-11-03
-- Records: SM-15 (owner request: `language: any` returns both languages); amends ADR 0023 (search pipeline) and ADR 0022 (index file layout); golden numbers after ADR 0026 and ADR 0029
+- Records: owner request (`language: any` returns both languages); amends ADR 0023 (search pipeline) and ADR 0022 (index file layout); golden numbers after ADR 0026 and ADR 0029
 
 ## Context
 

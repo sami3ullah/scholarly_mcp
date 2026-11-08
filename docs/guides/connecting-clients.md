@@ -96,7 +96,7 @@ By default the HTTP endpoint accepts only local `Host` and `Origin` headers. It 
 
 - `tools/list` shows six read-only tools: `search_articles`, `get_article`, `find_related`, `get_journal`, `cite`, `check_access`.
 - Every response carries a `notice` and a plain-text rendering with linked titles; card links carry a landing token and UTM tags, never the query.
-- Errors are tool results with `isError: true` and a stable code (`INVALID_INPUT`, `NOT_FOUND`, `CURSOR_STALE`, `TIMEOUT`, `INDEX_UNAVAILABLE`, `INTERNAL`); the message says what to do.
+- Errors are tool results with `isError: true` and a stable code (`INVALID_INPUT`, `NOT_FOUND`, `CURSOR_STALE`, `RATE_LIMITED`, `TIMEOUT`, `INDEX_UNAVAILABLE`, `INTERNAL`); the message says what to do.
 - Without an index the server still starts: tools answer `INDEX_UNAVAILABLE`, and it opens the index once the ingest has built one (checked every 30 s).
 
 The rules behind all of this are in [ADR 0025](../adr/0025-mcp-server-and-tool-rules.md).

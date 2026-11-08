@@ -1,12 +1,12 @@
 # 0035 Live funnel over the stored events
 
-- Status: accepted
+- Status: accepted, amended by [ADR 0048](0048-public-server-without-auth.md) (per-key funnel rows and filters removed)
 - Date: 2026-11-03
-- Records: SM-13 (follow-up from SM-12); builds on ADR 0033 (funnel report), ADR 0034 (Postgres outbox), ADR 0031 (metering outbox)
+- Builds on ADR 0033 (funnel report), ADR 0034 (Postgres outbox), ADR 0031 (metering outbox)
 
 ## Context
 
-ADR 0033 made the funnel a CLI over the JSON lines export and left a live view for when events sit in Postgres. With SM-13 they do: every replica appends to `scholarly.usage_events`, and the outbox keeps exported events for `METER_RETENTION_DAYS` (30 by default) before deleting them. A live view has to answer three questions: where it reads from, how it counts, and how it is served.
+ADR 0033 made the funnel a CLI over the JSON lines export and left a live view for when events sit in Postgres. With ADR 0034 they do: every replica appends to `scholarly.usage_events`, and the outbox keeps exported events for `METER_RETENTION_DAYS` (30 by default) before deleting them. A live view has to answer three questions: where it reads from, how it counts, and how it is served.
 
 ## Decision
 

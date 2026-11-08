@@ -27,7 +27,7 @@ The client address is the socket's peer, unless that peer is in `HTTP_TRUSTED_PR
 
 ### Landing API
 
-The landing API (`/landing/v1/page`, `/landing/v1/visits`, [landing guide](../LANDING.md)) has its own bucket per landing visitor: `LANDING_RATE_LIMIT_PER_MINUTE` (default 120) in bursts of `LANDING_RATE_LIMIT_BURST` (default 30). It takes `LANDING_API_SECRET` as a bearer token, and the server refuses to start with HTTP beyond loopback without it. Give the landing app the same secret, and keep the API on the internal network: only the landing app's server calls it. `LANDING_API_PORT` moves it to its own listener on `LANDING_API_HOST`, so the public port answers 404 for it.
+The landing API (`/landing/v1/page`, `/landing/v1/visits`, `/landing/v1/actions`, [landing guide](../LANDING.md)) has its own bucket per landing visitor: `LANDING_RATE_LIMIT_PER_MINUTE` (default 120) in bursts of `LANDING_RATE_LIMIT_BURST` (default 30). It takes `LANDING_API_SECRET` as a bearer token, and the server refuses to start with HTTP beyond loopback without it. Give the landing app the same secret, and keep the API on the internal network: only the landing app's server calls it. `LANDING_API_PORT` moves it to its own listener on `LANDING_API_HOST`, so the public port answers 404 for it.
 
 Secrets can come from mounted files instead of the environment: `LANDING_API_SECRET_FILE`, `METER_WEBHOOK_SECRET_FILE` and `DATABASE_URL_FILE` name a file whose contents (one trailing newline dropped) become the variable. Set one form, not both ([ADR 0038](../adr/0038-landing-image-proxy-and-secret-files.md)).
 
@@ -80,7 +80,7 @@ function verify(rawBody, timestamp, signature, secret) {
 | `/readyz`  | `200` when the index is open, the model loaded and the server not draining, `503` otherwise                      |
 | `/metrics` | Prometheus text: tool calls, durations, HTTP requests, metering, landing pages, visits and actions, Node runtime |
 
-These routes skip the `Host` and `Origin` checks so probes can reach the pod by address. They hold no article data, but keep `/metrics` internal at the load balancer. No metric label carries a client address or query text.
+These routes skip the `Host` and `Origin` checks so probes can reach the pod by address. They hold no article data, but keep `/metrics` internal: `METRICS_PORT` moves it to its own listener on `METRICS_HOST` (default `127.0.0.1`; the image uses port 9464), and the public port then answers 404 for it. No metric label carries a client address or query text.
 
 Traces are off until `OTEL_EXPORTER_OTLP_ENDPOINT` is set, e.g. `http://localhost:4318`. Each HTTP request is a span, with a child span per tool call carrying the tool name, status and result count. `OTEL_SERVICE_NAME` defaults to `scholarly-mcp`; the other standard `OTEL_EXPORTER_OTLP_*` variables, such as headers, work as usual.
 

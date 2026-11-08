@@ -42,6 +42,15 @@ One entrypoint runs every command, with the same settings and volumes:
 | `tools`    | `ingest`, for one-off ingest commands on SQLite                          | `docker compose --profile tools run --rm ingest full`            |
 | `landing`  | `landing` app and `landing-proxy` (Caddy); add to `sqlite` or `postgres` | `docker compose --profile sqlite --profile landing up -d --wait` |
 
+On `postgres` the database starts empty and `server-pg` is not ready until it holds an index. Load the image's demo index first, as `docker/e2e/smoke.sh postgres` does:
+
+```bash
+docker compose --profile postgres up -d --wait postgres
+docker compose --profile postgres run --rm migrate
+docker compose --profile postgres run --rm migrate ingest copy --from /data/index.sqlite
+docker compose --profile postgres up -d --wait
+```
+
 The MCP endpoint needs no key: connect a client to `http://localhost:8080/mcp` ([ADR 0048](../docs/adr/0048-public-server-without-auth.md)).
 
 Settings come from `presets/thieme.env` plus the compose file; put your own values in `.env` next to `compose.yaml`:
@@ -80,7 +89,7 @@ The smoke test builds the demo index first unless `SMOKE_INDEX_DIR` names one; `
 
 ## Releases
 
-Pushing a tag `v1.2.3` runs `.github/workflows/release.yml`: it builds the demo index, smoke-tests it on SQLite and Postgres, then pushes both images for amd64 and arm64 to `ghcr.io/<owner>/scholarly-mcp` and `ghcr.io/<owner>/scholarly-mcp-landing` (tags `1.2.3`, `1.2`, `latest`) with build provenance, and attaches an SPDX SBOM of each to the GitHub release.
+Pushing a tag `v1.2.3` runs `.github/workflows/release.yml` ([ADR 0049](../docs/adr/0049-fast-release-pipeline.md)). It restores the demo index from the Actions cache, which `.github/workflows/demo-index.yml` fills every week and whenever an input of the index changes, and builds each image natively for amd64 and arm64. Once CI, where the smoke tests run, has passed on the tagged commit, it pushes both images to `ghcr.io/<owner>/scholarly-mcp` and `ghcr.io/<owner>/scholarly-mcp-landing` (tags `1.2.3`, `1.2`, `latest`) with build provenance, and attaches an SPDX SBOM of each to the GitHub release. Tag a commit that was pushed to `main`.
 
 ## What the image guarantees
 

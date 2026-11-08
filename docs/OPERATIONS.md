@@ -8,23 +8,23 @@ How to deploy, refresh, scale and watch scholarly-mcp. For a complete HTTPS depl
 
 One image, `ghcr.io/sami3ullah/scholarly-mcp`, runs the server and every command (`serve`, `funnel`, `ingest`). Release images carry the CC BY demo index ([ADR 0039](adr/0039-demo-index-from-a-cc-by-doi-list.md)); for the real corpus, build an index with `ingest full` or bake one into a private image ([docker/README.md](../docker/README.md#build)).
 
-| Need               | Set                                                                                                   |
-| ------------------ | ----------------------------------------------------------------------------------------------------- |
-| Public hostname    | `HTTP_ALLOWED_HOSTS=mcp.example.org` (and `HTTP_ALLOWED_ORIGINS` for browser clients)                 |
-| Behind a proxy     | `HTTP_TRUSTED_PROXIES` with its addresses or CIDR ranges, so rate limits see the client address       |
-| Rate limits        | `RATE_LIMIT_PER_MINUTE` (60) and `RATE_LIMIT_BURST` (20) per client address                           |
-| Card links         | `LANDING_BASE_URL` to your landing page ([LANDING.md](LANDING.md))                                    |
-| Publisher settings | the preset, e.g. `--env-file presets/thieme.env`                                                      |
-| Runtime state      | a volume at `/var/lib/scholarly` (SQLite) or `STORE=postgres` with `DATABASE_URL`                     |
-| Secrets            | `LANDING_API_SECRET_FILE`, `METER_WEBHOOK_SECRET_FILE`, `DATABASE_URL_FILE` from the secret store     |
-| Usage export       | `METER_WEBHOOK_URL` and its secret ([operating guide](guides/operating-the-server.md#usage-metering)) |
+| Need               | Set                                                                                                      |
+| ------------------ | -------------------------------------------------------------------------------------------------------- |
+| Public hostname    | `HTTP_ALLOWED_HOSTS=mcp.example.org` (and `HTTP_ALLOWED_ORIGINS` for browser clients)                    |
+| Behind a proxy     | `HTTP_TRUSTED_PROXIES` with its addresses or CIDR ranges, so rate limits see the client address          |
+| Rate limits        | `RATE_LIMIT_PER_MINUTE` (60) and `RATE_LIMIT_BURST` (20) per client address                              |
+| Card links         | `LANDING_BASE_URL` to your landing page ([LANDING.md](LANDING.md))                                       |
+| Publisher settings | `SCHOLARLY_PRESET` (default `thieme`) applies `presets/<name>.env` from the image; explicit settings win |
+| Runtime state      | a volume at `/var/lib/scholarly` (SQLite) or `STORE=postgres` with `DATABASE_URL`                        |
+| Secrets            | `LANDING_API_SECRET_FILE`, `METER_WEBHOOK_SECRET_FILE`, `DATABASE_URL_FILE` from the secret store        |
+| Usage export       | `METER_WEBHOOK_URL` and its secret ([operating guide](guides/operating-the-server.md#usage-metering))    |
 
 Publish port 8080 behind a TLS-terminating proxy; keep 9464 (`/metrics`) and 8081 (landing API, when `LANDING_API_PORT` is set) on the internal network. Probe `/healthz` for liveness and `/readyz` for readiness, and give the container at least 15 s to stop (`SHUTDOWN_TIMEOUT_MS` plus 5 s), so requests in flight drain and the usage outbox is flushed.
 
 ```bash
 docker run -d --name scholarly-mcp --read-only --tmpfs /tmp \
-  -p 127.0.0.1:8080:8080 -v scholarly-state:/var/lib/scholarly \
-  --env-file presets/thieme.env -e HTTP_ALLOWED_HOSTS=mcp.example.org \
+  -p 127.0.0.1:8080:8080 -v scholarly-index:/data -v scholarly-state:/var/lib/scholarly \
+  -e HTTP_ALLOWED_HOSTS=mcp.example.org \
   ghcr.io/sami3ullah/scholarly-mcp:latest
 ```
 
@@ -39,7 +39,7 @@ Ingestion is the only writer ([ADR 0008](adr/0008-ingestion-is-the-only-writer.m
 ```bash
 # SQLite: the same volumes as the server
 docker run --rm -v scholarly-index:/data -v scholarly-state:/var/lib/scholarly \
-  --env-file presets/thieme.env ghcr.io/sami3ullah/scholarly-mcp ingest incremental
+  ghcr.io/sami3ullah/scholarly-mcp ingest incremental
 ```
 
 Set `CROSSREF_MAILTO` so Crossref serves the polite pool. A first full run of the Thieme corpus (about 71,000 articles) takes a few hours, mostly embedding.
@@ -75,7 +75,7 @@ Full Thieme index (70,989 articles, 176,536 chunks), 60 s per run, on an Apple M
 | SQLite, 3 search workers; 2 vCPUs                      |        20 |     19.8 |    345 |    525 |    837 |                                  0 |
 | SQLite, 2 workers, SIMD sqlite-vec (ADR 0042); 2 vCPUs |        20 |     19.9 |    222 |    346 |    618 |                                  0 |
 
-- **Postgres meets the plan's target** (20 requests a second, p95 under 500 ms on a 2-vCPU server) when the database has 4 vCPUs. The server itself stays near 15% of one CPU at 20 calls a second; Postgres does the search work and is what to size.
+- **Postgres meets the capacity target** (20 requests a second, p95 under 500 ms on a 2-vCPU server) when the database has 4 vCPUs. The server itself stays near 15% of one CPU at 20 calls a second; Postgres does the search work and is what to size.
 - **SQLite serves 20 calls a second on 2 vCPUs.** A search costs about 50 ms natively (it was 200 ms, mostly the exact vector scan; [ADR 0040](adr/0040-sqlite-vector-scan-by-euclidean-distance.md)); in the image the scan takes 33 ms (65 ms before), as the image compiles sqlite-vec with NEON or AVX where the npm Linux build is scalar ([ADR 0042](adr/0042-sqlite-vec-compiled-with-simd-in-the-image.md)), so the amd64 image needs a CPU with AVX. Searches run on `SQLITE_SEARCH_WORKERS` threads (default 2) instead of the event loop ([ADR 0041](adr/0041-sqlite-search-on-worker-threads.md)). A search without a language filter scans vectors in two language lanes ([ADR 0044](adr/0044-language-lanes-for-any-language-search.md)), about a quarter more CPU. At 20 a second p95 is about 420 ms over three runs (408 to 436, p50 262 to 275; 346 to 361 before the lanes), with no `TIMEOUT`; the 2 vCPUs are close to saturated, so past that rate calls queue and some hit the 2 s search budget. For more give the server more vCPUs and workers, or use Postgres. `LOAD_CPUS=2` limits the server container in `load.sh`, and `SQLITE_SEARCH_WORKERS` is passed on.
 - **Cold start** to ready: 1.2 to 1.9 s on the full SQLite index, about 1.8 s on the eval index.
 - **Memory:** the server holds about 560 MiB when ready (mostly the model) and 590 to 700 MiB under load on Postgres; Postgres about 250 MiB at this load. On SQLite the index file is mapped into memory (ADR 0040), and the pages it reads count as the container's file cache: about 1.3 GiB after a load run on the full index, 1.4 GiB with the two search workers. Give a Postgres server 1 GiB and a SQLite server 1 GiB plus the index file size.
@@ -115,7 +115,7 @@ Release tags (`v1.2.3`) publish `1.2.3`, `1.2` and `latest`. Pin a version in pr
 | Symptom                                            | Cause and fix                                                                                   |
 | -------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | Exits at start with `HTTP beyond loopback needs …` | Set `HTTP_ALLOWED_HOSTS` (and `LANDING_API_SECRET` when the landing API is exposed)             |
-| `421` or `403` from `/mcp`                         | The `Host` or `Origin` the client sends is not on `HTTP_ALLOWED_HOSTS` / `HTTP_ALLOWED_ORIGINS` |
+| `403` from `/mcp`                                  | The `Host` or `Origin` the client sends is not on `HTTP_ALLOWED_HOSTS` / `HTTP_ALLOWED_ORIGINS` |
 | `/readyz` stays `503`                              | No index at `INDEX_PATH` or no live Postgres build: bake one in, run `ingest full` or `copy`    |
 | `RATE_LIMITED` for every client at once            | The server sees the proxy's address: list the proxy in `HTTP_TRUSTED_PROXIES`                   |
 | Card links open the wrong host                     | `LANDING_BASE_URL`                                                                              |

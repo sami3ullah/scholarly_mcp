@@ -69,7 +69,7 @@ Landing app:
 | `LANDING_API_TIMEOUT_MS` | `3000`                  | How long a page waits for the API            |
 | `LOG_LEVEL`              | `info`                  | Log level of the app's server-side JSON logs |
 
-The app's rate limit keys on the first `x-forwarded-for` hop, else `x-real-ip`, so run it behind a proxy that sets one of them from the reader's address and drops any value the reader sent. Only a salted hash of the address reaches the server.
+The server's per-visitor rate limit keys on the reader's address as the app sees it: the first `x-forwarded-for` hop, else `x-real-ip`. Run the app behind a proxy that sets one of them from the reader's address and drops any value the reader sent. Only a salted hash of the address reaches the server, in the `x-landing-visitor` header.
 
 Both sides take the secret from a mounted file as well: `LANDING_API_SECRET_FILE=/run/secrets/landing_api_secret` instead of `LANDING_API_SECRET` (not both).
 
@@ -86,7 +86,7 @@ The server serves the landing API on port 8081 of an internal network that only 
 
 ## The landing API
 
-Both routes check the `Host` allowlist (`HTTP_ALLOWED_HOSTS`), the bearer secret and the per-visitor bucket. They answer `cache-control: no-store` and `x-robots-tag: noindex`.
+All three routes check the `Host` allowlist (`HTTP_ALLOWED_HOSTS`), the bearer secret and the per-visitor bucket. They answer `cache-control: no-store`, and JSON answers also `x-robots-tag: noindex`.
 
 ### `GET /landing/v1/page?t=<token>&doi=<doi>`
 
@@ -144,7 +144,7 @@ The body is `{ "t": "<token>", "doi": "<result>", "action": "read" }`. The actio
 
 ## Rebuilding the page in your own stack
 
-Keep these rules. They come from the hard rules in PLAN.md and are each covered by a test in this repo:
+Keep these rules. They come from the [guardrails](ARCHITECTURE.md#security-compliance-and-guardrails) and are each covered by a test in this repo:
 
 1. **Fetch on the server.** Call the API from your backend with the secret, never from the browser.
 2. **Never index.** Send `noindex` in the meta tag and the header, with the article page as canonical.

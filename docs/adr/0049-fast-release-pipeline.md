@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-11-08
-- Records: SM-15 (owner request: releases and CI take too long); amends ADR 0039 (when the demo index is built) and the SM-14 release workflow
+- Records: owner request (releases and CI take too long); amends ADR 0039 (when the demo index is built) and the release workflow
 
 ## Context
 

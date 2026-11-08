@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-11-02
-- Records: PLAN.md key design decision #2
+- Records: ARCHITECTURE.md key design decision 2
 
 ## Context
 
@@ -14,5 +14,5 @@ The server supports both MCP transports: Streamable HTTP (with `Origin` validati
 
 ## Consequences
 
-- Both transports are covered by protocol tests in SM-09.
+- Both transports are covered by protocol tests (ADR 0025).
 - Revisit when the MCP specification changes its transports.

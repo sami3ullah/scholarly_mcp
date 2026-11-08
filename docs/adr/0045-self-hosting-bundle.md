@@ -1,8 +1,8 @@
 # 0045 Self-hosting bundle
 
-- Status: accepted
+- Status: accepted, amended by [ADR 0048](0048-public-server-without-auth.md) (no API keys or OAuth in the bundle)
 - Date: 2026-11-07
-- Records: SM-15; builds on ADR 0034 (Postgres), ADR 0037 (image, compose), ADR 0038 (landing image, proxy), ADR 0039 (demo index)
+- Builds on ADR 0034 (Postgres), ADR 0037 (image, compose), ADR 0038 (landing image, proxy), ADR 0039 (demo index)
 
 ## Context
 

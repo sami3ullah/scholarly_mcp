@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-11-02
-- Deviates from: PLAN.md key design decision #1 ("TypeScript on Node 22 LTS")
+- Deviates from: ARCHITECTURE.md key design decision 1 ("TypeScript on Node 22 LTS")
 
 ## Context
 
@@ -15,4 +15,4 @@ Use Node 24 LTS for all packages, CI and the container image. TypeScript strict 
 ## Consequences
 
 - Longer support window for the production path.
-- Native deps (better-sqlite3, sqlite-vec, onnxruntime-node) must ship Node 24 prebuilds; SM-00 verifies this.
+- Native deps (better-sqlite3, sqlite-vec, onnxruntime-node) must ship Node 24 prebuilds; the feasibility spike verified this (`docs/spike-results.md`).

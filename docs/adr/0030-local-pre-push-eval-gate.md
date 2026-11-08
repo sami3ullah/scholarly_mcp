@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-11-03
-- For: ticket SM-08 (open decision), ADR 0026
+- For: ADR 0026 (where the regression gate runs)
 
 ## Context
 

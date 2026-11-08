@@ -1,8 +1,8 @@
 # 0021 Chunking, per-chunk language and embedder rules
 
-- Status: accepted
+- Status: accepted, amended by [ADR 0028](0028-selectable-embedding-model.md) (the model and vector size became settings)
 - Date: 2026-11-02
-- Fills gaps in: PLAN.md "Chunking" and key design decision #5, ticket SM-04
+- Fills gaps in: ARCHITECTURE.md "Chunking" and key design decision 5
 
 ## Context
 
@@ -26,6 +26,6 @@ The plan sets chunk sizes (200-400 tokens, sentence fallback, 1-2 sentence overl
 ## Consequences
 
 - Chunking needs a loaded tokenizer; tests use a word counter or the fake embedder's.
-- A bad declared language costs nothing at chunk level, but search filters on article language still see Crossref's value; SM-05/SM-07 should decide whether the article language is corrected from its chunks.
+- A bad declared language costs nothing at chunk level, but search filters on article language still see Crossref's value; the index and search rules should decide whether the article language is corrected from its chunks.
 - Raising the batch size trades determinism for nothing on CPU; revisit only on GPU or with fp32 weights.
 - CI downloads the q8 model once per revision (about 135 MB) and caches `.cache/models`.

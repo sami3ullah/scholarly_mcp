@@ -1,8 +1,8 @@
 # 0039 Demo index from a CC BY DOI list
 
-- Status: accepted
+- Status: accepted, amended by [ADR 0049](0049-fast-release-pipeline.md) (when the demo index is built)
 - Date: 2026-11-03
-- Records: SM-14; builds on ADR 0003 (CC BY-NC-ND full text for matching only), ADR 0014 (config from the environment), ADR 0020 (Crossref source rules), ADR 0037 (server image)
+- Builds on ADR 0003 (CC BY-NC-ND full text for matching only), ADR 0014 (config from the environment), ADR 0020 (Crossref source rules), ADR 0037 (server image)
 
 ## Context
 
@@ -13,7 +13,7 @@ The full index holds every abstract of the corpus and matching-only full-text ch
 1. **A DOI list in the source.** `createCrossrefSource({ dois })` looks up only the listed DOIs, 20 per page with the same `doi:` filter as the retraction follow-ups, still within the prefix, the `journal-article` type and `CROSSREF_FROM_PUB_DATE`. Its cursor holds the offset into the list; incremental runs keep works deposited since the last run. Duplicates are asked for once; DOIs Crossref does not know are counted in the log (`notFound`), never named. The ingest reads the list from `INGEST_DOIS_FILE` (one DOI per line, `#` comments), and fails before starting on a missing file, an empty list or a line that is not a DOI.
 2. **The demo list.** `presets/thieme.demo-dois.txt`: 214 articles, two per journal across 111 journals (54 in German, 138 with full text), taken from the full index on 2026-11-03 where every licence Crossref lists is CC BY 4.0, the article is not retracted and has an abstract, and every indexed full-text chunk is CC BY 4.0.
 3. **Built and checked by one script.** `docker/demo-index/build.sh <dir>` runs `ingest full` in the server image with the list and `FULLTEXT_LICENSE_ALLOWLIST` set to CC BY 4.0 only, then checks with `sqlite3` that every article licence and every chunk licence in the result is CC BY 4.0, and fails otherwise. A licence change at Crossref after the list was made is caught there, before anything is published.
-4. **Where it is used.** The E2E smoke test bakes it into the image it starts. The public release image carries only this index (SM-14 step 9). The full index is never published: it is built with `ingest full`, or baked into a local or private image with `--build-context index=<dir>` (ADR 0037).
+4. **Where it is used.** The E2E smoke test bakes it into the image it starts. The public release image carries only this index. The full index is never published: it is built with `ingest full`, or baked into a local or private image with `--build-context index=<dir>` (ADR 0037).
 
 ## Consequences
 

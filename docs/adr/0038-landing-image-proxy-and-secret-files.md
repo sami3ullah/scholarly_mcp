@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-11-03
-- Records: SM-14; builds on ADR 0032 (landing API and app), ADR 0036 (shared buckets), ADR 0037 (server image, compose)
+- Builds on ADR 0032 (landing API and app), ADR 0036 (shared buckets), ADR 0037 (server image, compose)
 
 ## Context
 

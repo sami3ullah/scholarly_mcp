@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-11-02
-- Records: PLAN.md key design decision #11 (licence allowlist amended by ADR 0003)
+- Records: ARCHITECTURE.md key design decision 11 (licence allowlist amended by ADR 0003)
 
 ## Context
 

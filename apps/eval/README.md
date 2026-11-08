@@ -1,6 +1,6 @@
 # @scholarly-mcp/eval
 
-Measures search with the real embedder and search service, wired the way the server wires them: latency on the live index, and relevance on the golden set (SM-08, [ADR 0026](../../docs/adr/0026-golden-set-eval-and-tuning.md)).
+Measures search with the real embedder and search service, wired the way the server wires them: latency on the live index, and relevance on the golden set ([ADR 0026](../../docs/adr/0026-golden-set-eval-and-tuning.md)).
 
 | Command       | What it does                                                                                                       |
 | ------------- | ------------------------------------------------------------------------------------------------------------------ |
@@ -11,7 +11,7 @@ The embedding cache is off, so every search pays for its embedding. Reports go t
 
 `bench` options: `--rounds N` (default 5), `--max-p95 MS` (default 500), `--show` to print each query's top 3 results with their match labels. Exit codes: `0` p95 within the limit and no failures, `1` over it or a search failed, `2` bad usage.
 
-`golden` options: `--golden FILE` (default `packages/testkit/golden/golden-set.json`), `--show` to print each query's scores and the grades of its top ten (`2`, `1`, `.`), worst first, `--baseline FILE` to fail on any drop against a committed baseline, `--write-baseline FILE` to record the current scores, `--rankings FILE` to write each query's top ten DOIs (to pool a new model's results for judging), `--min-recall R` and `--min-cross-recall R` (defaults 0.8 and 0.7, the SM-08 targets, used when there is no `--baseline`). Exit codes: `0` passed, `1` a score dropped or is below target, `2` bad usage or a baseline from another index or golden set version.
+`golden` options: `--golden FILE` (default `packages/testkit/golden/golden-set.json`), `--show` to print each query's scores and the grades of its top ten (`2`, `1`, `.`), worst first, `--baseline FILE` to fail on any drop against a committed baseline, `--write-baseline FILE` to record the current scores, `--rankings FILE` to write each query's top ten DOIs (to pool a new model's results for judging), `--min-recall R` and `--min-cross-recall R` (defaults 0.8 and 0.7, the targets of ADR 0026, used when there is no `--baseline`). Exit codes: `0` passed, `1` a score dropped or is below target, `2` bad usage or a baseline from another index or golden set version.
 
 ```bash
 LOG_LEVEL=warn EMBEDDER_CACHE_DIR=.cache/models pnpm eval bench --show

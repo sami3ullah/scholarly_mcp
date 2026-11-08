@@ -56,18 +56,18 @@ scholarly-mcp is an independent prototype, not affiliated with Thieme or any oth
 
 ### Supply chain
 
-| Check                                                                            | Where                                    |
-| -------------------------------------------------------------------------------- | ---------------------------------------- |
-| osv-scanner on `pnpm-lock.yaml`                                                  | `security.yml`, every push and weekly    |
-| Trivy on both images and the Dockerfiles                                         | `security.yml`                           |
-| Semgrep (`p/default`, `p/typescript`)                                            | `security.yml`                           |
-| gitleaks over the whole git history                                              | `security.yml`                           |
-| SPDX SBOM per image                                                              | `security.yml`; attached to each release |
-| Build provenance attestation                                                     | `release.yml`                            |
-| Release tags only a commit whose CI (incl. end-to-end smoke tests) passed        | `release.yml`                            |
-| Actions pinned by commit, tools by digest                                        | all workflows                            |
-| New npm releases wait 7 days; no trust downgrades; registry-only transitive deps | `pnpm-workspace.yaml`                    |
-| Dependabot for npm, actions and base images, 7-day cooldown                      | `.github/dependabot.yml`                 |
+| Check                                                                            | Where                                                      |
+| -------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| osv-scanner on `pnpm-lock.yaml`                                                  | `security.yml`, every push and weekly                      |
+| Trivy on both images and the Dockerfiles                                         | `security.yml`                                             |
+| Semgrep (`p/default`, `p/typescript`)                                            | `security.yml`                                             |
+| gitleaks over the whole git history                                              | `security.yml`                                             |
+| SPDX SBOM per image                                                              | `security.yml`; `release.yml` attaches one to each release |
+| Build provenance attestation                                                     | `release.yml`                                              |
+| Release tags only a commit whose CI (incl. end-to-end smoke tests) passed        | `release.yml`                                              |
+| Actions pinned by commit, tools by digest                                        | all workflows                                              |
+| New npm releases wait 7 days; no trust downgrades; registry-only transitive deps | `pnpm-workspace.yaml`                                      |
+| Dependabot for npm, actions and base images, 7-day cooldown                      | `.github/dependabot.yml`                                   |
 
 Advisories that only touch development tools are ignored in `osv-scanner.toml`, each with its reason and an expiry date. Image findings in code nothing in the image loads (such as a base-image library Node does not link) are ignored in `.trivyignore` the same way. Verify a release image with `gh attestation verify oci://ghcr.io/sami3ullah/scholarly-mcp:<version> --owner sami3ullah`.
 

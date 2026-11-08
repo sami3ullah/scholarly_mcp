@@ -1,12 +1,12 @@
 # 0032 Landing API and reference landing page
 
-- Status: accepted; decision 2 amended for the reference app by ADR 0046
+- Status: accepted; decision 2 amended for the reference app by [ADR 0046](0046-focused-reference-landing-page.md)
 - Date: 2026-11-03
-- Records: SM-11; builds on ADR 0017 (tokens), ADR 0025 (link format), ADR 0003 (full text never shown)
+- Builds on ADR 0017 (tokens), ADR 0025 (link format), ADR 0003 (full text never shown)
 
 ## Context
 
-SM-09 already stores each card-returning call's results under a random token and puts it in every link (`/mcp/landing?t=&doi=&utm_*`). SM-11 needs the other half: something that turns a link into a personalised page, a beacon that counts real visits, and a Next.js reference page that a publisher's web team can rebuild in its own stack. PLAN.md fixes the page's parts, the fallbacks and the testing tools, but not where page data comes from, how the lookup is protected or how fallbacks reach the browser.
+The MCP server (ADR 0025) already stores each card-returning call's results under a random token and puts it in every link (`/mcp/landing?t=&doi=&utm_*`). The landing page needs the other half: something that turns a link into a personalised page, a beacon that counts real visits, and a Next.js reference page that a publisher's web team can rebuild in its own stack. ARCHITECTURE.md fixes the page's parts, the fallbacks and the testing tools, but not where page data comes from, how the lookup is protected or how fallbacks reach the browser.
 
 ## Decision
 
@@ -15,7 +15,7 @@ SM-09 already stores each card-returning call's results under a random token and
 3. **Chosen article.** The chosen article is the link's DOI. Without a DOI (the collection link), it is the first result still in the index. A DOI outside the session's results opens that article with all results as matches.
 4. **Matched passage.** An abstract chunk is quoted with its section. A metadata chunk says the title matched. A full-text chunk names only its generic section label, and the schema strips any text passed with it (ADR 0003, ADR 0025).
 5. **Fallbacks.** An expired, unknown or malformed token with a DOI shows the article alone (`session: unavailable`) with an expiry notice. No token at all gives `session: none`. When no page exists, the API answers 404. The app then redirects a link with a DOI to `https://doi.org/<doi>` with a real 307. A link without a DOI gets a real 404 not-found page. If the API is down, rate-limited or returns something invalid, a link with a DOI still goes to doi.org. Only a link without a DOI reaches the error page.
-6. **No `loading.tsx` on the landing route** (deviation from PLAN.md React conventions). A loading boundary makes Next.js stream the shell first and fixes the status at 200. The redirect then becomes a meta refresh and not-found answers 200, which previews and crawlers misread. The page waits for one API call (about 0.2 s on the live index), so a skeleton adds nothing to LCP.
+6. **No `loading.tsx` on the landing route** (deviation from the ARCHITECTURE.md React conventions). A loading boundary makes Next.js stream the shell first and fixes the status at 200. The redirect then becomes a meta refresh and not-found answers 200, which previews and crawlers misread. The page waits for one API call (about 0.2 s on the live index), so a skeleton adds nothing to LCP.
 7. **Visits.** Reading a page never counts or consumes anything, so link previews cannot use a token up.
    - **Browser side.** A client beacon sends `{ t, tool }` once per token and tab, using `sessionStorage` plus a ref, so StrictMode, reloads and moves between results do not repeat it. It waits for `prerenderingchange` on a prerendered page and posts to the app's `/mcp/landing/visit`.
    - **App route.** The route drops preview agents (Slack, WhatsApp, Discord, Teams/Skype previews, crawlers, headless browsers), `Sec-Purpose: prefetch` requests and cross-site posts. It forwards the rest to `POST /landing/v1/visits`.
@@ -40,7 +40,7 @@ SM-09 already stores each card-returning call's results under a random token and
 ## Consequences
 
 - **Measured locally.** Against the live index, a German search's link renders in about 0.2-0.27 s. Lighthouse on mobile settings measured LCP 620-628 ms, with performance and accessibility at 1.0 (stub: about 620 ms). An unknown DOI answers 307 to doi.org, and a dead link answers 404.
-- **Several replicas.** The per-visitor limit and sessions are per process. Sessions move to Postgres in SM-13, and shared limits are an SM-14 follow-up (done in ADR 0036).
-- **Funnel data.** `visitCount` lives on the session row and is deleted with it after 24 h. The SM-12 funnel needs visit events in the metering outbox (follow-up added there).
+- **Several replicas.** The per-visitor limit and sessions are per process. Sessions move to Postgres (ADR 0034), and shared limits are a follow-up (done in ADR 0036).
+- **Funnel data.** `visitCount` lives on the session row and is deleted with it after 24 h. The funnel needs visit events in the metering outbox (done in ADR 0033).
 - **Untranslated topic labels.** Topics are MeSH labels, which are English, so a German page reads "Ihre Ergebnisse zu Atrial Fibrillation". German MeSH labels would need a source (follow-up candidate).
-- **Image build.** `output: 'standalone'` is left for the SM-14 image, because `next start` refuses it (done behind a build flag in ADR 0038).
+- **Image build.** `output: 'standalone'` is left for the container image, because `next start` refuses it (done behind a build flag in ADR 0038).

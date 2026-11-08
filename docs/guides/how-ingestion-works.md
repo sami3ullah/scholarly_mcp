@@ -1,8 +1,8 @@
-# How ingestion works, and how it was built
+# How ingestion works
 
 [← Back to the docs index](../README.md)
 
-This guide explains, step by step, how scholarly-mcp turns publisher metadata into a search index, and how each part was designed and built. It is written for someone new to the project. To run ingestion, see the [ingestion guide](ingestion.md); for the reasoning behind each rule, follow the ADR links.
+This guide explains, step by step, how scholarly-mcp turns publisher metadata into a search index, and why each part is designed the way it is. It is written for someone new to the project. To run ingestion, see the [ingestion guide](ingestion.md); for the reasoning behind each rule, follow the ADR links.
 
 ## In one paragraph
 
@@ -78,7 +78,7 @@ The new index is written to `data/index.sqlite.building`; the live `data/index.s
 
 Code: `packages/source-crossref` ([ADR 0020](../adr/0020-crossref-source-ingestion-rules.md))
 
-- Walks `/prefixes/10.1055/works`, journal articles only, sorted by deposit date, 1,000 records per page, using Crossref's cursor. If Crossref forgets the cursor, the walk restarts from the latest deposit date already seen.
+- Walks `/prefixes/10.1055/works` (`CROSSREF_PREFIX`), journal articles only, sorted by deposit date, `CROSSREF_ROWS` records per page (100 by default, at most 1,000), using Crossref's cursor. If Crossref forgets the cursor, the walk restarts from the latest deposit date already seen.
 - Requests go one at a time, at Crossref's advertised rate. Failures are retried with growing, randomised waits that honour `Retry-After`. This retry logic is shared with Europe PMC in `packages/http`.
 - **Notices are skipped:** errata, corrections and retraction notices are not articles a reader should find.
 - **Retractions are flagged:** when a page holds a retraction notice, the retracted article is looked up and marked, so search hides it.
@@ -90,7 +90,7 @@ Code: `packages/source-crossref` ([ADR 0020](../adr/0020-crossref-source-ingesti
 
 Code: `packages/source-europepmc` ([ADR 0024](../adr/0024-europe-pmc-enrichment.md)), on when `EUROPEPMC_ENABLED=true`
 
-One search request covers 100 DOIs (`DOI:"a" OR DOI:"b" …`), so a page of 1,000 articles costs 10 requests. A hit counts only if it states the requested DOI itself; preprints are ignored.
+One search request covers `EUROPEPMC_BATCH_SIZE` DOIs (100 by default, `DOI:"a" OR DOI:"b" …`), so a Crossref page of 1,000 articles costs 10 requests. A hit counts only if it states the requested DOI itself; preprints are ignored.
 
 Each match gives:
 
@@ -156,7 +156,7 @@ Code: `packages/core/src/chunk/` ([ADR 0021](../adr/0021-chunking-language-and-e
 
 Code: `packages/embedder-onnx`
 
-The model (by default `Xenova/multilingual-e5-small`, pinned revision, 8-bit weights; `EMBEDDER_MODEL` picks another, ADR 0028) runs in-process. Each chunk is embedded with the prefix `passage: `; queries later get `query: `, as e5 models expect. One text at a time, so the same text always gives the same vector. The model version is stored with every chunk; an index never mixes models.
+The model (by default `Xenova/multilingual-e5-small`, pinned revision, 8-bit weights; `EMBEDDER_MODEL` picks another pinned model, [ADR 0028](../adr/0028-selectable-embedding-model.md)) runs in-process. Each chunk is embedded with the prefix `passage: `; queries later get `query: `, as e5 models expect. One text at a time, so the same text always gives the same vector. The model version is stored with every chunk; an index never mixes models.
 
 ### 9. Write the page and the checkpoint
 
@@ -192,7 +192,7 @@ The build is vacuumed into one self-contained file and **renamed** over `data/in
 
 ### 12. The server follows
 
-The server (SM-09) opens the index read-only and checks its version now and then (`refresh()`); on a new version it reopens. Landing sessions and usage counts live in a separate runtime file, so they survive every swap.
+The server opens the index read-only and checks its version every `INDEX_REFRESH_MS` (30 s); on a new version it reopens. Landing sessions and usage counts live in a separate runtime file, so they survive every swap.
 
 ## How full text stays hidden
 
@@ -201,7 +201,7 @@ Matching-only use is enforced in four layers, each with tests:
 1. **Types.** A full-text section can carry only one of six generic labels (`fullTextSectionSchema` in core). A full-text chunk must have a licence, or it fails validation.
 2. **Ingestion stamps provenance.** Origin, source and licence come from the article's reference, not from the adapter.
 3. **Search shows labels and query words only.** The teaser comes from the abstract; `whyMatched` reads "Matched in Methods (full text): thrombectomy" and quotes nothing. A property test feeds random full-text words and checks that no word except the query's own terms ever reaches a result or a log line (`packages/search/src/service/full-text-guardrail.test.ts`).
-4. **Later tickets** extend the same test to every MCP tool's output (SM-09) and the landing page passage (SM-11).
+4. **Every output is checked.** The same kind of test covers every MCP tool's output (`apps/server/src/tools/full-text-guardrail.test.ts`) and the landing page's matched passage (`apps/server/src/landing/landing-pages.test.ts`).
 
 To remove all full text under one licence, take it off `FULLTEXT_LICENSE_ALLOWLIST` and run `ingest purge-license <url>`. It goes through the same copy, verify and swap steps.
 
@@ -217,33 +217,20 @@ To remove all full text under one licence, take it off `FULLTEXT_LICENSE_ALLOWLI
 | A full text is missing or unusable | The article is indexed from metadata, with a logged reason                             |
 | The new index looks wrong          | Verification fails, the build is deleted, the live index stays                         |
 
-## How it was built
+## How it was designed
 
 ### The approach
 
-The same pattern was used for every ticket:
+Every part followed the same pattern:
 
-1. **Read the plan and the ADRs first.** `docs/PLAN.md` sets the goals and hard rules. ADRs record every decision the plan left open.
+1. **Read the architecture and the ADRs first.** [ARCHITECTURE.md](../ARCHITECTURE.md) sets the goals and hard rules. ADRs record every decision it left open.
 2. **Probe the real API before designing.** Every adapter started with live requests against real Thieme records, and the findings shaped the rules. The ADRs list them as "facts found while building it".
 3. **Ports before adapters.** Core defines the interface and a contract test suite; the testkit has an in-memory fake that passes the suite; the real adapter must pass the same suite. Swapping Crossref for another source, or SQLite for Postgres, means writing one adapter.
-4. **Recorded fixtures, no network in tests.** Real responses are saved under each adapter's `fixtures/` and replayed with msw. A script re-records them.
-5. **Small commits that each pass `pnpm check`**: formatting, lint, type check, dependency rules (core may not import adapters, adapters may not import each other) and tests with an 85% coverage gate.
-6. **An exit check on the real corpus.** A ticket is done only when its live check passes.
+4. **Recorded fixtures, no network in tests.** Real responses are saved under each adapter's `fixtures/` and replayed with msw. `scripts/record-fixtures.mjs` in each source package re-records them.
+5. **Small commits that each pass `pnpm check`**: formatting, lint, type check, dependency rules (core may not import adapters, adapters may not import each other) and tests with an 85% line coverage gate.
+6. **A check on the real corpus.** A part is done only when it works on a full Thieme run, not just on fixtures.
 
-### Order of work
-
-| Ticket | What it added                                                                                    |
-| ------ | ------------------------------------------------------------------------------------------------ |
-| SM-00  | Spike: coverage of abstracts, licences and Europe PMC; the model works across German and English |
-| SM-01  | Monorepo, strict TypeScript, lint, tests, layering rules, CI                                     |
-| SM-02  | Core types (article, chunk), ports, config, errors, testkit fakes and contract suites            |
-| SM-03  | Crossref source: paging, retries, notices, retractions, JATS cleaning                            |
-| SM-04  | Chunker and ONNX embedder                                                                        |
-| SM-05  | SQLite store and the ingest CLI: build, resume, verify, swap                                     |
-| SM-07  | Search service on top of the index                                                               |
-| SM-06  | Europe PMC enrichment (this guide's steps 4 and 6), purge by licence                             |
-
-### Worked example: SM-06, Europe PMC
+### Worked example: Europe PMC
 
 1. **Probe.** One `OR` query for 100 DOIs returned everything in about 1.7 s. Of 200 random open access articles, 115 were in Europe PMC and 110 had usable full text. Surprises came from live responses:
    - a missing text answers HTTP 500, not 404
@@ -257,9 +244,9 @@ The same pattern was used for every ticket:
 2. **Fit it to the ports.** Europe PMC does not list articles, it adds to them, so it got its own port (`ArticleEnricher`) rather than pretending to be a `Source`.
 3. **Share the HTTP client.** Crossref's retry code moved into `packages/http` instead of being copied. All Crossref tests passed unchanged after the move.
 4. **Make the rule structural.** Rather than trusting every caller to hide full text, the types allow only generic labels, and ingestion stamps the licence.
-5. **Test on real documents.** The reader was run on English, German and case-report full texts, and gaps were fixed: German back matter, an erratum section, "Tables 1s–6s" headings, a false match on "Correctional facilities". Only CC BY texts are committed as fixtures; BY-NC-ND cases use small synthetic XML, so no ND text is redistributed.
+5. **Test on real documents.** The reader was run on English, German and case-report full texts, and gaps were fixed: German back matter, an erratum section, "Tables 1s-6s" headings, a false match on "Correctional facilities". Only CC BY texts are committed as fixtures; BY-NC-ND cases use small synthetic XML, so no ND text is redistributed.
 6. **Keep reruns cheap.** The hash covers the full-text reference, so rebuilds reuse unchanged articles without fetching their text again.
-7. **Exit check.** A full Thieme rebuild with enrichment, then a second run that must write 0 rows, then `ingest verify`. Results are recorded in the SM-06 ticket.
+7. **Check on the corpus.** A full Thieme rebuild with enrichment, then a second run that must write 0 rows, then `ingest verify`.
 
 ## Where the code lives
 
@@ -279,4 +266,4 @@ The same pattern was used for every ticket:
 
 - [Ingestion guide](ingestion.md): commands, scheduling, logs, troubleshooting
 - [ADR index](../adr/README.md): every design decision
-- [Engineering plan](../PLAN.md): goals, architecture and hard rules
+- [Architecture](../ARCHITECTURE.md): goals, architecture and hard rules

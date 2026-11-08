@@ -106,9 +106,9 @@ STORE=postgres DATABASE_URL=postgres://scholarly_server:server-local@127.0.0.1:5
 
 ## Troubleshooting
 
-| Message                                                            | What to do                                                                                    |
-| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
-| `The database schema is at version 0, not 2; run "ingest migrate"` | Run `pnpm ingest migrate` as the writer, then start the server                                |
-| `permission denied to create extension "vector"`                   | Create the extensions as a superuser first (above); the migration then skips them             |
-| `INDEX_UNAVAILABLE` from the server or `eval`                      | No build is live yet, or it was made with another `EMBEDDER_MODEL`; run `copy` or `full`      |
-| `permission denied for schema index_…`                             | The build was committed without `PG_SERVER_ROLE`; set it and run `pnpm ingest full` or `copy` |
+| Message                                                                  | What to do                                                                                    |
+| ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
+| `The database schema is at version 0, not 5; run "ingest migrate" first` | Run `pnpm ingest migrate` as the writer, then start the server                                |
+| `permission denied to create extension "vector"`                         | Create the extensions as a superuser first (above); the migration then skips them             |
+| `INDEX_UNAVAILABLE` from the server or `eval`                            | No build is live yet, or it was made with another `EMBEDDER_MODEL`; run `copy` or `full`      |
+| `permission denied for schema index_…`                                   | The build was committed without `PG_SERVER_ROLE`; set it and run `pnpm ingest full` or `copy` |

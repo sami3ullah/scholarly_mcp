@@ -2,11 +2,11 @@
 
 - Status: accepted
 - Date: 2026-11-03
-- Records: SM-17; amends ADR 0022 decision 8 (exact cosine scan of a plain table)
+- Amends ADR 0022 decision 8 (exact cosine scan of a plain table)
 
 ## Context
 
-The SM-14 load test found one SQLite server serving about 4.4 tool calls a second on the full index (70,989 articles, 176,536 chunks), with 13 of 266 calls timing out at 20 calls a second offered (`TIMEOUT`, the 2 s search budget; 2 vCPUs, 2026-11-03). Each search ran about 200 ms of synchronous work on the event loop.
+The load test found one SQLite server serving about 4.4 tool calls a second on the full index (70,989 articles, 176,536 chunks), with 13 of 266 calls timing out at 20 calls a second offered (`TIMEOUT`, the 2 s search budget; 2 vCPUs, 2026-11-03). Each search ran about 200 ms of synchronous work on the event loop.
 
 Profile of one search on the full index, by stage (12 load-test queries, 3 rounds after a warm-up, Apple M4 Max, native Node 24, cache off):
 
