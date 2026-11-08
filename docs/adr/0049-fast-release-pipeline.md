@@ -25,6 +25,7 @@ The v0.2.0 release took 37 minutes, and the CI `e2e` job took 12 to 34 minutes o
 - **The demo index can be up to a week old** in a release, checked for CC BY 4.0 when it was built. Licence changes upstream are rare (one so far) and the weekly check catches them.
 - **Fewer calls to Crossref and Europe PMC**, about one demo build a week instead of one per push.
 - **Same results across runs of a week.** CI and the release use the same index, so a full text Europe PMC failed to return no longer changes the smoke test from one run to the next.
+- **A cache miss still depends on Europe PMC.** On 2026-11-08 about half of its full-text requests answered HTTP 500; the ingest stops after 5 articles in a row without full text (`MAX_CONSECUTIVE_FULLTEXT_FAILURES`), and the first two builds with this pipeline failed that way. Until one build of the week succeeds, CI's `e2e` job and a release fail with it; after that, the cache carries them through such outages.
 - **A key that misses an input** would reuse a stale index until the week turns. The hash covers the ingest's whole dependency closure; a new package the ingest starts using must be added to the list in the action.
 - **Tag only a commit that CI ran on** (pushed to main on its own). Otherwise the `ci` job finds no run and fails, and nothing is published.
 - **arm64 runners** are free for public repositories. A private fork needs paid arm64 runners, or can put QEMU back for that one build.
