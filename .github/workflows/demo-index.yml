@@ -1,14 +1,34 @@
 name: Demo index
 
-# Builds the week's demo index early on Monday (ADR 0049), so CI and releases restore it from
-# the cache instead of waiting 10-30 minutes on Crossref and Europe PMC. It also runs the
-# CC BY 4.0 licence check (ADR 0039) every week, so a licence that changes upstream fails here,
-# not in a release. A cache entry made on the default branch is readable from every branch,
-# pull request and tag.
+# Builds the demo index into the Actions cache (ADR 0049): early every Monday for the new
+# week's key, and on main whenever an input of the index changes, so CI and releases restore it
+# instead of waiting on Crossref and Europe PMC, which can take an hour on a bad day. It also
+# runs the CC BY 4.0 licence check (ADR 0039) every week, so a licence that changes upstream
+# fails here, not in a release. A cache entry made on the default branch is readable from
+# every branch, pull request and tag. The paths below follow the key in the action.
 on:
   schedule:
     - cron: '7 3 * * 1'
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/actions/demo-index/**
+      - .github/workflows/demo-index.yml
+      - presets/thieme.demo-dois.txt
+      - presets/thieme.env
+      - docker/demo-index/build.sh
+      - docker/server/**
+      - pnpm-lock.yaml
+      - apps/ingest/src/**
+      - packages/core/src/**
+      - packages/embedder-onnx/src/**
+      - packages/http/src/**
+      - packages/lexical/src/**
+      - packages/logger/src/**
+      - packages/source-crossref/src/**
+      - packages/source-europepmc/src/**
+      - packages/store-sqlite/src/**
 
 permissions:
   contents: read
@@ -20,10 +40,11 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 180
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/demo-index
         with:
           path: ${{ runner.temp }}/demo-index
+          exact: 'true'
           crossref-mailto: ${{ vars.CROSSREF_MAILTO }}

@@ -1,21 +1,31 @@
 name: Demo index
 description: >-
-  The demo index (ADR 0039) as <path>/index.sqlite: restored from the Actions cache, or built
-  from Crossref and Europe PMC and then cached (ADR 0049). The key changes every ISO week and
-  whenever an input of the index changes: the DOI list, the preset, the build script, the
-  server image recipe, the lockfile, or the source of the ingest and the packages it uses.
+  The demo index (ADR 0039) as <path>/index.sqlite, from the Actions cache (ADR 0049). The key
+  changes every ISO week and whenever an input of the index changes: the DOI list, the preset,
+  the build script, the server image recipe, the lockfile, or the source of the ingest and the
+  packages it uses. With `exact`, a missing key is built from Crossref and Europe PMC and cached
+  (the Demo index workflow). Without it, the newest cached index stands in for a missing key,
+  and the index is built only when the cache holds none at all, so a slow or failing Europe
+  PMC never holds up CI or a release.
 inputs:
   path:
     description: Directory that receives index.sqlite. Use the same path everywhere, as the cache stores it.
     required: true
+  exact:
+    description: '"true" to build the exact key when it is missing, instead of using an older index'
+    required: false
+    default: 'false'
   crossref-mailto:
     description: Contact address for Crossref's polite pool
     required: false
     default: ''
 outputs:
   cache-hit:
-    description: '"true" when the index came from the cache'
+    description: '"true" when the exact key came from the cache'
     value: ${{ steps.restore.outputs.cache-hit }}
+  matched-key:
+    description: The cache key restored, possibly an older one; empty when the index was built
+    value: ${{ steps.restore.outputs.cache-matched-key }}
 runs:
   using: composite
   steps:
@@ -46,7 +56,14 @@ runs:
             'packages/store-sqlite/src/**',
             '!**/*.test.ts'
           ) }}
-    - if: steps.restore.outputs.cache-hit != 'true'
+        restore-keys: ${{ inputs.exact != 'true' && 'demo-index-v1-' || '' }}
+    - if: steps.restore.outputs.cache-matched-key != '' && steps.restore.outputs.cache-hit != 'true'
+      shell: bash
+      run: echo "::notice::Demo index for this week and these inputs not built yet; using ${MATCHED} (the Demo index workflow builds it)"
+      env:
+        MATCHED: ${{ steps.restore.outputs.cache-matched-key }}
+    - id: build
+      if: steps.restore.outputs.cache-hit != 'true' && (inputs.exact == 'true' || steps.restore.outputs.cache-matched-key == '')
       shell: bash
       run: |
         docker build -q -f docker/server/Dockerfile -t scholarly-mcp:local .
@@ -54,7 +71,7 @@ runs:
       env:
         INDEX_PATH: ${{ inputs.path }}
         CROSSREF_MAILTO: ${{ inputs.crossref-mailto }}
-    - if: steps.restore.outputs.cache-hit != 'true'
+    - if: steps.build.outcome == 'success'
       uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ${{ inputs.path }}/index.sqlite

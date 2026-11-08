@@ -66,7 +66,8 @@ jobs:
   # on SQLite and then on Postgres, each with the landing app, and every tool over HTTP.
   e2e:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    # Minutes normally; up to hours only when the cache holds no demo index at all.
+    timeout-minutes: 180
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -74,7 +75,7 @@ jobs:
           node-version-file: .nvmrc
           # No pnpm here: the smoke test needs only Node.
           package-manager-cache: false
-      # Cached per week and per input (ADR 0049); a cache miss builds it from the APIs.
+      # From the cache (ADR 0049); the Demo index workflow keeps it current.
       - uses: ./.github/actions/demo-index
         with:
           path: ${{ runner.temp }}/demo-index
