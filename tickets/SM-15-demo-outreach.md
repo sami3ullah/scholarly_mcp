@@ -30,7 +30,7 @@ Owner follow-ups from the review: cards show closed articles as `subscription` (
 - [x] Connector instructions for Claude and ChatGPT (`docs/CONNECTORS.md`; every client connects with the URL alone, no auth)
 - [x] Public server, no API keys or OAuth; per-client rate limits (owner decision, ADR 0048, 2026-11-08)
 - [x] One-page memo drafted (`docs/outreach/memo.md`; Loom link and contact to fill in)
-- [ ] Release v0.2.0, so the bundle's default `SCHOLARLY_VERSION` exists (owner approval)
+- [x] Release v0.2.0, so the bundle's default `SCHOLARLY_VERSION` exists (owner approval)
 - [ ] Loom recording (user; script in `docs/outreach/loom-script.md`)
 - [ ] Outreach (user)
 
