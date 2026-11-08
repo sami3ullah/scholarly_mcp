@@ -2,7 +2,6 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
   min-height: var(--tap-target);
   padding: var(--space-2) var(--space-5);
   border: 1px solid transparent;
@@ -16,22 +15,6 @@
     border-color 160ms var(--ease),
     color 160ms var(--ease),
     opacity 160ms var(--ease);
-}
-
-.icon {
-  flex: none;
-  width: 0.875rem;
-  height: 0.875rem;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  transition: transform 160ms var(--ease);
-}
-
-.button:hover .icon {
-  transform: translate(2px, -2px);
 }
 
 /* Ink on paper: the one filled button on the page. */
