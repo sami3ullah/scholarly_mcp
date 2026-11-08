@@ -17,7 +17,7 @@ The full index holds every abstract of the corpus and matching-only full-text ch
 
 ## Consequences
 
-- **Rebuilt, not committed.** No binary in git: the list is the source, and CI or the release workflow builds the index from Crossref and Europe PMC in a few minutes. Those runs need the internet, and a Crossref or Europe PMC outage fails them; the HTTP client's retries cover short ones.
+- **Rebuilt, not committed.** No binary in git: the list is the source, and CI or the release workflow builds the index from Crossref and Europe PMC in a few minutes. Those runs need the internet, and a Crossref or Europe PMC outage fails them; the HTTP client's retries cover short ones. Since [ADR 0049](0049-fast-release-pipeline.md) the built index is cached per week and per input, built ahead by a weekly workflow, so CI and releases rarely build it themselves.
 - **Small results.** About 214 articles and 3,200 chunks, so search answers are thin and many queries find little. The README says the public image is a demo and points to `ingest full` for the real corpus.
 - **A full run with a list replaces the live index with just the listed articles**, like any full run. Set `INGEST_DOIS_FILE` only for a demo or test index.
 - **Attribution.** CC BY needs attribution; every card links the article's landing page and DOI, and the licence URL is on each card.

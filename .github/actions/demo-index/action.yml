@@ -1,0 +1,61 @@
+name: Demo index
+description: >-
+  The demo index (ADR 0039) as <path>/index.sqlite: restored from the Actions cache, or built
+  from Crossref and Europe PMC and then cached (ADR 0049). The key changes every ISO week and
+  whenever an input of the index changes: the DOI list, the preset, the build script, the
+  server image recipe, the lockfile, or the source of the ingest and the packages it uses.
+inputs:
+  path:
+    description: Directory that receives index.sqlite. Use the same path everywhere, as the cache stores it.
+    required: true
+  crossref-mailto:
+    description: Contact address for Crossref's polite pool
+    required: false
+    default: ''
+outputs:
+  cache-hit:
+    description: '"true" when the index came from the cache'
+    value: ${{ steps.restore.outputs.cache-hit }}
+runs:
+  using: composite
+  steps:
+    - id: week
+      shell: bash
+      run: echo "week=$(date -u +%G-W%V)" >> "$GITHUB_OUTPUT"
+    - id: restore
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ${{ inputs.path }}/index.sqlite
+        key: >-
+          demo-index-v1-${{ steps.week.outputs.week }}-${{ hashFiles(
+            'presets/thieme.demo-dois.txt',
+            'presets/thieme.env',
+            'docker/demo-index/build.sh',
+            'docker/server/Dockerfile',
+            'docker/server/*.sh',
+            'docker/server/*.mjs',
+            'pnpm-lock.yaml',
+            'apps/ingest/src/**',
+            'packages/core/src/**',
+            'packages/embedder-onnx/src/**',
+            'packages/http/src/**',
+            'packages/lexical/src/**',
+            'packages/logger/src/**',
+            'packages/source-crossref/src/**',
+            'packages/source-europepmc/src/**',
+            'packages/store-sqlite/src/**',
+            '!**/*.test.ts'
+          ) }}
+    - if: steps.restore.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        docker build -q -f docker/server/Dockerfile -t scholarly-mcp:local .
+        docker/demo-index/build.sh "$INDEX_PATH"
+      env:
+        INDEX_PATH: ${{ inputs.path }}
+        CROSSREF_MAILTO: ${{ inputs.crossref-mailto }}
+    - if: steps.restore.outputs.cache-hit != 'true'
+      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ${{ inputs.path }}/index.sqlite
+        key: ${{ steps.restore.outputs.cache-primary-key }}

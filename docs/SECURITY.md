@@ -64,6 +64,7 @@ scholarly-mcp is an independent prototype, not affiliated with Thieme or any oth
 | gitleaks over the whole git history                                              | `security.yml`                           |
 | SPDX SBOM per image                                                              | `security.yml`; attached to each release |
 | Build provenance attestation                                                     | `release.yml`                            |
+| Release tags only a commit whose CI (incl. end-to-end smoke tests) passed        | `release.yml`                            |
 | Actions pinned by commit, tools by digest                                        | all workflows                            |
 | New npm releases wait 7 days; no trust downgrades; registry-only transitive deps | `pnpm-workspace.yaml`                    |
 | Dependabot for npm, actions and base images, 7-day cooldown                      | `.github/dependabot.yml`                 |

@@ -54,3 +54,4 @@ Each ADR records one decision: the context, what we chose and what follows from 
 | [0046](0046-focused-reference-landing-page.md)             | Focused reference landing page                                   | accepted                |
 | [0047](0047-api-keys-and-oauth-in-one-deployment.md)       | API keys and OAuth in one deployment                             | superseded by 0048      |
 | [0048](0048-public-server-without-auth.md)                 | Public server without auth                                       | accepted                |
+| [0049](0049-fast-release-pipeline.md)                      | Fast release pipeline                                            | accepted                |

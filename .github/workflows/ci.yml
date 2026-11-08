@@ -66,7 +66,7 @@ jobs:
   # on SQLite and then on Postgres, each with the landing app, and every tool over HTTP.
   e2e:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -74,12 +74,11 @@ jobs:
           node-version-file: .nvmrc
           # No pnpm here: the smoke test needs only Node.
           package-manager-cache: false
-      - name: Demo index
-        run: |
-          docker build -q -f docker/server/Dockerfile -t scholarly-mcp:local .
-          docker/demo-index/build.sh "$RUNNER_TEMP/demo-index"
-        env:
-          CROSSREF_MAILTO: ${{ vars.CROSSREF_MAILTO }}
+      # Cached per week and per input (ADR 0049); a cache miss builds it from the APIs.
+      - uses: ./.github/actions/demo-index
+        with:
+          path: ${{ runner.temp }}/demo-index
+          crossref-mailto: ${{ vars.CROSSREF_MAILTO }}
       - run: docker/e2e/smoke.sh sqlite
         env:
           SMOKE_INDEX_DIR: ${{ runner.temp }}/demo-index
