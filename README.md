@@ -25,7 +25,22 @@ each linking to a personalised landing page on the publisher's own site, never t
 
 ## Quick start
 
-Requirements: Docker. The image carries a small demo index of open access (CC BY 4.0) articles, the embedding model and the Thieme preset, so it needs no other setup.
+Requirements: Docker. The image carries a small demo index of open access (CC BY 4.0) articles, the embedding model and the Thieme preset, so it needs no other setup. Set it up yourself, or let your coding agent do it.
+
+### Set up with your agent
+
+Paste this into Claude Code, Codex, Cursor or any agent that can run shell commands:
+
+```text
+Set up the scholarly-mcp server for me and connect it to this client. Follow
+https://raw.githubusercontent.com/sami3ullah/scholarly_mcp/main/docs/guides/agent-setup.md
+```
+
+The agent checks Docker and the port, starts the container, waits until it is ready, checks the six tools, registers the server in your client and tells you how to stop it. It asks before installing anything or touching what it did not create. The steps are in the [agent setup guide](docs/guides/agent-setup.md).
+
+### Set up manually
+
+Start the server:
 
 ```bash
 docker run -d --name scholarly-mcp -p 127.0.0.1:8080:8080 ghcr.io/sami3ullah/scholarly-mcp:latest
@@ -37,7 +52,11 @@ Connect Claude Code (or any MCP client that speaks Streamable HTTP). The server 
 claude mcp add --transport http scholarly http://localhost:8080/mcp
 ```
 
-Then ask, for example, _"Find recent articles on stroke thrombolysis"_ or _"Welche Artikel gibt es zur Sepsis bei Kindern?"_. Claude Desktop, MCP Inspector and stdio are in the [client guide](docs/guides/connecting-clients.md).
+Cursor, VS Code and Claude Desktop are in the [agent setup guide](docs/guides/agent-setup.md#6-register-the-server-in-the-users-client); MCP Inspector and stdio in the [client guide](docs/guides/connecting-clients.md).
+
+### Try it
+
+Ask, for example, _"Find recent articles on stroke thrombolysis"_ or _"Welche Artikel gibt es zur Sepsis bei Kindern?"_.
 
 <details>
 <summary><b>The full stack from a clone: server, landing page, Postgres</b></summary>

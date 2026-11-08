@@ -55,6 +55,7 @@ Everything beyond the quick start lives here. New guides are added as the featur
 | [How ingestion works](guides/how-ingestion-works.md)           | Every step from Crossref to a swapped-in index, how full text stays hidden, and how it was built |
 | [Operating the server](guides/operating-the-server.md)         | Public endpoint, rate limits, usage metering and webhooks, health, metrics, traces, shutdown     |
 | [Connecting clients](guides/connecting-clients.md)             | Running the MCP server and connecting Claude Desktop or MCP Inspector, over stdio or HTTP        |
+| [Setting up with an agent](guides/agent-setup.md)              | Steps a coding agent follows to run the Docker image and register the server in its client       |
 | [Evaluating search](guides/evaluating-search.md)               | The golden set, its metrics, the eval index and the regression gate for ranking changes          |
 | [The funnel and the card view](guides/funnel-and-card-view.md) | What the funnel counts, the report and the live view, the beacons, the MCP Apps card view        |
 | [Running on Postgres](guides/postgres.md)                      | The compose profile, roles, migrating, copying an index in, running the server, search parity    |
