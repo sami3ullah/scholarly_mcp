@@ -178,7 +178,7 @@ services:
   # Cloudflare Tunnel instead of public ports 80 and 443 (SELF-HOSTING.md#cloudflare).
   cloudflared:
     profiles: [cloudflare]
-    image: cloudflare/cloudflared:2026.10.7
+    image: cloudflare/cloudflared:2026.11.0
     command: [tunnel, --no-autoupdate, run]
     environment:
       TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
